@@ -35,25 +35,25 @@ class Auth(BaseModel):
 
 # Collection and Request Related Objects
 class Script(BaseModel):
-    type: str
+    type: Optional[str]
     exec: List[str]
 
 
 class Event(BaseModel):
-    listen: str
+    listen: Optional[str]
     script: Optional[Script]
 
 
 # Request Related Objects
 class Header(BaseModel):
-    key: str
-    value: str
+    key: Optional[str]
+    value: Optional[str]
     description: Optional[str]
     disabled: Optional[str]
 
 
 class Variable(BaseModel):
-    key: str
+    key: Optional[str]
     value: Optional[str]
     description: Optional[str]
 
