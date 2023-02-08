@@ -59,7 +59,7 @@ class Variable(BaseModel):
 
 
 class Param(BaseModel):
-    key: str
+    key: Optional[str]
     value: Optional[str]
     description: Optional[str]
     disabled: Optional[str]
