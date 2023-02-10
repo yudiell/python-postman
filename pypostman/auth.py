@@ -60,7 +60,7 @@ class Auth:
             return HTTPBasicAuth(username=basic["username"], password=basic["password"])
 
     @property
-    def apikey(self) -> HTTPBasicAuth:
+    def apikey(self) -> ApiKeyAuth:
         if self.__auth_config and self.type == "apikey":
             apikey = {}
             for item in self.__auth_config:
