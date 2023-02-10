@@ -19,7 +19,7 @@ class Collection:
             template: str = CustomTemplate(text).safe_substitute(os.environ)
             data: dict = json.loads(template)
 
-        self.template = template
+        self._template = template
         self._collection = Config(**data)
         self._info = self._collection.info
         self._variables: Variables = Variables(variables=self._collection.variables)
