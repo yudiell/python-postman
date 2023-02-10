@@ -1,6 +1,6 @@
 from requests.auth import HTTPBasicAuth, AuthBase
 
-from .config import Auth
+from .config import Auth as ConfigAuth
 
 
 class BearerAuth(AuthBase):
@@ -35,7 +35,7 @@ class ApiKeyAuth(AuthBase):
 
 
 class Auth:
-    def __init__(self, auth: Auth):
+    def __init__(self, auth: ConfigAuth):
         self.type = auth.type if auth else None
         self.__auth_config = (
             auth.noauth or auth.basic or auth.apikey or auth.bearer if auth else None

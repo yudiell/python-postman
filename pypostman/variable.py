@@ -17,7 +17,7 @@ class Variables:
         if self.variables:
             for variable in self.variables:
                 collection_variables[variable.key] = variable.value
-        collection_variables.update(os.environ)
+        # collection_variables.update(os.environ)
         return collection_variables
 
     @property
