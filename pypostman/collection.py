@@ -16,6 +16,7 @@ class Collection:
         load_dotenv()
         with open(Path(collection_file)) as file:
             text = file.read().replace("{{", "${").replace("}}", "}")
+            print(os.environ)
             template: str = CustomTemplate(text).safe_substitute(os.environ)
             data: dict = json.loads(template)
 
