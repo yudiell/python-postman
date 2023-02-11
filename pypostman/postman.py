@@ -1,8 +1,5 @@
-# import os
 import glob
 from typing import List
-
-# from dotenv import load_dotenv
 
 from .modules.logger import Log
 from .environment import Environment

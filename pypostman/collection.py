@@ -1,7 +1,6 @@
 import os
 import json
 from pathlib import Path
-from dotenv import load_dotenv
 
 from .config import Config
 from .variable import Variables
@@ -13,10 +12,8 @@ from .template import CustomTemplate
 
 class Collection:
     def __init__(self, collection_file) -> None:
-        load_dotenv()
         with open(Path(collection_file)) as file:
             text = file.read().replace("{{", "${").replace("}}", "}")
-            print(os.environ)
             template: str = CustomTemplate(text).safe_substitute(os.environ)
             data: dict = json.loads(template)
 
