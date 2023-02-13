@@ -35,7 +35,7 @@ class Variables:
                     return variable.value.split(",")
         return []
 
-    def s3_prefix(self, env: str):
+    def s3_prefix(self, **kwargs):
         """
         This function takes in an environment string and returns the S3 prefix
         based on the provided environment and the current date. The S3 prefix is
@@ -45,11 +45,7 @@ class Variables:
         if self.variables:
             for variable in self.variables:
                 if variable.key.upper() in ["S3_PREFIX", "PREFIX"]:
-                    tz = pendulum.timezone("UTC")
-                    date = pendulum.today(tz=tz).date().format("YYYY/MM/DD")
-                    s3_prefix = CustomTemplate(variable.value).safe_substitute(
-                        DATE_PARTITION=date, ENV=env
-                    )
+                    s3_prefix = CustomTemplate(variable.value).safe_substitute(**kwargs)
                     return s3_prefix
 
     @property
