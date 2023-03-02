@@ -44,7 +44,7 @@ def pokemon(self, **kwargs):
 
 ## Installation
 
-### Pythom >= 3.8
+### Python >= 3.8
 
 Pypi Test:
   ```
