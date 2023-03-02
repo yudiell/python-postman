@@ -1,0 +1,66 @@
+{
+	"info": {
+		"_postman_id": "a2772614-429d-4707-b8ad-b87ac87fd365",
+		"name": "PokeAPI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3009653"
+	},
+	"item": [
+		{
+			"name": "/pokemon",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/pokemon/:name_or_id",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"pokemon",
+						":name_or_id"
+					],
+					"variable": [
+						{
+							"key": "name_or_id",
+							"value": "pikachu"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://pokeapi.co/api/v2",
+			"type": "string"
+		},
+		{
+			"key": "s3_prefix",
+			"value": "{{ENV}}/business_systems/pokeapi/pokemon/snapshots/{{DATE_PARTITION}}",
+			"type": "string"
+		}
+	]
+}

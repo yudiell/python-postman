@@ -1,0 +1,107 @@
+{
+	"info": {
+		"_postman_id": "580b810b-c1ea-4bdd-8024-8f4beaf600e5",
+		"name": "Coinmarketcap",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3009653"
+	},
+	"item": [
+		{
+			"name": "/listings/latest",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accepts",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "X-CMC_PRO_API_KEY",
+						"value": "120ba475-f571-451d-828f-d062486b40e8",
+						"type": "text"
+					},
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "{{base_path}}/cryptocurrency/listings/latest?circulating_supply_max=100000000&limit=10&price_max=1",
+					"host": [
+						"{{base_path}}"
+					],
+					"path": [
+						"cryptocurrency",
+						"listings",
+						"latest"
+					],
+					"query": [
+						{
+							"key": "circulating_supply_max",
+							"value": "100000000"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						},
+						{
+							"key": "price_max",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "key",
+				"value": "X-CMC_PROD_API_KEY",
+				"type": "string"
+			},
+			{
+				"key": "value",
+				"value": "{{X-CMC_PRO_API_KEY}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_path",
+			"value": "https://pro-api.coinmarketcap.com/v1",
+			"type": "string"
+		},
+		{
+			"key": "s3_prefix",
+			"value": "{{ENV}}/business_systems/coinmarketcap/listings/latest/snapshots/{{DATE_PARTITION}}",
+			"type": "string"
+		}
+	]
+}
