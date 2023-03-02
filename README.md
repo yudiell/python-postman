@@ -1,20 +1,55 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# Python Postman
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+**pypostman** is a command-line interface that allows to `automate` multiple api calls from postman collections, additionally it also allow you to `compress` and `save` the response to a local directory or to an AWS S3 bucket.
+Thereby allowing you to manage your api calls using postman, then `automate` and `process` their response using python.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+Example:
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+```
+from pypostman.postman import Postman
+from pypostman.modules.http import Request
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+postman = Postman()
+
+collections_dir = "../collections"
+collections = postman._get_collections(dir=collections_dir)
+pokeapi_collection = postman._get_collection(name="PokeAPI", collections=collections)
+pokeapi_requests = postman._get_requests(collection=pokeapi_collection)
+
+def pokemon(self, **kwargs):
+    # Make an API request.
+    # The request name should match the Postman request name.
+    name = "/pokemon"
+    pokemon = postman._get_request(name=name, requests=pokeapi_requests)
+    prepared_request: Request = Request(request=pokemon)
+    prepared_request.set_path_vars(kwargs)
+    prepared_request.set_params(kwargs)
+    response = prepared_request.send
+    return response
+```
+## What is Included?
+
+- The **pypostman** source code.
+- collections
+  - Coinmarketcap.postman_collection.json
+  - PokeAPI.postman_collection.json
+- models
+  - coinmarketcap_example.py
+  - pokeapi_example.py
+
+### Included Modules
+- file.py
+- http.py
+- logger.py
+
+## Installation
+
+### Pythom >= 3.8
+
+```
+pip install python-postman
+```
+
+## How to Use It
+
+See examples.

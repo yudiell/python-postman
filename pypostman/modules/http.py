@@ -1,3 +1,4 @@
+import os
 import json
 from requests import Session, Response
 from urllib3 import Timeout
@@ -76,6 +77,12 @@ class Request(Session):
             path: str = CustomTemplate(request_url).safe_substitute(path_variables)
             self.url = path
 
+    def substitute_bearer_token(self) -> None:
+        if self._request.auth and self._request.auth.type == "bearer":
+            self._request.auth.http_auth.token = CustomTemplate(
+                self._request.auth.http_auth.token
+            ).safe_substitute(os.environ)
+
     @property
     def send(self) -> Response:
         log: Log = self.log
@@ -83,6 +90,10 @@ class Request(Session):
             # Setting the requests
             request: CollectionRequest = self._request
             log.info(f"Request Name: {request.name}")
+
+            # Substitute the a bearer token at the API call level.
+            # This is a substitution for the postman "test" script that sets a bearer token.
+            self.substitute_bearer_token()
 
             # Setting the request params
             method = request.method
