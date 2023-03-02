@@ -46,9 +46,14 @@ def pokemon(self, **kwargs):
 
 ### Pythom >= 3.8
 
-```
-pip install python-postman
-```
+Pypi Test:
+  ```
+  pip install -i https://test.pypi.org/simple/ python-postman
+  ```
+Pypi (Not implemented Yet):
+  ```  
+  pip install python-postman
+  ```
 
 ## How to Use It
 
