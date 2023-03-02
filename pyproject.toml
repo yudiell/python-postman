@@ -3,12 +3,12 @@ requires = ["setuptools", "wheel", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pypostman"
+name = "python-postman"
 version = "0.1.0"
 description = "Pypostman allows users to parse postman environments and postman collections."
 readme = "README.md"
 requires-python = ">=3.8"
-keywords = ["postman", "python-postman", "pypostman"]
+keywords = ["postman", "python-postman", "pypostman", "api", "requests"]
 license = {text = "MIT"}
 classifiers = ["Programming Language :: Python :: 3"]
 dependencies = ["pydantic", "cryptography", "python-dotenv", "urllib3", "requests", "logbook", "pendulum", "boto3", "pytz", "retry2"]
