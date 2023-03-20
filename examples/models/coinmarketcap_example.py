@@ -27,7 +27,7 @@ class Coinmarketcap:
     ## NOTE: This api requires an API key added to the .env file.
     def __init__(self) -> None:
         self.env = ARGS.environment
-        self.bucket = "lovesoildata"
+        self.bucket = "bucket_name"
         self.s3_prefix = coinmarketcap_collection._variables.s3_prefix(env=self.env)
 
     def listings(self, **kwargs):

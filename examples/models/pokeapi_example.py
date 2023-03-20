@@ -25,7 +25,7 @@ pokeapi_requests = postman._get_requests(collection=pokeapi_collection)
 class PokeAPI:
     def __init__(self) -> None:
         self.env = ARGS.environment
-        self.bucket = "lovesoildata"
+        self.bucket = "bucket_name"
         self.s3_prefix = pokeapi_collection._variables.s3_prefix(env=self.env)
 
     def pokemon(self, **kwargs):
