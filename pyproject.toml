@@ -7,6 +7,8 @@ name = "python-postman"
 version = "0.1.0"
 description = "Pypostman allows users to parse postman environments and postman collections."
 readme = "README.md"
+homepage = "https://github.com/yudiell/python-postman"
+repository = "https://github.com/yudiell/python-postman"
 requires-python = ">=3.8"
 keywords = ["postman", "python-postman", "pypostman", "api", "requests"]
 license = {text = "MIT"}
