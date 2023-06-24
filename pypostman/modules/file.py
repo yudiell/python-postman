@@ -120,7 +120,7 @@ class File:
         Delete a file from an S3 bucket
         ***** Please verify that the prefix parameter is correct... Objects are permanetnly deleted. *****
         :param bucket, Bucket to delete from
-        :param prefix, filter to be passed to the s3 bucket it selects the objects that match the prefix. Ex: dev/musket_systems/kpler/trades/cpp
+        :param prefix, filter to be passed to the s3 bucket it selects the objects that match the prefix. Ex: dev/system/prefix1/prefix2/prefix3
         :param last_modified, Select files oder than the timestamp passed.
             The filter targets the s3 object's last modified date. Ex: last_modified = datetime.now() - timedelta(days=31).
             Uses last_modified.replace(tzinfo=pytz.UTC)
