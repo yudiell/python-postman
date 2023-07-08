@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "python-postman"
-version = "0.2.0"
+version = "0.3.0"
 description = "Pypostman allows users to parse postman environments and postman collections."
 readme = "README.md"
 # homepage = "https://github.com/yudiell/python-postman" 
