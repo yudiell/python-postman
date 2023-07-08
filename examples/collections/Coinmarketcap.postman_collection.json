@@ -1,39 +1,83 @@
 {
 	"info": {
-		"_postman_id": "580b810b-c1ea-4bdd-8024-8f4beaf600e5",
+		"_postman_id": "d55e8f48-1461-407a-ba5a-854675da762f",
 		"name": "Coinmarketcap",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "3009653"
+		"_exporter_id": "3009653",
+		"_collection_link": "https://rubrics.postman.co/workspace/Team-Training-Workspace~68679b56-1339-48c0-8b13-a4f0937a9c15/collection/3009653-d55e8f48-1461-407a-ba5a-854675da762f?action=share&creator=3009653&source=collection_link"
 	},
 	"item": [
 		{
-			"name": "/listings/latest",
+			"name": "/v1/cryptocurrency/map",
 			"request": {
 				"method": "GET",
 				"header": [
 					{
-						"key": "Accepts",
+						"key": "Accept",
 						"value": "application/json",
 						"type": "text"
-					},
-					{
-						"key": "X-CMC_PRO_API_KEY",
-						"value": "120ba475-f571-451d-828f-d062486b40e8",
-						"type": "text"
-					},
-					{
-						"key": "",
-						"value": "",
-						"type": "text",
-						"disabled": true
 					}
 				],
 				"url": {
-					"raw": "{{base_path}}/cryptocurrency/listings/latest?circulating_supply_max=100000000&limit=10&price_max=1",
+					"raw": "{{base_path}}/v1/cryptocurrency/map?listing_status={{LISTING_STATUS}}&limit={{LIMIT}}&sort={{SORT}}&symbol={{SYMBOL}}",
 					"host": [
 						"{{base_path}}"
 					],
 					"path": [
+						"v1",
+						"cryptocurrency",
+						"map"
+					],
+					"query": [
+						{
+							"key": "listing_status",
+							"value": "{{LISTING_STATUS}}",
+							"description": "string\nDefault: \"active\"\nOnly active cryptocurrencies are returned by default. Pass inactive to get a list of cryptocurrencies that are no longer active. Pass untracked to get a list of cryptocurrencies that are listed but do not yet meet methodology requirements to have tracked markets available. You may pass one or more comma-separated values."
+						},
+						{
+							"key": "start",
+							"value": "{{START}}",
+							"description": "integer >= 1\nDefault: 1\nOptionally offset the start (1-based index) of the paginated list of items to return.",
+							"disabled": true
+						},
+						{
+							"key": "limit",
+							"value": "{{LIMIT}}",
+							"description": "integer [ 1 .. 5000 ]\nOptionally specify the number of results to return. Use this parameter and the \"start\" parameter to determine your own pagination size."
+						},
+						{
+							"key": "sort",
+							"value": "{{SORT}}",
+							"description": "string\nDefault: \"id\"\nValid Values: \"cmc_rank\"\"id\"\nWhat field to sort the list of cryptocurrencies by."
+						},
+						{
+							"key": "symbol",
+							"value": "{{SYMBOL}}",
+							"description": "string\nOptionally pass a comma-separated list of cryptocurrency symbols to return CoinMarketCap IDs for. If this option is passed, other options will be ignored."
+						},
+						{
+							"key": "aux",
+							"value": "",
+							"description": "string\nDefault: \"platform,first_historical_data,last_historical_data,is_active\"\nOptionally specify a comma-separated list of supplemental data fields to return. Pass platform,first_historical_data,last_historical_data,is_active,status to include all auxiliary fields.",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/listings/latest",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_path}}/v1/cryptocurrency/listings/latest?circulating_supply_max=1000000000&limit=100&price_max=.065&price_min=.04",
+					"host": [
+						"{{base_path}}"
+					],
+					"path": [
+						"v1",
 						"cryptocurrency",
 						"listings",
 						"latest"
@@ -41,15 +85,24 @@
 					"query": [
 						{
 							"key": "circulating_supply_max",
-							"value": "100000000"
+							"value": "1000000000"
 						},
 						{
 							"key": "limit",
-							"value": "10"
+							"value": "100"
 						},
 						{
 							"key": "price_max",
-							"value": "1"
+							"value": ".065"
+						},
+						{
+							"key": "price_min",
+							"value": ".04"
+						},
+						{
+							"key": "sort",
+							"value": null,
+							"disabled": true
 						}
 					]
 				}
@@ -61,13 +114,13 @@
 		"type": "apikey",
 		"apikey": [
 			{
-				"key": "key",
-				"value": "X-CMC_PROD_API_KEY",
+				"key": "value",
+				"value": "{{X-CMC_PRO_API_KEY}}",
 				"type": "string"
 			},
 			{
-				"key": "value",
-				"value": "{{X-CMC_PRO_API_KEY}}",
+				"key": "key",
+				"value": "X-CMC_PRO_API_KEY",
 				"type": "string"
 			}
 		]
@@ -94,13 +147,33 @@
 	],
 	"variable": [
 		{
+			"key": "PROD_BASE_URL",
+			"value": "https://pro-api.coinmarketcap.com",
+			"type": "string"
+		},
+		{
+			"key": "SANDBOX_BASE_URL",
+			"value": "https://sandbox-api.coinmarketcap.com",
+			"type": "string"
+		},
+		{
 			"key": "base_path",
-			"value": "https://pro-api.coinmarketcap.com/v1",
+			"value": "https://pro-api.coinmarketcap.com",
+			"type": "string"
+		},
+		{
+			"key": "api_tags",
+			"value": "crypto,bitcoin,daily,cryptocurrency,grouped,coinmarketcap",
+			"type": "string"
+		},
+		{
+			"key": "model_name",
+			"value": "coinmarketcap",
 			"type": "string"
 		},
 		{
 			"key": "s3_prefix",
-			"value": "{{ENV}}/business_systems/coinmarketcap/listings/latest/snapshots/{{DATE_PARTITION}}",
+			"value": "{{ENV}}/business_systems/coinmarketcap/latest/snapshots/{{DATE_PARTITION}}",
 			"type": "string"
 		}
 	]

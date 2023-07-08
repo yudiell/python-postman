@@ -5,6 +5,7 @@ from pypostman.postman import Postman
 from pypostman.modules.http import Request
 from pypostman.modules.file import File
 from pypostman.utils.cli import Cli
+from pypostman.utils import load_dotenvc
 from pypostman.modules.logger import Log
 
 postman = Postman()
@@ -14,6 +15,7 @@ ARGS = cli.parse_arguments()
 
 # Postman collection and rerquest names should be used.
 # Use a .env file for Auth.
+load_dotenvc.decrypt_and_loadenv(password="XXXXXXX", filepath="/Path/to/file/.env.aes")
 
 collections_dir = "../collections"
 collections = postman._get_collections(dir=collections_dir)
