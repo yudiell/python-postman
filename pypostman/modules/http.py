@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from requests import Session, Response
 from urllib3 import Timeout
 
@@ -21,26 +22,7 @@ class Request(Session):
         self.timeout: Timeout = timeout
         self.stream: bool = stream
         self.url: str = self._request.url.base_url
-
-    def set_params(self, params: dict):
-        """
-        Set URL parameters on the request object.
-
-        Args:
-            params (dict): Parameters to set on the request object.
-
-        Returns:
-            None
-        """
-        if self._request.url.params:
-            text = json.dumps(self._request.url.params)
-            template: str = CustomTemplate(text).safe_substitute(params)
-            params = {
-                key: value
-                for key, value in json.loads(template).items()
-                if "${" not in value
-            }
-            self.params = params
+        self.body = None
 
     def set_headers(self, headers: dict):
         """
@@ -62,6 +44,26 @@ class Request(Session):
             }
             self.headers = headers
 
+    def set_params(self, params: dict):
+        """
+        Set URL parameters on the request object.
+
+        Args:
+            params (dict): Parameters to set on the request object.
+
+        Returns:
+            None
+        """
+        if self._request.url.params:
+            text = json.dumps(self._request.url.params)
+            template: str = CustomTemplate(text).safe_substitute(params)
+            params = {
+                key: value
+                for key, value in json.loads(template).items()
+                if "${" not in value
+            }
+            self.params = params
+
     def set_path_vars(self, path_variables: dict):
         """
         This function sets the path variables for a given request.
@@ -76,6 +78,58 @@ class Request(Session):
             request_url = self._request.url.base_url
             path: str = CustomTemplate(request_url).safe_substitute(path_variables)
             self.url = path
+
+    def set_body(self, body: dict):
+        """
+        Set body payload.
+
+        Args:
+            body (dict): Parameters to set on the request object.
+
+        Returns:
+            None
+        """
+        # The pattern looks for ${...} that's not surrounded by quotes
+        pattern = r'(?<!")(\$\{[^}]+\})(?!")'
+        # Replacement pattern that adds quotes around the matched pattern
+        replacement = r'"\1"'
+
+        raw = (
+            re.sub(pattern, replacement, self._request.body.raw)
+            if self._request.body.raw
+            else None
+        )
+
+        formdata = (
+            json.dumps(self._request.body.formdata_as_dict)
+            if self._request.body.formdata_as_dict
+            else None
+        )
+
+        urlencoded = (
+            json.dumps(self._request.body.urlencoded_as_dict)
+            if self._request.body.urlencoded_as_dict
+            else None
+        )
+
+        options_list = [
+            raw,
+            formdata,
+            urlencoded,
+        ]
+        options = next(
+            (option for option in options_list if option is not None),
+            ModuleNotFoundError,
+        )
+        if self._request.body:
+            text = options
+            template: str = CustomTemplate(text).safe_substitute(body)
+            items = {
+                key: value
+                for key, value in json.loads(template).items()
+                if "${" not in value
+            }
+            self.body = items
 
     def substitute_bearer_token(self) -> None:
         if self._request.auth and self._request.auth.type == "bearer":
@@ -100,7 +154,7 @@ class Request(Session):
             url = self.url
             headers = self._request.headers.as_dict
             params = self.params
-            data = request.body.raw if request.body else None
+            data = self.body
             timeout = self.timeout
             stream = self.stream
             auth = request.auth.http_auth
