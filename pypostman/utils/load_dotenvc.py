@@ -1,3 +1,8 @@
+"""
+This script provides functionalities for encrypting a file and decrypting an AES encrypted file.
+The decrypted file's contents are then loaded into the environment using the dotenv library.
+"""
+
 import os
 import argparse
 import pyAesCrypt
@@ -6,93 +11,90 @@ from dotenv import load_dotenv
 
 from pypostman.modules.logger import Log
 
-log = Log()
+log = Log()  # Initialize the logger
 
 
-def encrypt_file() -> str:
-    # Create a parser
-    parser = argparse.ArgumentParser(description="Encrypt a file")
+def parse_arguments(description, arguments):
+    """
+    Parses command line arguments.
 
-    # Add the arguments
-    parser.add_argument(
-        "-p",
-        "--password",
-        type=str,
-        required=True,
-        help="The password to encrypt the file",
+    Parameters:
+    description (str): Description of the command line program.
+    arguments (list): A list of tuples, where each tuple is an argument in the format (short_option, long_option, description).
+
+    Returns:
+    argparse.Namespace: The parsed command line arguments.
+    """
+    parser = argparse.ArgumentParser(description=description)
+    for argument in arguments:
+        parser.add_argument(
+            argument[0], argument[1], type=str, required=True, help=argument[2]
+        )
+    return parser.parse_args()
+
+
+def encrypt_file():
+    """
+    Encrypts a file with AES encryption. The password and file path are provided as command line arguments.
+    """
+    args = parse_arguments(
+        "Encrypt a file",
+        [
+            ("-p", "--password", "The password to encrypt the file"),
+            ("-f", "--file", "The path to the file to encrypt"),
+        ],
     )
-    parser.add_argument(
-        "-f", "--file", type=str, required=True, help="The path to the file to encrypt"
-    )
-
-    # Parse the arguments
-    args = parser.parse_args()
-
-    # File to be encrypted
     filepath = args.file
     password = args.password
-
-    # encryption/decryption buffer size - 64K
-    bufferSize = 64 * 1024
-
-    # Confirm password
+    bufferSize = 64 * 1024  # Encryption/decryption buffer size
     confirm_password = getpass("Please confirm your password: ")
 
     if password != confirm_password:
-        raise ValueError("Passwords do not match!")
+        log.error("Passwords do not match!")
+        return
 
-    # generate encrypted file path
-    encrypted_filepath = filepath + ".aes"
-
-    # encrypt the file
-    pyAesCrypt.encryptFile(filepath, encrypted_filepath, password, bufferSize)
-
-    # Create a parser
-    parser = argparse.ArgumentParser(description="Encrypt a file")
+    encrypted_filepath = filepath + ".aes"  # Generate encrypted file path
+    pyAesCrypt.encryptFile(
+        filepath, encrypted_filepath, password, bufferSize
+    )  # Encrypt the file
 
     try:
-        log.info("Encrypted file:", encrypted_filepath)
+        log.info(
+            f"Encrypted file: {encrypted_filepath}"
+        )  # Log the path of the encrypted file
     except ValueError as ve:
         log.error(ve)
 
 
-def decrypt_and_loadenv(
-    password: str, filepath: str, remove_decrypted: bool = True
-) -> dict:
+def decrypt_and_loadenv(password: str, filepath: str, remove_decrypted: bool = True):
     """
-    Decrypts an AES encrypted file and loads its contents to the dotenv.
+    Decrypts an AES encrypted file and loads its contents to the environment using the dotenv library.
 
     Parameters:
     password (str): The password to decrypt the AES encrypted file.
     filepath (str): The path to the AES encrypted file that needs to be decrypted.
-    remove_decrypted (bool): A flag that, if True, removes the decrypted file after its contents are loaded to the dotenv.
+    remove_decrypted (bool): A flag that, if True, removes the decrypted file after its contents are loaded to the environment.
                              Default value is True. If False, the decrypted file will remain in the file system,
                              and its path will be logged.
-
-    Returns:
-    dict: A dictionary containing the loaded dotenv variables. The dictionary keys are the variable names and
-          the values are the variable values.
-
-    Note:
-    The function doesn't explicitly return a dictionary. The loaded dotenv variables can be accessed using
-    os.getenv() or os.environ in the rest of your code.
     """
-    # Encryption/decryption buffer size - 64K
-    bufferSize = 64 * 1024
+    bufferSize = 64 * 1024  # Encryption/decryption buffer size
+    decrypted_filepath = filepath.replace(".aes", "")  # Generate decrypted file path
 
-    # Decrypted file path (temporary)
-    decrypted_filepath = filepath.replace(".aes", "")
+    try:
+        pyAesCrypt.decryptFile(
+            filepath, decrypted_filepath, password, bufferSize
+        )  # Decrypt the file
+        load_dotenv(
+            dotenv_path=decrypted_filepath
+        )  # Load the decrypted content to environment
+    except Exception as e:
+        log.error(f"An error occurred during decryption: {str(e)}")
+        return
 
-    # Decrypt the file
-    pyAesCrypt.decryptFile(filepath, decrypted_filepath, password, bufferSize)
-
-    # Load the decrypted content to dotenv
-    load_dotenv(dotenv_path=decrypted_filepath)
-    # Delete the temporary decrypted file
     if remove_decrypted:
-        os.remove(decrypted_filepath)
+        os.remove(decrypted_filepath)  # Remove the decrypted file
     else:
-        log.info(decrypted_filepath)
+        log.info(decrypted_filepath)  # Log the path of the decrypted file
 
 
 if __name__ == "__main__":

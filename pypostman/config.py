@@ -68,6 +68,8 @@ class Param(BaseModel):
 class Body(BaseModel):
     mode: Optional[str]
     raw: Optional[str]
+    formdata: Optional[List[Dict[str, str]]]
+    urlencoded: Optional[List[Dict[str, str]]]
     options: Optional[Dict[str, Dict[str, str]]]
 
 

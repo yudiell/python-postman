@@ -11,9 +11,20 @@ readme = "README.md"
 # repository = "https://github.com/yudiell/python-postman"
 requires-python = ">=3.8"
 keywords = ["postman", "python-postman", "pypostman", "api", "requests"]
-license = {text = "MIT"}
+license = { text = "MIT" }
 classifiers = ["Programming Language :: Python :: 3"]
-dependencies = ["pydantic", "cryptography", "python-dotenv", "urllib3", "requests", "logbook", "pendulum", "boto3", "pytz", "retry2"]
+dependencies = [
+    "pydantic >= 1.10.0, <2",
+    "cryptography",
+    "python-dotenv",
+    "urllib3",
+    "requests",
+    "logbook",
+    "pendulum",
+    "boto3",
+    "pytz",
+    "retry2",
+]
 
 [project.optional-dependencies]
 mypy = ["mypy"]
