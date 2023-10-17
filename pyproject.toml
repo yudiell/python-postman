@@ -14,7 +14,7 @@ keywords = ["postman", "python-postman", "pypostman", "api", "requests"]
 license = { text = "MIT" }
 classifiers = ["Programming Language :: Python :: 3"]
 dependencies = [
-    "pydantic >= 1.10.0, <2",
+    "pydantic",
     "cryptography",
     "python-dotenv",
     "urllib3",

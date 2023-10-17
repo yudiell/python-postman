@@ -10,7 +10,7 @@ from .template import CustomTemplate
 class Variable(BaseModel):
     key: str
     value: str
-    type: Optional[str]
+    type: Optional[str] = None
     enabled: bool
 
 
