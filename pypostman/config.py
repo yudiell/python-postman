@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Union, Optional
 from pydantic import Field, BaseModel
 
 
@@ -11,10 +11,10 @@ class Info(BaseModel):
 
 # Variable Related Objects
 class Variables(BaseModel):
-    key: Optional[str]
-    value: Optional[str]
-    type: Optional[str]
-    disabled: Optional[str]
+    key: Optional[str] = None
+    value: Optional[str] = None
+    type: Optional[str] = None
+    disabled: Optional[bool] = None
 
 
 # Auth Related Objects
@@ -22,80 +22,80 @@ class AuthValues(BaseModel):
     key: str
     value: str
     type: str
-    disabled: Optional[str]
+    disabled: Optional[bool] = None
 
 
 class Auth(BaseModel):
     type: str
-    noauth: Optional[List[AuthValues]]
-    basic: Optional[List[AuthValues]]
-    apikey: Optional[List[AuthValues]]
-    bearer: Optional[List[AuthValues]]
+    noauth: Optional[List[AuthValues]] = None
+    basic: Optional[List[AuthValues]] = None
+    apikey: Optional[List[AuthValues]] = None
+    bearer: Optional[List[AuthValues]] = None
 
 
 # Collection and Request Related Objects
 class Script(BaseModel):
-    type: Optional[str]
+    type: Optional[str] = None
     exec: List[str]
 
 
 class Event(BaseModel):
-    listen: Optional[str]
-    script: Optional[Script]
+    listen: Optional[str] = None
+    script: Optional[Script] = None
 
 
 # Request Related Objects
 class Header(BaseModel):
-    key: Optional[str]
-    value: Optional[str]
-    description: Optional[str]
-    disabled: Optional[str]
+    key: Optional[str] = None
+    value: Optional[str] = None
+    description: Optional[str] = None
+    disabled: Optional[bool] = None
 
 
 class Variable(BaseModel):
-    key: Optional[str]
-    value: Optional[str]
-    description: Optional[str]
+    key: Optional[str] = None
+    value: Optional[str] = None
+    description: Optional[str] = None
 
 
 class Param(BaseModel):
-    key: Optional[str]
-    value: Optional[str]
-    description: Optional[str]
-    disabled: Optional[str]
+    key: Optional[str] = None
+    value: Optional[str] = None
+    description: Optional[str] = None
+    disabled: Optional[bool] = None
 
 
 class Body(BaseModel):
-    mode: Optional[str]
-    raw: Optional[str]
-    formdata: Optional[List[Dict[str, str]]]
-    urlencoded: Optional[List[Dict[str, str]]]
-    options: Optional[Dict[str, Dict[str, str]]]
+    mode: Optional[str] = None
+    raw: Optional[str] = None
+    formdata: Optional[List[Dict[str, Union[str, bool]]]] = None
+    urlencoded: Optional[List[Dict[str, Union[str, bool]]]] = None
+    options: Optional[Dict[str, Dict[str, Union[str, bool]]]] = None
 
 
 class Url(BaseModel):
-    raw: Optional[str]
-    protocol: Optional[str]
-    host: Optional[List[str]]
-    path: Optional[List[str]]
-    variable: Optional[List[Variable]]
-    query: Optional[List[Param]]
+    raw: Optional[str] = None
+    protocol: Optional[str] = None
+    host: Optional[List[str]] = None
+    path: Optional[List[str]] = None
+    variable: Optional[List[Variable]] = None
+    query: Optional[List[Param]] = None
 
 
 class Request(BaseModel):
-    auth: Optional[Auth]
+    auth: Optional[Auth] = None
     method: str
     headers: List[Header] = Field(None, alias="header")
-    url: Optional[Url]
-    body: Optional[Body]
+    url: Optional[Url] = None
+    body: Optional[Body] = None
 
 
 # Collection Related Objects
 class Item(BaseModel):
     name: str
-    item: Optional[List["Item"]]
+    item: Optional[List["Item"]] = None
     events: Optional[List[Event]] = Field(None, alias="event")
-    request: Optional[Request]
+    request: Optional[Request] = None
 
     @property
     def type(self):
@@ -103,8 +103,8 @@ class Item(BaseModel):
 
 
 class Config(BaseModel):
-    info: Optional[Info]
+    info: Optional[Info] = None
     items: Optional[List[Item]] = Field(None, alias="item")
     variables: Optional[List[Variables]] = Field(None, alias="variable")
     events: Optional[List[Event]] = Field(None, alias="event")
-    auth: Optional[Auth]
+    auth: Optional[Auth] = None
