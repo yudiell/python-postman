@@ -113,7 +113,6 @@ class Request(Session):
         )
 
         options_list = [
-            raw,
             formdata,
             urlencoded,
         ]
@@ -121,7 +120,7 @@ class Request(Session):
             (option for option in options_list if option is not None),
             ModuleNotFoundError,
         )
-        if self._request.body:
+        if self._request.body.formdata or self._request.body.urlencoded:
             text = options
             template: str = CustomTemplate(text).safe_substitute(body)
             items = {
@@ -130,6 +129,8 @@ class Request(Session):
                 if "${" not in value
             }
             self.body = items
+        else:
+            self.body = raw
 
     def substitute_bearer_token(self) -> None:
         if self._request.auth and self._request.auth.type == "bearer":
