@@ -23,6 +23,7 @@ class Request(Session):
         self.stream: bool = stream
         self.url: str = self._request.url.base_url
         self.body = None
+        self.prepare_cookies = None
 
     def set_headers(self, headers: dict):
         """
@@ -159,9 +160,9 @@ class Request(Session):
             timeout = self.timeout
             stream = self.stream
             auth = request.auth.http_auth
+            prepare_cookies = self.prepare_cookies
 
             self.log.request(url=url)
-
             response = session.request(
                 auth=auth,
                 method=method,
@@ -171,6 +172,7 @@ class Request(Session):
                 data=data,
                 stream=stream,
                 timeout=timeout,
+                cookies=prepare_cookies,
             )
 
             if response.ok:
