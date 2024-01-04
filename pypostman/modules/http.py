@@ -80,21 +80,23 @@ class Request(Session):
             path: str = CustomTemplate(request_url).safe_substitute(path_variables)
             self.url = path
 
-    def set_body(self, body: dict):
+    def set_body(self, body: dict, with_quuotes: bool = True):
         """
         Set body payload.
 
         Args:
             body (dict): Parameters to set on the request object.
-
+            with_quotes (bool) default=True: Add/remove quotes on body parameters.
         Returns:
             None
         """
         # The pattern looks for ${...} that's not surrounded by quotes
         pattern = r'(?<!")(\$\{[^}]+\})(?!")'
         # Replacement pattern that adds quotes around the matched pattern
-        replacement = r'"\1"'
-
+        if with_quuotes:
+            replacement = r'"\1"'
+        else:
+            replacement = r"\1"
         raw = (
             re.sub(pattern, replacement, self._request.body.raw)
             if self._request.body.raw
@@ -131,7 +133,8 @@ class Request(Session):
             }
             self.body = items
         else:
-            self.body = raw
+            substitute_body: str = CustomTemplate(raw).safe_substitute(body)
+            self.body = substitute_body
 
     def substitute_bearer_token(self) -> None:
         if self._request.auth and self._request.auth.type == "bearer":
