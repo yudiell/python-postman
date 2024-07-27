@@ -29,4 +29,4 @@ Pypi (Not implemented Yet):
 
 ## How to Use It
 
-See examples.
+See example
