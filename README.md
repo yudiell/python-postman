@@ -6,26 +6,7 @@ Thereby allowing you to manage your api calls using postman, then `automate` and
 Example:
 
 ```
-from pypostman.postman import Postman
-from pypostman.modules.http import Request
-
-postman = Postman()
-
-collections_dir = "../collections"
-collections = postman._get_collections(dir=collections_dir)
-pokeapi_collection = postman._get_collection(name="PokeAPI", collections=collections)
-pokeapi_requests = postman._get_requests(collection=pokeapi_collection)
-
-def pokemon(self, **kwargs):
-    # Make an API request.
-    # The request name should match the Postman request name.
-    name = "/pokemon"
-    pokemon = postman._get_request(name=name, requests=pokeapi_requests)
-    prepared_request: Request = Request(request=pokemon)
-    prepared_request.set_path_vars(kwargs)
-    prepared_request.set_params(kwargs)
-    response = prepared_request.send
-    return response
+https://github.com/yudiell/energy-apis
 ```
 ## What is Included?
 
@@ -38,11 +19,11 @@ def pokemon(self, **kwargs):
   - pokeapi_example.py
 
 ### Included Modules
-- file.py
 - http.py
 - logger.py
 
 ## Installation
+See the example.
 
 ### Python >= 3.8
 
