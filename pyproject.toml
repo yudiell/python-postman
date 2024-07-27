@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "python-postman"
-version = "0.5.0"
+version = "0.6.0"
 description = "Pypostman allows users to parse postman environments and postman collections."
 authors = ["Data Engineering Team <DataEngineering@loves.com>"]
 readme = "README.md"
