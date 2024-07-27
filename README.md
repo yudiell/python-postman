@@ -16,7 +16,7 @@ https://github.com/yudiell/energy-apis
 ## Installation
 See the example.
 
-### Python >= 3.8
+### Python >= 3.8.1
 
 Pypi Test:
   ```
