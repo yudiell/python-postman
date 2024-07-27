@@ -8,15 +8,6 @@ Example:
 ```
 https://github.com/yudiell/energy-apis
 ```
-## What is Included?
-
-- The **pypostman** source code.
-- collections
-  - Coinmarketcap.postman_collection.json
-  - PokeAPI.postman_collection.json
-- models
-  - coinmarketcap_example.py
-  - pokeapi_example.py
 
 ### Included Modules
 - http.py
