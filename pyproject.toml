@@ -1,34 +1,59 @@
-[build-system]
-requires = ["setuptools", "wheel", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "python-postman"
-version = "0.3.0"
+version = "0.5.0"
 description = "Pypostman allows users to parse postman environments and postman collections."
+authors = ["Data Engineering Team <DataEngineering@loves.com>"]
 readme = "README.md"
-# homepage = "https://github.com/yudiell/python-postman" 
-# repository = "https://github.com/yudiell/python-postman"
-requires-python = ">=3.8"
-keywords = ["postman", "python-postman", "pypostman", "api", "requests"]
-license = { text = "MIT" }
-classifiers = ["Programming Language :: Python :: 3"]
-dependencies = [
-    "pydantic",
-    "cryptography",
-    "python-dotenv",
-    "urllib3",
-    "requests",
-    "logbook",
-    "pendulum",
-    "boto3",
-    "pytz",
-    "retry2",
-]
 
-[project.optional-dependencies]
-mypy = ["mypy"]
-black = ["black"]
+[tool.isort]
+profile = "black"
 
-[project.scripts]
+
+[tool.poetry.dependencies]
+python = "^3.8.1"
+requests = "^2.32.3"
+pyyaml = "^6.0.1"
+pydantic = "^2.6.4"
+cryptography = "^42.0.5"
+urllib3 = "^1.25.4"
+logbook = "^1.7.0.post0"
+pendulum = "^3.0.0"
+boto3 = "^1.34.67"
+pytz = "^2024.1"
+
+
+[tool.poetry.group.lint.dependencies]
+flake8-annotations = "^3.0.1"
+flake8-builtins = "^2.1.0"
+flake8-docstrings = "^1.7.0"
+flake8-eradicate = "^1.5.0"
+flake8-future-annotations = "^1.1.0"
+flake8-isort = "^6.0.0"
+flake8-new-union-types = "^0.4.1"
+flake8-pep585 = "^0.1.7"
+flake8-secure-coding-standard = "^1.4.0"
+flake8-type-checking = "^2.4.1"
+flake8-use-pathlib = "^0.3.0"
+flake8-variables-names = "^0.0.6"
+pep8-naming = "^0.13.3"
+black = "^24.3.0"
+isort = "^5.12.0"
+pip-audit = "^2.6.1"
+mypy = "^1.9.0"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.3.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry.scripts]
 pypostman = "pypostman.__main__:main"
