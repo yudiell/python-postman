@@ -18,11 +18,7 @@ See the example.
 
 ### Python >= 3.8.1
 
-Pypi Test:
-  ```
-  pip install -i https://test.pypi.org/simple/ python-postman
-  ```
-Pypi (Not implemented Yet):
+Pypi:
   ```  
   pip install python-postman
   ```
