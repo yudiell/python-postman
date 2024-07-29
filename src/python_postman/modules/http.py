@@ -23,35 +23,46 @@ class Request(Session):
         self.timeout: Timeout = timeout
         self.stream: bool = stream
         self.url: str = self._request.url.base_url
-        self.body = None
-        self.prepare_cookies = None
+        self.body: Optional[Any] = None
+        self.prepare_cookies: Optional[Dict[str, Any]] = None
 
-    def set_headers(self, headers: dict):
+    def set_headers(self, headers: Optional[Dict[str, str]]) -> None:
         """
         Set the headers of the request.
 
         Args:
-            headers (dict): The headers to set.
+            headers (Optional[Dict[str, str]]): The headers to set. If None, no changes are made.
 
         Returns:
             None
+
+        Raises:
+            TypeError: If the input is not a dictionary or None.
         """
+        if not headers:
+            return
+
         if self._request.headers:
             text = json.dumps(self._request.headers.as_dict)
             template: str = CustomTemplate(text).safe_substitute(headers)
-            headers = {
+            new_headers = {
                 key: value
                 for key, value in json.loads(template).items()
                 if "${" not in value
             }
-            self.headers = headers
+            self.headers.update(new_headers)
 
-    def set_params(self, params: dict):
+        # Add new headers that weren't in the template
+        for key, value in headers.items():
+            if key not in self.headers:
+                self.headers[key] = value
+
+    def set_params(self, params: Dict[str, Any]) -> None:
         """
         Set URL parameters on the request object.
 
         Args:
-            params (dict): Parameters to set on the request object.
+            params (Dict[str, Any]): Parameters to set on the request object.
 
         Returns:
             None
@@ -64,14 +75,14 @@ class Request(Session):
                 for key, value in json.loads(template).items()
                 if "${" not in value
             }
-            self.params = params
+            self.params.update(params)
 
-    def set_path_vars(self, path_variables: dict):
+    def set_path_vars(self, path_variables: Dict[str, str]) -> None:
         """
-        This function sets the path variables for a given request.
+        Set path variables on the request URL.
 
-        Parameters:
-            path_variables (dict): The data to be substituted into the url template.
+        Args:
+            path_variables (Dict[str, str]): Path variables to substitute in the URL.
 
         Returns:
             None
@@ -82,6 +93,15 @@ class Request(Session):
             self.url = path
 
     def set_body(self, body: Optional[Dict[str, Any]] = None) -> None:
+        """
+        Set the body of the request.
+
+        Args:
+            body (Optional[Dict[str, Any]]): The body content to set.
+
+        Returns:
+            None
+        """
         if not hasattr(self._request, "body") or self._request.body is None:
             self.log.info("Request does not have a body. Skipping body setting.")
             return
@@ -105,6 +125,16 @@ class Request(Session):
             self.log.error(f"An error occurred while setting the body: {e}")
 
     def _set_raw_body(self, raw: str, body: Dict[str, Any]) -> None:
+        """
+        Set the raw body of the request.
+
+        Args:
+            raw (str): The raw body template.
+            body (Dict[str, Any]): The body content to set.
+
+        Returns:
+            None
+        """
         template = CustomTemplate(raw)
         substituted = template.safe_substitute(body)
 
@@ -126,6 +156,16 @@ class Request(Session):
             self.body = parsed
 
     def _set_form_data(self, data: Dict[str, Any], body: Dict[str, Any]) -> None:
+        """
+        Set form data for the request.
+
+        Args:
+            data (Dict[str, Any]): The form data template.
+            body (Dict[str, Any]): The body content to set.
+
+        Returns:
+            None
+        """
         try:
             template = CustomTemplate(json.dumps(data))
             substituted = template.safe_substitute(body)
@@ -138,6 +178,12 @@ class Request(Session):
             self.log.error(f"An error occurred in _set_form_data: {e}")
 
     def substitute_bearer_token(self) -> None:
+        """
+        Substitute the bearer token in the request using environment variables.
+
+        Returns:
+            None
+        """
         if self._request.auth and self._request.auth.type == "bearer":
             self._request.auth.http_auth.token = CustomTemplate(
                 self._request.auth.http_auth.token
@@ -145,6 +191,12 @@ class Request(Session):
 
     @property
     def send(self) -> Response:
+        """
+        Send the HTTP request and return the response.
+
+        Returns:
+            Response: The HTTP response object.
+        """
         log: Log = self.log
         with Session() as session:
             # Setting the requests
