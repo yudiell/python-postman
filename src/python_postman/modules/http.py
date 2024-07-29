@@ -3,6 +3,7 @@ import json
 import re
 from requests import Session, Response
 from urllib3 import Timeout
+from typing import Optional, Dict, Any
 
 from ..request import Request as CollectionRequest
 from ..template import CustomTemplate
@@ -80,61 +81,61 @@ class Request(Session):
             path: str = CustomTemplate(request_url).safe_substitute(path_variables)
             self.url = path
 
-    def set_body(self, body: dict, with_quuotes: bool = True):
-        """
-        Set body payload.
+    def set_body(self, body: Optional[Dict[str, Any]] = None) -> None:
+        if not hasattr(self._request, "body") or self._request.body is None:
+            self.log.info("Request does not have a body. Skipping body setting.")
+            return
 
-        Args:
-            body (dict): Parameters to set on the request object.
-            with_quotes (bool) default=True: Add/remove quotes on body parameters.
-        Returns:
-            None
-        """
-        # The pattern looks for ${...} that's not surrounded by quotes
-        pattern = r'(?<!")(\$\{[^}]+\})(?!")'
-        # Replacement pattern that adds quotes around the matched pattern
-        if with_quuotes:
-            replacement = r'"\1"'
-        else:
-            replacement = r"\1"
-        raw = (
-            re.sub(pattern, replacement, self._request.body.raw)
-            if self._request.body.raw
-            else None
+        if body is None:
+            self.log.info("Provided body is None. Skipping body setting.")
+            return
+
+        try:
+            if self._request.body.raw:
+                self._set_raw_body(self._request.body.raw, body)
+            elif self._request.body.formdata_as_dict:
+                self._set_form_data(self._request.body.formdata_as_dict, body)
+            elif self._request.body.urlencoded_as_dict:
+                self._set_form_data(self._request.body.urlencoded_as_dict, body)
+            else:
+                self.log.warning("Request body is empty or in an unsupported format.")
+        except AttributeError as e:
+            self.log.error(f"Unexpected attribute error while setting body: {e}")
+        except Exception as e:
+            self.log.error(f"An error occurred while setting the body: {e}")
+
+    def _set_raw_body(self, raw: str, body: Dict[str, Any]) -> None:
+        template = CustomTemplate(raw)
+        substituted = template.safe_substitute(body)
+
+        def replace_value(match):
+            value = match.group(1) or match.group(2)
+            return {"True": "true", "False": "false", "None": "null"}.get(value, value)
+
+        # Replace placeholders and handle boolean/null values in one pass
+        parsed = re.sub(
+            r"\$\{([^}]+)\}|\b(True|False|None)\b", replace_value, substituted
         )
 
-        formdata = (
-            json.dumps(self._request.body.formdata_as_dict)
-            if self._request.body.formdata_as_dict
-            else None
-        )
+        try:
+            # Ensure the result is valid JSON
+            json_obj = json.loads(parsed)
+            self.body = json.dumps(json_obj)
+        except json.JSONDecodeError:
+            self.log.error(f"Invalid JSON after substitution: {parsed}")
+            self.body = parsed
 
-        urlencoded = (
-            json.dumps(self._request.body.urlencoded_as_dict)
-            if self._request.body.urlencoded_as_dict
-            else None
-        )
-
-        options_list = [
-            formdata,
-            urlencoded,
-        ]
-        options = next(
-            (option for option in options_list if option is not None),
-            ModuleNotFoundError,
-        )
-        if self._request.body.formdata or self._request.body.urlencoded:
-            text = options
-            template: str = CustomTemplate(text).safe_substitute(body)
-            items = {
-                key: value
-                for key, value in json.loads(template).items()
-                if "${" not in value
-            }
-            self.body = items
-        else:
-            substitute_body: str = CustomTemplate(raw).safe_substitute(body)
-            self.body = substitute_body
+    def _set_form_data(self, data: Dict[str, Any], body: Dict[str, Any]) -> None:
+        try:
+            template = CustomTemplate(json.dumps(data))
+            substituted = template.safe_substitute(body)
+            self.body = json.loads(substituted)
+        except json.JSONDecodeError as e:
+            self.log.error(f"JSON decode error in _set_form_data: {e}")
+        except KeyError as e:
+            self.log.error(f"Missing key in body dictionary: {e}")
+        except Exception as e:
+            self.log.error(f"An error occurred in _set_form_data: {e}")
 
     def substitute_bearer_token(self) -> None:
         if self._request.auth and self._request.auth.type == "bearer":
