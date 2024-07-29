@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import Mock, patch
 import json
-from typing import Dict, Any
 
 # Update this import to match your actual module structure
 from src.python_postman.modules.http import Request, CollectionRequest
