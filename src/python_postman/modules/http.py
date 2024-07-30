@@ -57,25 +57,36 @@ class Request(Session):
             if key not in self.headers:
                 self.headers[key] = value
 
-    def set_params(self, params: Dict[str, Any]) -> None:
+    def set_params(self, params: Optional[Dict[str, Any]]) -> None:
         """
         Set URL parameters on the request object.
 
         Args:
-            params (Dict[str, Any]): Parameters to set on the request object.
+            params (Optional[Dict[str, Any]]): Parameters to set on the request object.
 
         Returns:
             None
         """
-        if self._request.url.params:
-            text = json.dumps(self._request.url.params)
-            template: str = CustomTemplate(text).safe_substitute(params)
-            params = {
-                key: value
-                for key, value in json.loads(template).items()
-                if "${" not in value
-            }
-            self.params.update(params)
+        if self._request.url.params is None or params is None:
+            return
+
+        def serialize_value(value):
+            if isinstance(value, (dict, list)):
+                return json.dumps(value)
+            return str(value)
+
+        serialized_params = {k: serialize_value(v) for k, v in params.items()}
+
+        substituted_params = {}
+        for key, value in self._request.url.params.items():
+            if isinstance(value, str):
+                substituted_value = CustomTemplate(value).safe_substitute(
+                    serialized_params
+                )
+                if "${" not in substituted_value:
+                    substituted_params[key] = substituted_value
+
+        self.params.update(substituted_params)
 
     def set_path_vars(self, path_variables: Dict[str, str]) -> None:
         """
