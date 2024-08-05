@@ -1,4 +1,4 @@
-from typing import List, Dict, Union, Optional
+from typing import Union, Optional, List, Dict, Any
 from pydantic import Field, BaseModel
 
 
@@ -9,7 +9,6 @@ class Info(BaseModel):
     exporter_id: str = Field(None, alias="_exporter_id")
 
 
-# Variable Related Objects
 class Variables(BaseModel):
     key: Optional[str] = None
     value: Optional[str] = None
@@ -17,7 +16,6 @@ class Variables(BaseModel):
     disabled: Optional[bool] = None
 
 
-# Auth Related Objects
 class AuthValues(BaseModel):
     key: str
     value: str
@@ -33,7 +31,6 @@ class Auth(BaseModel):
     bearer: Optional[List[AuthValues]] = None
 
 
-# Collection and Request Related Objects
 class Script(BaseModel):
     type: Optional[str] = None
     exec: List[str]
@@ -44,7 +41,6 @@ class Event(BaseModel):
     script: Optional[Script] = None
 
 
-# Request Related Objects
 class Header(BaseModel):
     key: Optional[str] = None
     value: Optional[str] = None
@@ -83,28 +79,66 @@ class Url(BaseModel):
 
 
 class Request(BaseModel):
+    name: Optional[str] = None
     auth: Optional[Auth] = None
     method: str
-    headers: List[Header] = Field(None, alias="header")
+    headers: List[Header] = Field(default_factory=list, alias="header")
     url: Optional[Url] = None
     body: Optional[Body] = None
+    events: Optional[List[Event]] = Field(None, alias="event")
+    response: Optional[List[Any]] = None
+    prerequest: Optional[Event] = Field(None, alias="prerequest")
+    test: Optional[Event] = Field(None, alias="test")
 
 
-# Collection Related Objects
 class Item(BaseModel):
     name: str
     item: Optional[List["Item"]] = None
     events: Optional[List[Event]] = Field(None, alias="event")
     request: Optional[Request] = None
+    response: Optional[List[Any]] = None
+
+
+Item.model_rebuild()
+
+
+class Items:
+    def __init__(self, items: List[Item]) -> None:
+        self.items = items
 
     @property
-    def type(self):
-        return "request" if self.request else "folder"
+    def requests(self) -> List:
+        requests = []
+        for item in self.items:
+            if item.request:
+                item.request.name = item.name
+                item.request.events = item.events
+                item.request.response = item.response
+                requests.append(item.request)
+            if item.item:
+                requests.extend(Items(items=item.item).requests)
+        return requests
 
 
-class Config(BaseModel):
+class PostmanCollection(BaseModel):
     info: Optional[Info] = None
     items: Optional[List[Item]] = Field(None, alias="item")
     variables: Optional[List[Variables]] = Field(None, alias="variable")
     events: Optional[List[Event]] = Field(None, alias="event")
     auth: Optional[Auth] = None
+
+    @property
+    def folders(self) -> Items:
+        return Items(items=self.items)
+
+    @property
+    def requests(self) -> List:
+        return self.folders.requests
+
+    @property
+    def collection_variables(self) -> Dict[str, str]:
+        collection_variables = {}
+        if self.variables:
+            for variable in self.variables:
+                collection_variables[variable.key] = variable.value
+        return collection_variables

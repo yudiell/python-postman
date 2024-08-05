@@ -1,9 +1,10 @@
 import os
 import json
 import re
+from python_postman.collection import Collection
 from requests import Session, Response
 from urllib3 import Timeout
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Callable
 
 from ..request import Request as CollectionRequest
 from ..template import CustomTemplate
@@ -22,9 +23,41 @@ class Request(Session):
         self.log: Log = Log()
         self.timeout: Timeout = timeout
         self.stream: bool = stream
-        self.url: str = self._request.url.base_url
+        self.url: str = None
+        self.headers: Optional[Dict[Any]] = self._request.headers
+        self.params: Optional[Dict[Any]] = None
         self.body: Optional[Any] = None
         self.prepare_cookies: Optional[Dict[str, Any]] = None
+
+    def set_url(self, path_variables: Dict[str, Any]) -> None:
+        """
+        Set path variables on the request URL.
+
+        Args:
+            path_variables (Dict[str, str]): Path variables to substitute in the URL.
+
+        Returns:
+            None
+        Raises:
+            ValueError: If the base URL is not found in the collection request.
+            ValueError: If one or more path variables were not substituted in the URL.
+        """
+        base_url = self._request.url.base_url
+        if not base_url:
+            message = (
+                "Base URL was not found in the collection request."
+                "Please set a base url in the collection request using Postman."
+            )
+            raise ValueError(message)
+
+        self.url = CustomTemplate(base_url).safe_substitute(path_variables)
+
+        if "${" in self.url:
+            message = (
+                "One or more path variables were not substituted in the URL."
+                "Please inspect your path variable names."
+            )
+            raise ValueError(message)
 
     def set_headers(self, headers: Optional[Dict[str, str]]) -> None:
         """
@@ -35,10 +68,9 @@ class Request(Session):
 
         Returns:
             None
-
-        Raises:
-            TypeError: If the input is not a dictionary or None.
         """
+        # self.headers = self._request.headers
+
         if not headers:
             return
 
@@ -87,21 +119,6 @@ class Request(Session):
                     substituted_params[key] = substituted_value
 
         self.params.update(substituted_params)
-
-    def set_path_vars(self, path_variables: Dict[str, str]) -> None:
-        """
-        Set path variables on the request URL.
-
-        Args:
-            path_variables (Dict[str, str]): Path variables to substitute in the URL.
-
-        Returns:
-            None
-        """
-        if self._request.url.base_url:
-            request_url = self._request.url.base_url
-            path: str = CustomTemplate(request_url).safe_substitute(path_variables)
-            self.url = path
 
     def set_body(self, body: Optional[Dict[str, Any]] = None) -> None:
         """

@@ -1,0 +1,285 @@
+{
+	"info": {
+		"_postman_id": "47a1e98c-126b-428f-8767-565dba098044",
+		"name": "CollectionExample",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3009653"
+	},
+	"item": [
+		{
+			"name": "FolderOne",
+			"item": [
+				{
+					"name": "FolderOneSubOne",
+					"item": [
+						{
+							"name": "FolderOneSubOneReqOne",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"keyItem\": \"valueItem\"}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/folder-one-sub-one-req-one",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"folder-one-sub-one-req-one"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "FolderOneSubOneReqTwo",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/folder-one-sub-one-req-two",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"folder-one-sub-one-req-two"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "FolderOneSubTwo",
+					"item": [
+						{
+							"name": "FolderOneSubTwoReqOne",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/folder-one-sub-two-req-one",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"folder-one-sub-two-req-one"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "FolderOneSubTwoReqTwo",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/folder-one-sub-two-req-one",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"folder-one-sub-two-req-one"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "FolderOneReqOne",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/folder-one-req-one",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"folder-one-req-one"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "FolderOneReqTwo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/folder-one-sub-two-req-two",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"folder-one-sub-two-req-two"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "FolderTwo",
+			"item": [
+				{
+					"name": "FolderTwoSubOne",
+					"item": [
+						{
+							"name": "FolderTwoSubOneReqOne",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/folder-two-sub-one-req-one",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"folder-two-sub-one-req-one"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "FolderTwoSubTwo",
+					"item": []
+				},
+				{
+					"name": "FolderTwoReqOne",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/folder-two-req-one",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"folder-two-req-one"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "RequestOne",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var preRequestScript = \"Pre-Request Script\""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var postResponseScript = \"Post-Response Script\""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/req-one",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"req-one"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "{{my-api-key-value}}",
+				"type": "string"
+			},
+			{
+				"key": "in",
+				"value": "query",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "My-API-Key",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://example.com/v1",
+			"type": "string"
+		},
+		{
+			"key": "my-api-key-value",
+			"value": "CollectionMyAPIKeyValue",
+			"type": "string"
+		},
+		{
+			"key": "PM_ENV_VAR",
+			"value": "pmEnvVarValue",
+			"type": "string"
+		}
+	]
+}

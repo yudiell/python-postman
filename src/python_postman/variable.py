@@ -8,7 +8,6 @@ from .config import Variables
 
 class Variables:
     def __init__(self, variables: Variables) -> None:
-        # load_dotenv()
         self.variables = variables
 
     @property
@@ -17,7 +16,6 @@ class Variables:
         if self.variables:
             for variable in self.variables:
                 collection_variables[variable.key] = variable.value
-        # collection_variables.update(os.environ)
         return collection_variables
 
     @property

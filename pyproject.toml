@@ -56,4 +56,4 @@ build-backend = "poetry.core.masonry.api"
 
 
 [tool.poetry.scripts]
-pypostman = "pypostman.__main__:main"
+python-postman = "src.python_postman.__main__:main"
