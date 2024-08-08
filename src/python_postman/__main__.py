@@ -3,7 +3,7 @@ from python_postman.collection import Collection
 
 def main():
     collection = Collection(
-        "/Users/wry/github/python-postman/tests/CollectionExample.postman_collection.json"
+        "/Users/wry/github/python-postman/tests/zCollectionExample.postman_collection.json"
     )
 
     # collection = Collection(
@@ -11,11 +11,13 @@ def main():
     # )
 
     # print(collection._variables)
+    print(collection._items)
     print("\n\n")
     print(collection._auth)
     print("\n\n")
-    request = collection.get_request(name="FolderTwoSubOneReqOne")
-    print(request)
+    request = collection.get_request(name="RequestOne")
+    print(request.prerequest.script.exec)
+    print(request.test.script.exec)
 
     # print(request)
 

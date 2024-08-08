@@ -24,25 +24,25 @@ class Collection:
             }
             template: str = CustomTemplate(template=text).safe_substitute(
                 collection_variables
-            )  # -> Collection variables are applied first. Disable variable in [Postman Variables] if it needs to be skipped.
-            template: str = CustomTemplate(template=template).safe_substitute(
+            )
+            data: dict = json.loads(template)
+            # Collection variables are applied.
+            # Disable variable in [Postman Variables] if it needs to be skipped.
+            # Do not add secrests to colleciton variables.
+
+            __auth_template: str = CustomTemplate(template=text).safe_substitute(
                 os.environ
             )  # -> Environment variables are applied second. Remove [Environment Variable] if it needs to be skipped.
-            __auth_data: dict = json.loads(template)
+            __auth_data: dict = json.loads(__auth_template)
             __auth_collection: PostmanCollection = PostmanCollection(**__auth_data)
             self._auth = (
                 __auth_collection.auth
             )  # -> Auth variables are set with [Collection Variables or Environment Variables] only. [Environmen Variables] are highly recommended.
-            data: dict = json.loads(text)
 
         __postman_collection = PostmanCollection(**data)
         self._info = __postman_collection.info
-        self._variables = (
-            __postman_collection.variables
-        )  # -> Apply collection variables to the requests.
-        self._items = (
-            __postman_collection.items
-        )  # This object returns the Collection root items [folders & requests] only.
+        self._variables = __postman_collection.variables
+        self._items = __postman_collection.items
         self._requests = __postman_collection.requests
 
     def get_request(self, name: str) -> Request:
