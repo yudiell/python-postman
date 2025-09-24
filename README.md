@@ -281,13 +281,15 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Changelog
 
-### 0.1.0 (Initial Release)
+### 0.7.0 (Updated version)
 
-- Initial release with full Postman collection parsing support
-- Support for collections, requests, folders, variables, authentication, and events
-- Comprehensive validation and error handling
-- Full type annotation support
-- Extensive test coverage
+- Updated version to 0.7.0
+- Updated README.md
+- Updated pyproject.toml
+- Updated tests
+- Updated docs
+- Updated examples
+- Updated code
 
 ## Support
 
