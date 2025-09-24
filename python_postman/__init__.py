@@ -42,7 +42,7 @@ from .exceptions import (
 # Utility functions
 from .utils import parse_json_safely, load_json_file
 
-__version__ = "0.1.0"
+__version__ = "0.7.0"
 __author__ = "Python Postman Contributors"
 __email__ = "python-postman@example.com"
 __license__ = "MIT"

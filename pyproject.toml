@@ -24,7 +24,7 @@ classifiers = [
     "Topic :: Software Development :: Testing",
     "Topic :: Internet :: WWW/HTTP",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = []
 
 [project.optional-dependencies]
