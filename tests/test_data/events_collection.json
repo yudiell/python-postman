@@ -1,0 +1,91 @@
+{
+    "info": {
+        "name": "Events and Scripts Collection",
+        "description": "Collection with pre-request scripts and tests",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Request with Events",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Set timestamp variable",
+                            "pm.globals.set('timestamp', Date.now());"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Status code is 200', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test('Response time is less than 200ms', function () {",
+                            "    pm.expect(pm.response.responseTime).to.be.below(200);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "X-Timestamp",
+                        "value": "{{timestamp}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/test",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "test"
+                    ]
+                }
+            }
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "exec": [
+                    "// Collection-level pre-request script",
+                    "console.log('Running collection pre-request script');"
+                ],
+                "type": "text/javascript"
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "exec": [
+                    "// Collection-level test script",
+                    "console.log('Running collection test script');"
+                ],
+                "type": "text/javascript"
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "https://api.example.com",
+            "type": "string"
+        },
+        {
+            "key": "timestamp",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
