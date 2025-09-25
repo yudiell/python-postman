@@ -287,6 +287,21 @@ class Body:
 
         return None
 
+    def _parse_json_safely(self, content: str) -> Union[Dict[str, Any], str]:
+        """
+        Attempt to parse JSON content, falling back to raw string.
+        
+        Args:
+            content: String content to parse
+            
+        Returns:
+            Parsed JSON object if valid JSON, otherwise the original string
+        """
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            return content
+
     def get_content(
         self, variable_context: Optional[Dict[str, Any]] = None
     ) -> Optional[Union[str, bytes, Dict[str, Any]]]:
@@ -345,21 +360,16 @@ class Body:
         elif mode == BodyMode.GRAPHQL:
             # GraphQL body is typically JSON with query/variables
             if self.raw:
-                try:
-                    # Try to parse as JSON to validate structure
-                    graphql_data = json.loads(self.raw)
-                    if variable_context:
-                        # Resolve variables in the JSON string
-                        content = self.raw
-                        for var_name, var_value in variable_context.items():
-                            placeholder = f"{{{{{var_name}}}}}"
-                            if placeholder in content:
-                                content = content.replace(placeholder, str(var_value))
-                        return json.loads(content)
-                    return graphql_data
-                except json.JSONDecodeError:
-                    # Return as raw string if not valid JSON
-                    return self.raw
+                if variable_context:
+                    # Resolve variables in the JSON string
+                    content = self.raw
+                    for var_name, var_value in variable_context.items():
+                        placeholder = f"{{{{{var_name}}}}}"
+                        if placeholder in content:
+                            content = content.replace(placeholder, str(var_value))
+                    return self._parse_json_safely(content)
+                else:
+                    return self._parse_json_safely(self.raw)
             return None
 
         elif mode == BodyMode.FILE:
