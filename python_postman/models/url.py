@@ -191,7 +191,7 @@ class Url:
 
     def _resolve_variables(self, text: str, variable_context: Dict[str, Any]) -> str:
         """
-        Resolve variable placeholders in text.
+        Resolve variable placeholders in text using efficient regex-based approach.
 
         Args:
             text: Text containing variable placeholders
@@ -203,22 +203,22 @@ class Url:
         if not text or not variable_context:
             return text
 
-        # Handle both {{variable}} and :variable formats
-        result = text
+        import re
+        
+        # Combine both placeholder formats in a single regex
+        def replace_placeholder(match):
+            # Group 1: {{variable}} format
+            # Group 2: :variable format
+            var_name = match.group(1) or match.group(2)
+            var_name = var_name.strip()
+            
+            if var_name in variable_context:
+                return str(variable_context[var_name])
+            return match.group(0)  # Keep placeholder if variable not found
 
-        # Resolve {{variable}} format
-        for var_name, var_value in variable_context.items():
-            placeholder = f"{{{{{var_name}}}}}"
-            if placeholder in result:
-                result = result.replace(placeholder, str(var_value))
-
-        # Resolve :variable format (path parameters)
-        for var_name, var_value in variable_context.items():
-            placeholder = f":{var_name}"
-            if placeholder in result:
-                result = result.replace(placeholder, str(var_value))
-
-        return result
+        # Match both {{variable}} and :variable formats
+        pattern = r'\{\{([^}]+)\}\}|:([a-zA-Z_][a-zA-Z0-9_]*)'
+        return re.sub(pattern, replace_placeholder, text)
 
     def add_query_param(
         self, key: str, value: Optional[str] = None, description: Optional[str] = None

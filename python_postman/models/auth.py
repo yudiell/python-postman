@@ -75,8 +75,28 @@ class Auth:
             parameters: List of authentication parameters
         """
         self.type = type
-        self.parameters = parameters or []
-        self._parameter_dict: Optional[Dict[str, Any]] = None
+        self._parameters = []
+        self._parameter_lookup: Dict[str, AuthParameter] = {}
+        
+        # Set parameters using property to maintain lookup dict
+        if parameters:
+            self.parameters = parameters
+
+    @property
+    def parameters(self) -> List[AuthParameter]:
+        """Get the list of authentication parameters."""
+        return self._parameters
+
+    @parameters.setter
+    def parameters(self, value: List[AuthParameter]) -> None:
+        """Set the list of authentication parameters and update lookup dict."""
+        self._parameters = value or []
+        # Handle case where non-list values are passed (for validation testing)
+        try:
+            self._parameter_lookup = {param.key: param for param in self._parameters}
+        except (AttributeError, TypeError):
+            # If parameters are not AuthParameter objects, create empty lookup
+            self._parameter_lookup = {}
 
     def get_auth_type(self) -> AuthType:
         """
@@ -100,10 +120,8 @@ class Auth:
         Returns:
             Parameter value or None if not found
         """
-        for param in self.parameters:
-            if param.key == key:
-                return param.value
-        return None
+        param = self._parameter_lookup.get(key)
+        return param.value if param else None
 
     def get_parameter_dict(self) -> Dict[str, Any]:
         """
@@ -112,9 +130,7 @@ class Auth:
         Returns:
             Dictionary of parameter key-value pairs
         """
-        if self._parameter_dict is None:
-            self._parameter_dict = {param.key: param.value for param in self.parameters}
-        return self._parameter_dict.copy()
+        return {key: param.value for key, param in self._parameter_lookup.items()}
 
     def add_parameter(self, key: str, value: Any, type: str = "string") -> None:
         """
@@ -125,12 +141,21 @@ class Auth:
             value: Parameter value
             type: Parameter type
         """
-        # Remove existing parameter with same key
-        self.parameters = [p for p in self.parameters if p.key != key]
-        # Add new parameter
-        self.parameters.append(AuthParameter(key, value, type))
-        # Clear cached parameter dict
-        self._parameter_dict = None
+        new_param = AuthParameter(key, value, type)
+        
+        # If parameter exists, replace it
+        if key in self._parameter_lookup:
+            # Find and replace in list
+            for i, param in enumerate(self._parameters):
+                if param.key == key:
+                    self._parameters[i] = new_param
+                    break
+        else:
+            # Add new parameter
+            self._parameters.append(new_param)
+        
+        # Update lookup dict
+        self._parameter_lookup[key] = new_param
 
     def remove_parameter(self, key: str) -> bool:
         """
@@ -142,12 +167,16 @@ class Auth:
         Returns:
             True if parameter was removed, False if not found
         """
-        original_length = len(self.parameters)
-        self.parameters = [p for p in self.parameters if p.key != key]
-        removed = len(self.parameters) < original_length
-        if removed:
-            self._parameter_dict = None
-        return removed
+        if key not in self._parameter_lookup:
+            return False
+        
+        # Remove from lookup dict
+        del self._parameter_lookup[key]
+        
+        # Remove from list
+        self._parameters = [p for p in self._parameters if p.key != key]
+        
+        return True
 
     def is_basic_auth(self) -> bool:
         """Check if this is basic authentication."""

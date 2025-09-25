@@ -2,6 +2,72 @@
 
 from typing import Optional, List, Dict, Any
 
+# Standard HTTP headers - extracted for configurability
+STANDARD_HTTP_HEADERS = frozenset({
+    "accept",
+    "accept-charset", 
+    "accept-encoding",
+    "accept-language",
+    "accept-ranges",
+    "access-control-allow-credentials",
+    "access-control-allow-headers",
+    "access-control-allow-methods",
+    "access-control-allow-origin",
+    "access-control-expose-headers",
+    "access-control-max-age",
+    "access-control-request-headers",
+    "access-control-request-method",
+    "age",
+    "allow",
+    "authorization",
+    "cache-control",
+    "connection",
+    "content-disposition",
+    "content-encoding",
+    "content-language",
+    "content-length",
+    "content-location",
+    "content-range",
+    "content-type",
+    "cookie",
+    "date",
+    "etag",
+    "expect",
+    "expires",
+    "from",
+    "host",
+    "if-match",
+    "if-modified-since",
+    "if-none-match",
+    "if-range",
+    "if-unmodified-since",
+    "last-modified",
+    "location",
+    "max-forwards",
+    "origin",
+    "pragma",
+    "proxy-authenticate",
+    "proxy-authorization",
+    "range",
+    "referer",
+    "retry-after",
+    "server",
+    "set-cookie",
+    "te",
+    "trailer",
+    "transfer-encoding",
+    "upgrade",
+    "user-agent",
+    "vary",
+    "via",
+    "warning",
+    "www-authenticate",
+    "x-forwarded-for",
+    "x-forwarded-host",
+    "x-forwarded-proto",
+    "x-real-ip",
+})
+
 
 class Header:
     """Represents an HTTP header with key-value pair handling."""
@@ -86,72 +152,7 @@ class Header:
         Returns:
             True if this is a recognized standard HTTP header
         """
-        standard_headers = {
-            "accept",
-            "accept-charset",
-            "accept-encoding",
-            "accept-language",
-            "accept-ranges",
-            "access-control-allow-credentials",
-            "access-control-allow-headers",
-            "access-control-allow-methods",
-            "access-control-allow-origin",
-            "access-control-expose-headers",
-            "access-control-max-age",
-            "access-control-request-headers",
-            "access-control-request-method",
-            "age",
-            "allow",
-            "authorization",
-            "cache-control",
-            "connection",
-            "content-disposition",
-            "content-encoding",
-            "content-language",
-            "content-length",
-            "content-location",
-            "content-range",
-            "content-type",
-            "cookie",
-            "date",
-            "etag",
-            "expect",
-            "expires",
-            "from",
-            "host",
-            "if-match",
-            "if-modified-since",
-            "if-none-match",
-            "if-range",
-            "if-unmodified-since",
-            "last-modified",
-            "location",
-            "max-forwards",
-            "origin",
-            "pragma",
-            "proxy-authenticate",
-            "proxy-authorization",
-            "range",
-            "referer",
-            "retry-after",
-            "server",
-            "set-cookie",
-            "te",
-            "trailer",
-            "transfer-encoding",
-            "upgrade",
-            "user-agent",
-            "vary",
-            "via",
-            "warning",
-            "www-authenticate",
-            "x-forwarded-for",
-            "x-forwarded-host",
-            "x-forwarded-proto",
-            "x-real-ip",
-        }
-
-        return self.key.lower() in standard_headers
+        return self.key.lower() in STANDARD_HTTP_HEADERS
 
     def validate(self) -> bool:
         """
@@ -254,7 +255,24 @@ class HeaderCollection:
         Args:
             headers: List of Header objects
         """
-        self.headers = headers or []
+        self._headers = []
+        self._header_lookup: Dict[str, Header] = {}
+        
+        # Set headers using property to maintain lookup dict
+        if headers:
+            self.headers = headers
+
+    @property
+    def headers(self) -> List[Header]:
+        """Get the list of headers."""
+        return self._headers
+
+    @headers.setter
+    def headers(self, value: List[Header]) -> None:
+        """Set the list of headers and update lookup dict."""
+        self._headers = value or []
+        # Use lowercase keys for case-insensitive lookups
+        self._header_lookup = {header.key.lower(): header for header in self._headers}
 
     def add(
         self, key: str, value: Optional[str] = None, description: Optional[str] = None
@@ -271,7 +289,8 @@ class HeaderCollection:
             The created Header object
         """
         header = Header(key=key, value=value, description=description)
-        self.headers.append(header)
+        self._headers.append(header)
+        self._header_lookup[key.lower()] = header
         return header
 
     def remove(self, key: str) -> bool:
@@ -284,9 +303,17 @@ class HeaderCollection:
         Returns:
             True if header was found and removed
         """
-        original_length = len(self.headers)
-        self.headers = [h for h in self.headers if h.key.lower() != key.lower()]
-        return len(self.headers) < original_length
+        key_lower = key.lower()
+        if key_lower not in self._header_lookup:
+            return False
+        
+        # Remove from lookup dict
+        del self._header_lookup[key_lower]
+        
+        # Remove from list
+        self._headers = [h for h in self._headers if h.key.lower() != key_lower]
+        
+        return True
 
     def get(self, key: str) -> Optional[Header]:
         """
@@ -298,10 +325,7 @@ class HeaderCollection:
         Returns:
             Header if found, None otherwise
         """
-        for header in self.headers:
-            if header.key.lower() == key.lower():
-                return header
-        return None
+        return self._header_lookup.get(key.lower())
 
     def get_value(
         self, key: str, variable_context: Optional[Dict[str, Any]] = None
@@ -351,7 +375,7 @@ class HeaderCollection:
         Returns:
             List of active Header objects
         """
-        return [h for h in self.headers if h.is_active()]
+        return [h for h in self._headers if h.is_active()]
 
     def to_http_dict(
         self, variable_context: Optional[Dict[str, Any]] = None
@@ -382,18 +406,18 @@ class HeaderCollection:
         Raises:
             ValueError: If any header validation fails
         """
-        for header in self.headers:
+        for header in self._headers:
             header.validate()
         return True
 
     def __len__(self) -> int:
-        return len(self.headers)
+        return len(self._headers)
 
     def __iter__(self):
-        return iter(self.headers)
+        return iter(self._headers)
 
     def __getitem__(self, index):
-        return self.headers[index]
+        return self._headers[index]
 
     def __repr__(self) -> str:
-        return f"HeaderCollection({len(self.headers)} headers)"
+        return f"HeaderCollection({len(self._headers)} headers)"

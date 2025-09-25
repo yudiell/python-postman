@@ -58,15 +58,23 @@ class Variable:
         """Set the variable scope."""
         self._scope = scope
 
-    def resolve_value(self, context: Optional[Dict[str, Any]] = None) -> Any:
+    def resolve_value(
+        self, 
+        context: Optional[Dict[str, Any]] = None,
+        _resolution_stack: Optional[set] = None
+    ) -> Any:
         """
         Resolve the variable value, potentially using context for nested variables.
 
         Args:
             context: Dictionary of variables for resolution
+            _resolution_stack: Internal parameter to track resolution chain for cycle detection
 
         Returns:
             Resolved variable value
+
+        Raises:
+            ValueError: If circular dependency is detected
         """
         if self.disabled:
             return None
@@ -74,16 +82,50 @@ class Variable:
         if self.value is None:
             return None
 
+        # Initialize resolution stack for cycle detection
+        if _resolution_stack is None:
+            _resolution_stack = set()
+
+        # Check for circular dependency
+        if self.key in _resolution_stack:
+            raise ValueError(f"Circular dependency detected in variable resolution: {' -> '.join(_resolution_stack)} -> {self.key}")
+
         # If value is a string and contains variable references, resolve them
         if isinstance(self.value, str) and context:
+            # Add current variable to resolution stack
+            _resolution_stack.add(self.key)
+            
             resolved_value = self.value
-            for var_key, var_value in context.items():
-                if var_key != self.key:  # Avoid self-reference
-                    placeholder = f"{{{{{var_key}}}}}"
-                    if placeholder in resolved_value:
-                        resolved_value = resolved_value.replace(
-                            placeholder, str(var_value)
-                        )
+            
+            # Use regex for more efficient placeholder detection
+            import re
+            placeholder_pattern = r'\{\{([^}]+)\}\}'
+            
+            def replace_placeholder(match):
+                var_name = match.group(1).strip()
+                if var_name == self.key:
+                    # Skip self-reference
+                    return match.group(0)
+                
+                if var_name in context:
+                    var_value = context[var_name]
+                    # If the context value is a Variable object, resolve it recursively
+                    if hasattr(var_value, 'resolve_value'):
+                        try:
+                            return str(var_value.resolve_value(context, _resolution_stack.copy()))
+                        except ValueError:
+                            # If circular dependency in nested resolution, return placeholder
+                            return match.group(0)
+                    else:
+                        return str(var_value)
+                return match.group(0)  # Keep placeholder if variable not found
+            
+            try:
+                resolved_value = re.sub(placeholder_pattern, replace_placeholder, resolved_value)
+            finally:
+                # Remove current variable from resolution stack
+                _resolution_stack.discard(self.key)
+            
             return resolved_value
 
         return self.value
@@ -147,6 +189,9 @@ class Variable:
 
         Returns:
             Variable instance
+
+        Raises:
+            ValueError: If validation fails
         """
         return cls(
             key=data.get("key"),

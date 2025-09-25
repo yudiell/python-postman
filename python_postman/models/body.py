@@ -302,9 +302,87 @@ class Body:
         except json.JSONDecodeError:
             return content
 
+    def _resolve_variables_in_text(
+        self, text: str, variable_context: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """
+        Utility method to resolve variables in text content.
+
+        Args:
+            text: Text containing variable placeholders
+            variable_context: Dictionary of variables for resolution
+
+        Returns:
+            Text with resolved variables
+        """
+        if not text or not variable_context:
+            return text
+
+        import re
+        
+        def replace_placeholder(match):
+            var_name = match.group(1).strip()
+            if var_name in variable_context:
+                return str(variable_context[var_name])
+            return match.group(0)  # Keep placeholder if variable not found
+
+        return re.sub(r'\{\{([^}]+)\}\}', replace_placeholder, text)
+
+    def _get_raw_content(
+        self, variable_context: Optional[Dict[str, Any]] = None
+    ) -> Optional[str]:
+        """Get content for RAW mode."""
+        return self._resolve_variables_in_text(self.raw, variable_context)
+
+    def _get_urlencoded_content(
+        self, variable_context: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, str]:
+        """Get content for URLENCODED mode."""
+        result = {}
+        for param in self.urlencoded:
+            if param.is_active():
+                value = param.get_effective_value(variable_context)
+                if value is not None:
+                    result[param.key] = value
+        return result
+
+    def _get_formdata_content(
+        self, variable_context: Optional[Dict[str, Any]] = None
+    ) -> List[tuple]:
+        """Get content for FORMDATA mode."""
+        result = []
+        for param in self.formdata:
+            if param.is_active():
+                if param.is_file():
+                    # File parameter - use src if available, otherwise value
+                    file_value = param.src or param.value or ""
+                    result.append((param.key, file_value, "file"))
+                else:
+                    # Text parameter
+                    value = param.get_effective_value(variable_context)
+                    if value is not None:
+                        result.append((param.key, value, "text"))
+        return result
+
+    def _get_graphql_content(
+        self, variable_context: Optional[Dict[str, Any]] = None
+    ) -> Optional[Union[Dict[str, Any], str]]:
+        """Get content for GRAPHQL mode."""
+        if not self.raw:
+            return None
+        
+        resolved_content = self._resolve_variables_in_text(self.raw, variable_context)
+        return self._parse_json_safely(resolved_content)
+
+    def _get_file_content(
+        self, variable_context: Optional[Dict[str, Any]] = None
+    ) -> Optional[str]:
+        """Get content for FILE mode."""
+        return self.file.get("src")
+
     def get_content(
         self, variable_context: Optional[Dict[str, Any]] = None
-    ) -> Optional[Union[str, bytes, Dict[str, Any]]]:
+    ) -> Optional[Union[str, Dict[str, Any], List[tuple]]]:
         """
         Get the body content in appropriate format.
 
@@ -321,60 +399,19 @@ class Body:
         if not mode:
             return None
 
-        if mode == BodyMode.RAW:
-            content = self.raw
-            if content and variable_context:
-                # Resolve variables in raw content
-                for var_name, var_value in variable_context.items():
-                    placeholder = f"{{{{{var_name}}}}}"
-                    if placeholder in content:
-                        content = content.replace(placeholder, str(var_value))
-            return content
+        # Dispatch to mode-specific handlers
+        content_handlers = {
+            BodyMode.RAW: self._get_raw_content,
+            BodyMode.URLENCODED: self._get_urlencoded_content,
+            BodyMode.FORMDATA: self._get_formdata_content,
+            BodyMode.GRAPHQL: self._get_graphql_content,
+            BodyMode.FILE: self._get_file_content,
+            BodyMode.BINARY: self._get_raw_content,  # Binary uses same as raw
+        }
 
-        elif mode == BodyMode.URLENCODED:
-            # Return as dictionary for URL encoding
-            result = {}
-            for param in self.urlencoded:
-                if param.is_active():
-                    value = param.get_effective_value(variable_context)
-                    if value is not None:
-                        result[param.key] = value
-            return result
-
-        elif mode == BodyMode.FORMDATA:
-            # Return as list of tuples for multipart form data
-            result = []
-            for param in self.formdata:
-                if param.is_active():
-                    if param.is_file():
-                        # File parameter - use src if available, otherwise value
-                        file_value = param.src or param.value or ""
-                        result.append((param.key, file_value, "file"))
-                    else:
-                        # Text parameter
-                        value = param.get_effective_value(variable_context)
-                        if value is not None:
-                            result.append((param.key, value, "text"))
-            return result
-
-        elif mode == BodyMode.GRAPHQL:
-            # GraphQL body is typically JSON with query/variables
-            if self.raw:
-                if variable_context:
-                    # Resolve variables in the JSON string
-                    content = self.raw
-                    for var_name, var_value in variable_context.items():
-                        placeholder = f"{{{{{var_name}}}}}"
-                        if placeholder in content:
-                            content = content.replace(placeholder, str(var_value))
-                    return self._parse_json_safely(content)
-                else:
-                    return self._parse_json_safely(self.raw)
-            return None
-
-        elif mode == BodyMode.FILE:
-            # Return file path
-            return self.file.get("src")
+        handler = content_handlers.get(mode)
+        if handler:
+            return handler(variable_context)
 
         return None
 
