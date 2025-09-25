@@ -1,0 +1,16 @@
+{
+    "info": {
+        "name": "Malformed Collection",
+        "description": "This JSON has syntax errors"
+        // Missing comma and invalid comment
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Test Request""request": {
+                "method": "GET",
+                "url": "https://api.example.com/test"
+            }
+        }
+    ]
+}

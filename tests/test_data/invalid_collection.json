@@ -1,0 +1,14 @@
+{
+    "info": {
+        "description": "Missing required name field",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "request": {
+                "method": "GET",
+                "url": "https://api.example.com/test"
+            }
+        }
+    ]
+}

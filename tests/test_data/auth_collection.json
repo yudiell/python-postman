@@ -1,0 +1,153 @@
+{
+    "info": {
+        "name": "Authentication Types Collection",
+        "description": "Collection demonstrating various authentication types",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Basic Auth Request",
+            "request": {
+                "method": "GET",
+                "auth": {
+                    "type": "basic",
+                    "basic": [
+                        {
+                            "key": "username",
+                            "value": "{{basic_username}}"
+                        },
+                        {
+                            "key": "password",
+                            "value": "{{basic_password}}"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/basic-auth",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "basic-auth"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Bearer Token Request",
+            "request": {
+                "method": "GET",
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{bearer_token}}"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/bearer-auth",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "bearer-auth"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "API Key Request",
+            "request": {
+                "method": "GET",
+                "auth": {
+                    "type": "apikey",
+                    "apikey": [
+                        {
+                            "key": "key",
+                            "value": "X-API-Key"
+                        },
+                        {
+                            "key": "value",
+                            "value": "{{api_key}}"
+                        },
+                        {
+                            "key": "in",
+                            "value": "header"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/api-key-auth",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api-key-auth"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "OAuth2 Request",
+            "request": {
+                "method": "GET",
+                "auth": {
+                    "type": "oauth2",
+                    "oauth2": [
+                        {
+                            "key": "accessToken",
+                            "value": "{{oauth2_token}}"
+                        },
+                        {
+                            "key": "tokenType",
+                            "value": "Bearer"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/oauth2-auth",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "oauth2-auth"
+                    ]
+                }
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "https://api.example.com",
+            "type": "string"
+        },
+        {
+            "key": "basic_username",
+            "value": "user",
+            "type": "string"
+        },
+        {
+            "key": "basic_password",
+            "value": "pass",
+            "type": "string"
+        },
+        {
+            "key": "bearer_token",
+            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+            "type": "string"
+        },
+        {
+            "key": "api_key",
+            "value": "abc123def456",
+            "type": "string"
+        },
+        {
+            "key": "oauth2_token",
+            "value": "oauth2_access_token_here",
+            "type": "string"
+        }
+    ]
+}
