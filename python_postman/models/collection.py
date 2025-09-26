@@ -2,7 +2,7 @@
 Main Collection class representing a Postman collection.
 """
 
-from typing import List, Optional, Iterator, TYPE_CHECKING
+from typing import List, Optional, Iterator, TYPE_CHECKING, Dict, Any
 from .item import Item
 from .collection_info import CollectionInfo
 from .variable import Variable
@@ -12,6 +12,8 @@ from .event import Event
 if TYPE_CHECKING:
     from .request import Request
     from .folder import Folder
+    from ..execution.executor import RequestExecutor
+    from ..execution.results import CollectionExecutionResult
 else:
     # Import for runtime use in search methods
     from .folder import Folder
@@ -289,4 +291,83 @@ class Collection:
             and self.variables == other.variables
             and self.auth == other.auth
             and self.events == other.events
+        )
+
+    def create_executor(self, **kwargs) -> "RequestExecutor":
+        """
+        Create a configured executor for this collection.
+
+        This convenience method creates a RequestExecutor instance with
+        collection-specific configuration and variable context.
+
+        Args:
+            **kwargs: Additional configuration options for RequestExecutor
+
+        Returns:
+            RequestExecutor: Configured executor instance
+
+        Raises:
+            ImportError: If execution module is not available
+        """
+        try:
+            from ..execution.executor import RequestExecutor
+        except ImportError as e:
+            raise ImportError(
+                "Execution functionality requires httpx. Install with: pip install httpx"
+            ) from e
+
+        # Extract collection variables for default configuration
+        collection_vars = {}
+        if self.variables:
+            for var in self.variables:
+                if hasattr(var, "key") and hasattr(var, "value"):
+                    collection_vars[var.key] = var.value
+
+        # Set up default variable overrides if not provided
+        if "variable_overrides" not in kwargs:
+            kwargs["variable_overrides"] = collection_vars
+
+        return RequestExecutor(**kwargs)
+
+    async def execute(
+        self,
+        executor: Optional["RequestExecutor"] = None,
+        parallel: bool = False,
+        stop_on_error: bool = False,
+    ) -> "CollectionExecutionResult":
+        """
+        Execute all requests in this collection.
+
+        This method executes all requests in the collection using the provided
+        executor or creating a new one if none is provided. It supports both
+        sequential and parallel execution modes.
+
+        Args:
+            executor: Optional RequestExecutor instance to use for execution.
+                     If None, a new executor will be created.
+            parallel: Whether to execute requests in parallel (default: False)
+            stop_on_error: Whether to stop execution on first error (default: False)
+
+        Returns:
+            CollectionExecutionResult: Result of the collection execution
+
+        Raises:
+            ImportError: If execution module is not available
+        """
+        try:
+            from ..execution.executor import RequestExecutor
+        except ImportError as e:
+            raise ImportError(
+                "Execution functionality requires httpx. Install with: pip install httpx"
+            ) from e
+
+        # Create executor if not provided
+        if executor is None:
+            executor = self.create_executor()
+
+        # Execute the collection
+        return await executor.execute_collection(
+            collection=self,
+            parallel=parallel,
+            stop_on_error=stop_on_error,
         )
