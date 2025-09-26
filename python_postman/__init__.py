@@ -42,6 +42,33 @@ from .exceptions import (
 # Utility functions
 from .utils import parse_json_safely, load_json_file
 
+# Optional execution functionality (requires httpx)
+try:
+    from .execution import (
+        RequestExecutor,
+        ExecutionContext,
+        ExecutionResponse,
+        RequestExtensions,
+        ExecutionResult,
+        TestResults,
+        TestAssertion,
+        CollectionExecutionResult,
+        FolderExecutionResult,
+        VariableResolver,
+        AuthHandler,
+        ScriptRunner,
+        ExecutionError,
+        RequestExecutionError,
+        VariableResolutionError,
+        ScriptExecutionError,
+        AuthenticationError,
+        TimeoutError,
+    )
+
+    _EXECUTION_AVAILABLE = True
+except ImportError:
+    _EXECUTION_AVAILABLE = False
+
 __version__ = "0.7.0"
 __author__ = "Python Postman Contributors"
 __email__ = "python-postman@example.com"
@@ -49,6 +76,17 @@ __license__ = "MIT"
 __description__ = (
     "A Python library for parsing and working with Postman collection.json files"
 )
+
+
+def is_execution_available() -> bool:
+    """
+    Check if execution functionality is available.
+
+    Returns:
+        bool: True if httpx is installed and execution classes are available, False otherwise.
+    """
+    return _EXECUTION_AVAILABLE
+
 
 # Public API - these are the main classes/functions users should import
 __all__ = [
@@ -82,4 +120,35 @@ __all__ = [
     # Utility functions
     "parse_json_safely",
     "load_json_file",
+    # Execution availability check
+    "is_execution_available",
 ]
+
+# Add execution classes to __all__ if available
+if _EXECUTION_AVAILABLE:
+    __all__.extend(
+        [
+            # Core execution classes
+            "RequestExecutor",
+            "ExecutionContext",
+            "ExecutionResponse",
+            "RequestExtensions",
+            # Result classes
+            "ExecutionResult",
+            "TestResults",
+            "TestAssertion",
+            "CollectionExecutionResult",
+            "FolderExecutionResult",
+            # Utility classes
+            "VariableResolver",
+            "AuthHandler",
+            "ScriptRunner",
+            # Exception classes
+            "ExecutionError",
+            "RequestExecutionError",
+            "VariableResolutionError",
+            "ScriptExecutionError",
+            "AuthenticationError",
+            "TimeoutError",
+        ]
+    )
