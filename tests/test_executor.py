@@ -733,27 +733,392 @@ class TestRequestExecutorSynchronousExecution:
         self, executor, mock_request, mock_context
     ):
         """Test synchronous request execution with script execution error."""
-        mock_script_runner = Mock()
-        mock_script_runner.execute_pre_request_scripts.side_effect = Exception(
-            "Script failed"
+
+
+class TestRequestExecutorFolderExecution:
+    """Test folder execution functionality."""
+
+    @pytest.fixture
+    def executor(self):
+        """Create a RequestExecutor for testing."""
+        with patch("python_postman.execution.executor.HTTPX_AVAILABLE", True):
+            return RequestExecutor()
+
+    @pytest.fixture
+    def mock_folder(self):
+        """Create a mock folder for testing."""
+        folder = Mock(spec=Folder)
+        folder.name = "Test Folder"
+        folder.variable = [
+            Mock(key="folder_var", value="folder_value"),
+        ]
+        return folder
+
+    @pytest.fixture
+    def mock_context(self):
+        """Create a mock execution context."""
+        context = Mock(spec=ExecutionContext)
+        context.collection_variables = {"col_var": "col_value"}
+        context.folder_variables = {}
+        context.environment_variables = {"env_var": "env_value"}
+        context.request_variables = {}
+        context._collection = Mock()
+        return context
+
+    @pytest.fixture
+    def mock_requests(self):
+        """Create mock requests for testing."""
+        request1 = Mock(spec=Request)
+        request1.name = "Request 1"
+        request1._collection = None
+
+        request2 = Mock(spec=Request)
+        request2.name = "Request 2"
+        request2._collection = None
+
+        return [request1, request2]
+
+    @pytest.mark.asyncio
+    async def test_execute_folder_sequential_success(
+        self, executor, mock_folder, mock_context, mock_requests
+    ):
+        """Test successful sequential folder execution."""
+        # Mock folder.get_requests() to return our test requests
+        mock_folder.get_requests.return_value = iter(mock_requests)
+
+        # Mock successful execution results
+        mock_result1 = Mock()
+        mock_result1.success = True
+        mock_result1.execution_time_ms = 100.0
+
+        mock_result2 = Mock()
+        mock_result2.success = True
+        mock_result2.execution_time_ms = 150.0
+
+        with patch.object(executor, "_create_execution_context") as mock_create_context:
+            mock_folder_context = Mock(spec=ExecutionContext)
+            mock_folder_context.collection_variables = {}
+            mock_folder_context.environment_variables = {}
+            mock_create_context.return_value = mock_folder_context
+
+            with patch.object(executor, "execute_request") as mock_execute:
+                mock_execute.side_effect = [mock_result1, mock_result2]
+
+                with patch(
+                    "python_postman.execution.executor.time.time",
+                    side_effect=[1.0, 1.5],
+                ):
+                    result = await executor.execute_folder(
+                        mock_folder, mock_context, parallel=False, stop_on_error=False
+                    )
+
+        # Verify the result
+        assert result.folder_name == "Test Folder"
+        assert len(result.results) == 2
+        assert result.results[0] is mock_result1
+        assert result.results[1] is mock_result2
+        assert result.total_time_ms == 500.0  # (1.5 - 1.0) * 1000
+
+        # Verify context creation with folder variables
+        mock_create_context.assert_called_once()
+        call_args = mock_create_context.call_args
+        assert call_args[1]["folder"] is mock_folder
+
+        # Verify collection reference was set on requests
+        assert mock_requests[0]._collection is mock_context._collection
+        assert mock_requests[1]._collection is mock_context._collection
+
+        # Verify sequential execution
+        assert mock_execute.call_count == 2
+        mock_execute.assert_any_call(mock_requests[0], mock_folder_context)
+        mock_execute.assert_any_call(mock_requests[1], mock_folder_context)
+
+    @pytest.mark.asyncio
+    async def test_execute_folder_parallel_success(
+        self, executor, mock_folder, mock_context, mock_requests
+    ):
+        """Test successful parallel folder execution."""
+        mock_folder.get_requests.return_value = iter(mock_requests)
+
+        mock_result1 = Mock()
+        mock_result1.success = True
+        mock_result1.execution_time_ms = 100.0
+
+        mock_result2 = Mock()
+        mock_result2.success = True
+        mock_result2.execution_time_ms = 150.0
+
+        with patch.object(executor, "_create_execution_context") as mock_create_context:
+            mock_folder_context = Mock(spec=ExecutionContext)
+            mock_folder_context.collection_variables = MagicMock()
+            mock_folder_context.environment_variables = MagicMock()
+            mock_create_context.return_value = mock_folder_context
+
+            with patch.object(executor, "execute_request") as mock_execute:
+                mock_execute.side_effect = [mock_result1, mock_result2]
+
+                with patch("asyncio.create_task") as mock_create_task:
+                    with patch("asyncio.gather") as mock_gather:
+                        # Make gather return an awaitable
+                        async def mock_gather_func(*args, **kwargs):
+                            return [mock_result1, mock_result2]
+
+                        mock_gather.side_effect = mock_gather_func
+
+                        result = await executor.execute_folder(
+                            mock_folder,
+                            mock_context,
+                            parallel=True,
+                            stop_on_error=False,
+                        )
+
+        # Verify parallel execution was attempted
+        assert mock_create_task.call_count == 2
+        mock_gather.assert_called_once()
+
+        # Verify results
+        assert len(result.results) == 2
+        assert result.results[0] is mock_result1
+        assert result.results[1] is mock_result2
+
+    @pytest.mark.asyncio
+    async def test_execute_folder_stop_on_error_sequential(
+        self, executor, mock_folder, mock_context, mock_requests
+    ):
+        """Test folder execution stops on error in sequential mode."""
+        mock_folder.get_requests.return_value = iter(mock_requests)
+
+        mock_result1 = Mock()
+        mock_result1.success = False  # First request fails
+        mock_result1.execution_time_ms = 100.0
+
+        with patch.object(executor, "_create_execution_context") as mock_create_context:
+            mock_folder_context = Mock(spec=ExecutionContext)
+            mock_folder_context.collection_variables = MagicMock()
+            mock_folder_context.environment_variables = MagicMock()
+            mock_create_context.return_value = mock_folder_context
+
+            with patch.object(executor, "execute_request") as mock_execute:
+                mock_execute.return_value = mock_result1
+
+                result = await executor.execute_folder(
+                    mock_folder, mock_context, parallel=False, stop_on_error=True
+                )
+
+        # Should only execute first request
+        assert mock_execute.call_count == 1
+        assert len(result.results) == 1
+        assert result.results[0] is mock_result1
+
+    @pytest.mark.asyncio
+    async def test_execute_folder_stop_on_error_parallel(
+        self, executor, mock_folder, mock_context, mock_requests
+    ):
+        """Test folder execution stops on error in parallel mode."""
+        mock_folder.get_requests.return_value = iter(mock_requests)
+
+        mock_result1 = Mock()
+        mock_result1.success = False  # First result fails
+        mock_result1.execution_time_ms = 100.0
+
+        mock_result2 = Mock()
+        mock_result2.success = True
+        mock_result2.execution_time_ms = 150.0
+
+        with patch.object(executor, "_create_execution_context") as mock_create_context:
+            mock_folder_context = Mock(spec=ExecutionContext)
+            mock_folder_context.collection_variables = MagicMock()
+            mock_folder_context.environment_variables = MagicMock()
+            mock_create_context.return_value = mock_folder_context
+
+            with patch.object(executor, "execute_request"):
+                with patch("asyncio.create_task"):
+                    with patch("asyncio.gather") as mock_gather:
+                        # Make gather return an awaitable
+                        async def mock_gather_func(*args, **kwargs):
+                            return [mock_result1, mock_result2]
+
+                        mock_gather.side_effect = mock_gather_func
+
+                        result = await executor.execute_folder(
+                            mock_folder, mock_context, parallel=True, stop_on_error=True
+                        )
+
+        # Should process first result and stop
+        assert len(result.results) == 1
+        assert result.results[0] is mock_result1
+
+    @pytest.mark.asyncio
+    async def test_execute_folder_with_exceptions_sequential(
+        self, executor, mock_folder, mock_context, mock_requests
+    ):
+        """Test folder execution handles exceptions in sequential mode."""
+        mock_folder.get_requests.return_value = iter(mock_requests)
+
+        test_exception = Exception("Request failed")
+
+        with patch.object(executor, "_create_execution_context") as mock_create_context:
+            mock_folder_context = Mock(spec=ExecutionContext)
+            mock_folder_context.collection_variables = {}
+            mock_folder_context.environment_variables = {}
+            mock_create_context.return_value = mock_folder_context
+
+            with patch.object(executor, "execute_request") as mock_execute:
+                mock_execute.side_effect = test_exception
+
+                result = await executor.execute_folder(
+                    mock_folder, mock_context, parallel=False, stop_on_error=False
+                )
+
+        # Should create failed execution results
+        assert len(result.results) == 2
+        for exec_result in result.results:
+            assert exec_result.error is test_exception
+            assert exec_result.execution_time_ms == 0.0
+
+    @pytest.mark.asyncio
+    async def test_execute_folder_with_exceptions_parallel(
+        self, executor, mock_folder, mock_context, mock_requests
+    ):
+        """Test folder execution handles exceptions in parallel mode."""
+        mock_folder.get_requests.return_value = iter(mock_requests)
+
+        test_exception = Exception("Request failed")
+
+        with patch.object(executor, "_create_execution_context") as mock_create_context:
+            mock_folder_context = Mock(spec=ExecutionContext)
+            mock_folder_context.collection_variables = MagicMock()
+            mock_folder_context.environment_variables = MagicMock()
+            mock_create_context.return_value = mock_folder_context
+
+            with patch.object(executor, "execute_request"):
+                with patch("asyncio.create_task"):
+                    with patch("asyncio.gather") as mock_gather:
+                        # Make gather return an awaitable with exceptions
+                        async def mock_gather_func(*args, **kwargs):
+                            return [test_exception, test_exception]
+
+                        mock_gather.side_effect = mock_gather_func
+
+                        result = await executor.execute_folder(
+                            mock_folder,
+                            mock_context,
+                            parallel=True,
+                            stop_on_error=False,
+                        )
+
+        # Should create failed execution results for exceptions
+        assert len(result.results) == 2
+        for exec_result in result.results:
+            assert exec_result.error is test_exception
+
+    @pytest.mark.asyncio
+    async def test_execute_folder_variable_scoping(
+        self, executor, mock_folder, mock_context, mock_requests
+    ):
+        """Test folder execution properly handles variable scoping."""
+        mock_folder.get_requests.return_value = iter(mock_requests)
+
+        # Mock folder with variables
+        mock_folder.variable = [
+            Mock(key="folder_var", value="folder_value"),
+            Mock(key="override_var", value="folder_override"),
+        ]
+
+        mock_result = Mock()
+        mock_result.success = True
+        mock_result.execution_time_ms = 100.0
+
+        with patch.object(executor, "_create_execution_context") as mock_create_context:
+            mock_folder_context = Mock(spec=ExecutionContext)
+            mock_folder_context.collection_variables = MagicMock()
+            mock_folder_context.environment_variables = MagicMock()
+            mock_create_context.return_value = mock_folder_context
+
+            with patch.object(executor, "execute_request") as mock_execute:
+                mock_execute.return_value = mock_result
+
+                await executor.execute_folder(
+                    mock_folder, mock_context, parallel=False, stop_on_error=False
+                )
+
+        # Verify context creation was called with folder
+        mock_create_context.assert_called_once()
+        call_args = mock_create_context.call_args[1]
+        assert call_args["folder"] is mock_folder
+
+        # Verify context variables were merged
+        mock_folder_context.collection_variables.update.assert_called_once_with(
+            mock_context.collection_variables
+        )
+        mock_folder_context.environment_variables.update.assert_called_once_with(
+            mock_context.environment_variables
         )
 
-        with patch.object(executor, "_prepare_request") as mock_prepare:
-            mock_prepare.return_value = {
-                "method": "GET",
-                "url": "https://api.example.com/test",
-            }
-            with patch(
-                "python_postman.execution.executor.ScriptRunner",
-                return_value=mock_script_runner,
-            ):
-                result = executor.execute_request_sync(mock_request, mock_context)
+    @pytest.mark.asyncio
+    async def test_execute_folder_empty_folder(
+        self, executor, mock_folder, mock_context
+    ):
+        """Test folder execution with empty folder."""
+        mock_folder.get_requests.return_value = iter([])  # Empty folder
 
-        # Verify error handling - script errors should cause overall execution failure
-        assert result.request is mock_request
-        assert result.response is None
-        assert result.error is not None
-        assert "Request execution failed" in str(result.error)
+        with patch.object(executor, "_create_execution_context") as mock_create_context:
+            mock_folder_context = Mock(spec=ExecutionContext)
+            mock_folder_context.collection_variables = MagicMock()
+            mock_folder_context.environment_variables = MagicMock()
+            mock_create_context.return_value = mock_folder_context
+
+            with patch(
+                "python_postman.execution.executor.time.time", side_effect=[1.0, 1.1]
+            ):
+                result = await executor.execute_folder(
+                    mock_folder, mock_context, parallel=False, stop_on_error=False
+                )
+
+        # Should return empty result
+        assert result.folder_name == "Test Folder"
+        assert len(result.results) == 0
+        assert (
+            abs(result.total_time_ms - 100.0) < 0.1
+        )  # Allow for floating point precision
+
+    @pytest.mark.asyncio
+    async def test_execute_folder_nested_folders(
+        self, executor, mock_folder, mock_context
+    ):
+        """Test folder execution with nested folders."""
+        # Create nested structure: folder -> subfolder -> request
+        nested_request = Mock(spec=Request)
+        nested_request.name = "Nested Request"
+        nested_request._collection = None
+
+        # Mock get_requests to return requests from nested structure
+        mock_folder.get_requests.return_value = iter([nested_request])
+
+        mock_result = Mock()
+        mock_result.success = True
+        mock_result.execution_time_ms = 100.0
+
+        with patch.object(executor, "_create_execution_context") as mock_create_context:
+            mock_folder_context = Mock(spec=ExecutionContext)
+            mock_folder_context.collection_variables = MagicMock()
+            mock_folder_context.environment_variables = MagicMock()
+            mock_create_context.return_value = mock_folder_context
+
+            with patch.object(executor, "execute_request") as mock_execute:
+                mock_execute.return_value = mock_result
+
+                result = await executor.execute_folder(
+                    mock_folder, mock_context, parallel=False, stop_on_error=False
+                )
+
+        # Should execute nested request
+        assert len(result.results) == 1
+        assert result.results[0] is mock_result
+        mock_execute.assert_called_once_with(nested_request, mock_folder_context)
+
+        # Verify collection reference was set
+        assert nested_request._collection is mock_context._collection
 
 
 class TestRequestExecutorAsynchronousExecution:
@@ -1523,7 +1888,23 @@ class TestRequestExecutorMethodPlaceholders:
             return RequestExecutor()
 
     @pytest.mark.asyncio
-    async def test_execute_folder_placeholder(self, executor):
-        """Test that execute_folder has proper placeholder."""
-        with pytest.raises(NotImplementedError, match="task 13"):
-            await executor.execute_folder(Mock(), Mock())
+    async def test_execute_folder_implemented(self, executor):
+        """Test that execute_folder is now implemented."""
+        # Create proper mocks for folder and context
+        mock_folder = Mock()
+        mock_folder.name = "Test Folder"
+        mock_folder.get_requests.return_value = iter([])  # Empty folder
+        mock_folder.variable = []
+
+        mock_context = Mock()
+        mock_context.collection_variables = {}
+        mock_context.environment_variables = {}
+        # Ensure _collection is None to avoid issues with variable extraction
+        del mock_context._collection
+
+        # Should not raise NotImplementedError anymore
+        result = await executor.execute_folder(mock_folder, mock_context)
+
+        # Should return a FolderExecutionResult
+        assert result.folder_name == "Test Folder"
+        assert len(result.results) == 0

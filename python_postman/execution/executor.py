@@ -155,12 +155,18 @@ class RequestExecutor:
         # Merge with overrides and additional variables
         environment_vars = {**self.variable_overrides, **(additional_variables or {})}
 
-        return ExecutionContext(
+        context = ExecutionContext(
             collection_variables=collection_vars,
             folder_variables=folder_vars,
             environment_variables=environment_vars,
             request_variables=request_vars,
         )
+
+        # Store collection reference for auth inheritance
+        if collection:
+            context._collection = collection
+
+        return context
 
     def _prepare_request(
         self,
@@ -574,5 +580,90 @@ class RequestExecutor:
         Returns:
             FolderExecutionResult: Result of the folder execution
         """
-        # Implementation will be added in task 13
-        raise NotImplementedError("Folder execution will be implemented in task 13")
+        import asyncio
+
+        execution_start = time.time()
+
+        # Create folder execution result
+        result = FolderExecutionResult(folder_name=folder.name)
+
+        # Create child context with folder variables
+        folder_context = self._create_execution_context(
+            collection=getattr(context, "_collection", None),
+            folder=folder,
+            additional_variables=context.environment_variables,
+        )
+
+        # Merge parent context variables with folder context
+        if hasattr(context, "collection_variables"):
+            folder_context.collection_variables.update(context.collection_variables)
+        if hasattr(context, "environment_variables"):
+            folder_context.environment_variables.update(context.environment_variables)
+
+        # Get all requests from the folder (including nested folders)
+        all_requests = list(folder.get_requests())
+
+        # Set collection reference on requests for auth inheritance
+        collection = getattr(context, "_collection", None)
+        for request in all_requests:
+            if not hasattr(request, "_collection") or request._collection is None:
+                request._collection = collection
+
+        if parallel:
+            # Execute requests in parallel
+            if all_requests:
+                # Create tasks for all requests
+                tasks = []
+                for request in all_requests:
+                    task = asyncio.create_task(
+                        self.execute_request(request, folder_context)
+                    )
+                    tasks.append(task)
+
+                # Wait for all tasks to complete
+                execution_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+                # Process results and handle exceptions
+                for i, exec_result in enumerate(execution_results):
+                    if isinstance(exec_result, Exception):
+                        # Create failed execution result for exceptions
+                        failed_result = ExecutionResult(
+                            request=all_requests[i],
+                            error=exec_result,
+                            execution_time_ms=0.0,
+                        )
+                        result.add_result(failed_result)
+
+                        if stop_on_error:
+                            break
+                    else:
+                        result.add_result(exec_result)
+
+                        if stop_on_error and not exec_result.success:
+                            break
+        else:
+            # Execute requests sequentially
+            for request in all_requests:
+                try:
+                    exec_result = await self.execute_request(request, folder_context)
+                    result.add_result(exec_result)
+
+                    # Stop on error if configured
+                    if stop_on_error and not exec_result.success:
+                        break
+
+                except Exception as e:
+                    # Create failed execution result for exceptions
+                    failed_result = ExecutionResult(
+                        request=request, error=e, execution_time_ms=0.0
+                    )
+                    result.add_result(failed_result)
+
+                    if stop_on_error:
+                        break
+
+        # Calculate total execution time
+        execution_end = time.time()
+        result.total_time_ms = (execution_end - execution_start) * 1000
+
+        return result
