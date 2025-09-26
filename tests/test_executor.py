@@ -1100,6 +1100,419 @@ class TestRequestExecutorAsynchronousExecution:
         assert async_result.test_results is not None
 
 
+class TestRequestExecutorCollectionExecution:
+    """Test collection execution functionality."""
+
+    @pytest.fixture
+    def executor(self):
+        """Create a RequestExecutor for testing."""
+        with patch("python_postman.execution.executor.HTTPX_AVAILABLE", True):
+            return RequestExecutor()
+
+    @pytest.fixture
+    def mock_collection(self):
+        """Create a mock collection with requests."""
+        from python_postman.models.collection_info import CollectionInfo
+
+        # Create mock requests
+        request1 = Mock(spec=Request)
+        request1.name = "Request 1"
+        request1._collection = None
+
+        request2 = Mock(spec=Request)
+        request2.name = "Request 2"
+        request2._collection = None
+
+        request3 = Mock(spec=Request)
+        request3.name = "Request 3"
+        request3._collection = None
+
+        # Create mock collection
+        collection = Mock(spec=Collection)
+        collection.info = CollectionInfo(name="Test Collection")
+        collection.get_all_requests.return_value = [request1, request2, request3]
+
+        return collection, [request1, request2, request3]
+
+    @pytest.fixture
+    def mock_empty_collection(self):
+        """Create a mock empty collection."""
+        from python_postman.models.collection_info import CollectionInfo
+
+        collection = Mock(spec=Collection)
+        collection.info = CollectionInfo(name="Empty Collection")
+        collection.get_all_requests.return_value = []
+
+        return collection
+
+    @pytest.mark.asyncio
+    async def test_execute_collection_sequential_success(
+        self, executor, mock_collection
+    ):
+        """Test successful sequential collection execution."""
+        collection, requests = mock_collection
+
+        # Mock successful execution results
+        mock_results = []
+        for i, request in enumerate(requests):
+            result = Mock()
+            result.success = True
+            result.request = request
+            result.response = Mock()
+            result.response.status_code = 200
+            result.error = None
+            result.test_results = Mock()
+            result.execution_time_ms = 100.0 + i * 10
+            mock_results.append(result)
+
+        with patch.object(
+            executor, "execute_request", side_effect=mock_results
+        ) as mock_execute:
+            with patch.object(executor, "_create_execution_context") as mock_context:
+                mock_context.return_value = Mock()
+
+                result = await executor.execute_collection(collection)
+
+                # Verify execution calls
+                assert mock_execute.call_count == 3
+                for i, request in enumerate(requests):
+                    mock_execute.assert_any_call(request, mock_context.return_value)
+
+                # Verify result
+                assert result.collection_name == "Test Collection"
+                assert result.total_requests == 3
+                assert result.successful_requests == 3
+                assert result.failed_requests == 0
+                assert result.success_rate == 1.0
+                assert result.total_time_ms > 0
+                assert len(result.results) == 3
+
+                # Verify collection reference was set
+                for request in requests:
+                    assert request._collection == collection
+
+    @pytest.mark.asyncio
+    async def test_execute_collection_sequential_with_failures(
+        self, executor, mock_collection
+    ):
+        """Test sequential collection execution with some failures."""
+        collection, requests = mock_collection
+
+        # Mock mixed execution results (success, failure, success)
+        mock_results = []
+        for i, request in enumerate(requests):
+            result = Mock()
+            result.request = request
+            result.execution_time_ms = 100.0 + i * 10
+
+            if i == 1:  # Second request fails
+                result.success = False
+                result.response = None
+                result.error = RequestExecutionError("Request failed")
+                result.test_results = None
+            else:
+                result.success = True
+                result.response = Mock()
+                result.response.status_code = 200
+                result.error = None
+                result.test_results = Mock()
+
+            mock_results.append(result)
+
+        with patch.object(executor, "execute_request", side_effect=mock_results):
+            with patch.object(executor, "_create_execution_context") as mock_context:
+                mock_context.return_value = Mock()
+
+                result = await executor.execute_collection(collection)
+
+                # Verify result
+                assert result.collection_name == "Test Collection"
+                assert result.total_requests == 3
+                assert result.successful_requests == 2
+                assert result.failed_requests == 1
+                assert result.success_rate == 2 / 3
+                assert len(result.results) == 3
+
+    @pytest.mark.asyncio
+    async def test_execute_collection_sequential_stop_on_error(
+        self, executor, mock_collection
+    ):
+        """Test sequential collection execution with stop_on_error=True."""
+        collection, requests = mock_collection
+
+        # Mock execution results where second request fails
+        mock_results = []
+        for i, request in enumerate(requests):
+            result = Mock()
+            result.request = request
+            result.execution_time_ms = 100.0 + i * 10
+
+            if i == 1:  # Second request fails
+                result.success = False
+                result.response = None
+                result.error = RequestExecutionError("Request failed")
+                result.test_results = None
+            else:
+                result.success = True
+                result.response = Mock()
+                result.response.status_code = 200
+                result.error = None
+                result.test_results = Mock()
+
+            mock_results.append(result)
+
+        with patch.object(
+            executor, "execute_request", side_effect=mock_results
+        ) as mock_execute:
+            with patch.object(executor, "_create_execution_context") as mock_context:
+                mock_context.return_value = Mock()
+
+                result = await executor.execute_collection(
+                    collection, stop_on_error=True
+                )
+
+                # Should only execute first two requests
+                assert mock_execute.call_count == 2
+                assert result.total_requests == 2
+                assert result.successful_requests == 1
+                assert result.failed_requests == 1
+
+    @pytest.mark.asyncio
+    async def test_execute_collection_sequential_exception_handling(
+        self, executor, mock_collection
+    ):
+        """Test sequential collection execution with exceptions."""
+        collection, requests = mock_collection
+
+        # Mock execute_request to raise exception for second request
+        def mock_execute_side_effect(request, context):
+            if request.name == "Request 2":
+                raise RuntimeError("Unexpected error")
+
+            result = Mock()
+            result.success = True
+            result.request = request
+            result.response = Mock()
+            result.response.status_code = 200
+            result.error = None
+            result.test_results = Mock()
+            result.execution_time_ms = 100.0
+            return result
+
+        with patch.object(
+            executor, "execute_request", side_effect=mock_execute_side_effect
+        ):
+            with patch.object(executor, "_create_execution_context") as mock_context:
+                mock_context.return_value = Mock()
+
+                result = await executor.execute_collection(collection)
+
+                # Verify result includes failed request
+                assert result.total_requests == 3
+                assert result.successful_requests == 2
+                assert result.failed_requests == 1
+
+                # Find the failed result
+                failed_result = next(r for r in result.results if not r.success)
+                assert failed_result.request.name == "Request 2"
+                assert isinstance(failed_result.error, RuntimeError)
+
+    @pytest.mark.asyncio
+    async def test_execute_collection_parallel_success(self, executor, mock_collection):
+        """Test successful parallel collection execution."""
+        collection, requests = mock_collection
+
+        # Mock successful execution results
+        mock_results = []
+        for i, request in enumerate(requests):
+            result = Mock()
+            result.success = True
+            result.request = request
+            result.response = Mock()
+            result.response.status_code = 200
+            result.error = None
+            result.test_results = Mock()
+            result.execution_time_ms = 100.0 + i * 10
+            mock_results.append(result)
+
+        with patch.object(
+            executor, "execute_request", side_effect=mock_results
+        ) as mock_execute:
+            with patch.object(executor, "_create_execution_context") as mock_context:
+                mock_context.return_value = Mock()
+
+                result = await executor.execute_collection(collection, parallel=True)
+
+                # Verify all requests were executed
+                assert mock_execute.call_count == 3
+                assert result.total_requests == 3
+                assert result.successful_requests == 3
+                assert result.failed_requests == 0
+
+    @pytest.mark.asyncio
+    async def test_execute_collection_parallel_with_exceptions(
+        self, executor, mock_collection
+    ):
+        """Test parallel collection execution with exceptions."""
+        collection, requests = mock_collection
+
+        # Mock execute_request to raise exception for second request
+        async def mock_execute_side_effect(request, context):
+            if request.name == "Request 2":
+                raise RuntimeError("Unexpected error")
+
+            result = Mock()
+            result.success = True
+            result.request = request
+            result.response = Mock()
+            result.response.status_code = 200
+            result.error = None
+            result.test_results = Mock()
+            result.execution_time_ms = 100.0
+            return result
+
+        with patch.object(
+            executor, "execute_request", side_effect=mock_execute_side_effect
+        ):
+            with patch.object(executor, "_create_execution_context") as mock_context:
+                mock_context.return_value = Mock()
+
+                result = await executor.execute_collection(collection, parallel=True)
+
+                # Verify result includes failed request
+                assert result.total_requests == 3
+                assert result.successful_requests == 2
+                assert result.failed_requests == 1
+
+                # Find the failed result
+                failed_result = next(r for r in result.results if not r.success)
+                assert failed_result.request.name == "Request 2"
+                assert isinstance(failed_result.error, RuntimeError)
+
+    @pytest.mark.asyncio
+    async def test_execute_collection_parallel_stop_on_error(
+        self, executor, mock_collection
+    ):
+        """Test parallel collection execution with stop_on_error=True."""
+        collection, requests = mock_collection
+
+        # Mock execution results where second request fails
+        mock_results = []
+        for i, request in enumerate(requests):
+            result = Mock()
+            result.request = request
+            result.execution_time_ms = 100.0 + i * 10
+
+            if i == 1:  # Second request fails
+                result.success = False
+                result.response = None
+                result.error = RequestExecutionError("Request failed")
+                result.test_results = None
+            else:
+                result.success = True
+                result.response = Mock()
+                result.response.status_code = 200
+                result.error = None
+                result.test_results = Mock()
+
+            mock_results.append(result)
+
+        with patch.object(executor, "execute_request", side_effect=mock_results):
+            with patch.object(executor, "_create_execution_context") as mock_context:
+                mock_context.return_value = Mock()
+
+                result = await executor.execute_collection(
+                    collection, parallel=True, stop_on_error=True
+                )
+
+                # With parallel execution and stop_on_error, all tasks start but execution stops
+                # when the first error is encountered during result processing
+                assert (
+                    result.total_requests >= 1
+                )  # At least one request should be processed
+                assert result.failed_requests >= 1  # At least one should fail
+
+    @pytest.mark.asyncio
+    async def test_execute_collection_empty_collection(
+        self, executor, mock_empty_collection
+    ):
+        """Test execution of empty collection."""
+        collection = mock_empty_collection
+
+        with patch.object(executor, "_create_execution_context") as mock_context:
+            mock_context.return_value = Mock()
+
+            result = await executor.execute_collection(collection)
+
+            # Verify result
+            assert result.collection_name == "Empty Collection"
+            assert result.total_requests == 0
+            assert result.successful_requests == 0
+            assert result.failed_requests == 0
+            assert (
+                result.success_rate == 1.0
+            )  # Empty collection is considered successful
+            assert len(result.results) == 0
+
+    @pytest.mark.asyncio
+    async def test_execute_collection_variable_state_maintenance(
+        self, executor, mock_collection
+    ):
+        """Test that variable state is maintained across requests in collection execution."""
+        collection, requests = mock_collection
+
+        # Mock execution context
+        mock_context = Mock()
+
+        with patch.object(executor, "execute_request") as mock_execute:
+            with patch.object(
+                executor, "_create_execution_context", return_value=mock_context
+            ):
+
+                # Mock successful results
+                mock_results = [
+                    Mock(success=True, execution_time_ms=100.0) for _ in requests
+                ]
+                mock_execute.side_effect = mock_results
+
+                await executor.execute_collection(collection)
+
+                # Verify that the same context is used for all requests
+                for call in mock_execute.call_args_list:
+                    assert (
+                        call[0][1] == mock_context
+                    )  # Second argument should be the context
+
+    @pytest.mark.asyncio
+    async def test_execute_collection_timing_calculation(
+        self, executor, mock_collection
+    ):
+        """Test that collection execution timing is calculated correctly."""
+        collection, requests = mock_collection
+
+        with patch.object(executor, "execute_request") as mock_execute:
+            with patch.object(executor, "_create_execution_context") as mock_context:
+                mock_context.return_value = Mock()
+
+                # Mock results with specific timing
+                mock_results = []
+                for i, request in enumerate(requests):
+                    result = Mock()
+                    result.success = True
+                    result.execution_time_ms = 100.0 + i * 50  # 100, 150, 200 ms
+                    mock_results.append(result)
+
+                mock_execute.side_effect = mock_results
+
+                result = await executor.execute_collection(collection)
+
+                # Total time should be greater than 0 (wall clock time)
+                assert result.total_time_ms > 0
+                # Individual request times should sum to 450ms
+                total_request_time = sum(r.execution_time_ms for r in result.results)
+                assert total_request_time == 450.0
+
+
 class TestRequestExecutorMethodPlaceholders:
     """Test that execution methods have proper placeholders."""
 
@@ -1108,12 +1521,6 @@ class TestRequestExecutorMethodPlaceholders:
         """Create a RequestExecutor for testing."""
         with patch("python_postman.execution.executor.HTTPX_AVAILABLE", True):
             return RequestExecutor()
-
-    @pytest.mark.asyncio
-    async def test_execute_collection_placeholder(self, executor):
-        """Test that execute_collection has proper placeholder."""
-        with pytest.raises(NotImplementedError, match="task 12"):
-            await executor.execute_collection(Mock())
 
     @pytest.mark.asyncio
     async def test_execute_folder_placeholder(self, executor):
