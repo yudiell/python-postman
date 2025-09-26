@@ -1,0 +1,390 @@
+"""
+Main execution engine for HTTP requests.
+
+This module contains the RequestExecutor class, which orchestrates the execution
+of HTTP requests from Postman collections, including variable resolution,
+authentication, script execution, and response handling.
+"""
+
+import warnings
+from typing import Optional, Dict, Any, Union, TYPE_CHECKING
+from .context import ExecutionContext
+from .extensions import RequestExtensions
+from .variable_resolver import VariableResolver
+from .auth_handler import AuthHandler
+from .results import ExecutionResult, CollectionExecutionResult, FolderExecutionResult
+from .exceptions import ExecutionError, RequestExecutionError
+from ..models.request import Request
+from ..models.collection import Collection
+from ..models.folder import Folder
+
+try:
+    import httpx
+
+    HTTPX_AVAILABLE = True
+except ImportError:
+    HTTPX_AVAILABLE = False
+    httpx = None
+
+# Type annotations for when httpx is not available
+if TYPE_CHECKING and not HTTPX_AVAILABLE:
+    import httpx
+
+
+class RequestExecutor:
+    """
+    Main class for executing HTTP requests from Postman collections.
+
+    The RequestExecutor orchestrates the complete request execution flow,
+    including variable resolution, authentication, pre-request scripts,
+    HTTP request execution, and test script execution.
+    """
+
+    def __init__(
+        self,
+        client_config: Optional[Dict[str, Any]] = None,
+        variable_overrides: Optional[Dict[str, Any]] = None,
+        global_headers: Optional[Dict[str, str]] = None,
+        script_timeout: float = 30.0,
+        request_delay: float = 0.0,
+    ):
+        """
+        Initialize the executor with configuration options.
+
+        Args:
+            client_config: Configuration options for the httpx client
+            variable_overrides: Global variable overrides
+            global_headers: Headers to add to all requests
+            script_timeout: Timeout for script execution in seconds
+            request_delay: Delay between requests in seconds
+
+        Raises:
+            ExecutionError: If httpx is not available
+        """
+        if not HTTPX_AVAILABLE:
+            raise ExecutionError(
+                "httpx is required for request execution. Install with: pip install httpx"
+            )
+
+        # Store configuration
+        self.variable_overrides = variable_overrides or {}
+        self.global_headers = global_headers or {}
+        self.script_timeout = script_timeout
+        self.request_delay = request_delay
+
+        # Set up default client configuration
+        default_config = {
+            "timeout": 30.0,
+            "verify": True,
+            "follow_redirects": True,
+        }
+
+        # Merge user config with defaults
+        self.client_config = {**default_config, **(client_config or {})}
+
+        # Warn about insecure SSL settings
+        if not self.client_config.get("verify", True):
+            warnings.warn(
+                "SSL verification is disabled. This is insecure and should only be used for testing.",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        # Initialize helper components
+        self.auth_handler = AuthHandler()
+
+        # HTTP clients will be created lazily
+        self._sync_client: Optional["httpx.Client"] = None
+        self._async_client: Optional["httpx.AsyncClient"] = None
+
+    def _get_sync_client(self) -> "httpx.Client":
+        """Get or create the synchronous HTTP client."""
+        if self._sync_client is None:
+            self._sync_client = httpx.Client(**self.client_config)
+        return self._sync_client
+
+    def _get_async_client(self) -> "httpx.AsyncClient":
+        """Get or create the asynchronous HTTP client."""
+        if self._async_client is None:
+            self._async_client = httpx.AsyncClient(**self.client_config)
+        return self._async_client
+
+    def _create_execution_context(
+        self,
+        collection: Optional[Collection] = None,
+        folder: Optional[Folder] = None,
+        request: Optional[Request] = None,
+        additional_variables: Optional[Dict[str, Any]] = None,
+    ) -> ExecutionContext:
+        """
+        Create an execution context with proper variable scoping.
+
+        Args:
+            collection: Collection containing variables
+            folder: Folder containing variables
+            request: Request containing variables
+            additional_variables: Additional variables to include
+
+        Returns:
+            ExecutionContext: Configured execution context
+        """
+        # Extract variables from collection
+        collection_vars = {}
+        if collection and hasattr(collection, "variable") and collection.variable:
+            for var in collection.variable:
+                if hasattr(var, "key") and hasattr(var, "value"):
+                    collection_vars[var.key] = var.value
+
+        # Extract variables from folder
+        folder_vars = {}
+        if folder and hasattr(folder, "variable") and folder.variable:
+            for var in folder.variable:
+                if hasattr(var, "key") and hasattr(var, "value"):
+                    folder_vars[var.key] = var.value
+
+        # Extract variables from request
+        request_vars = {}
+        if request and hasattr(request, "variable") and request.variable:
+            for var in request.variable:
+                if hasattr(var, "key") and hasattr(var, "value"):
+                    request_vars[var.key] = var.value
+
+        # Merge with overrides and additional variables
+        environment_vars = {**self.variable_overrides, **(additional_variables or {})}
+
+        return ExecutionContext(
+            collection_variables=collection_vars,
+            folder_variables=folder_vars,
+            environment_variables=environment_vars,
+            request_variables=request_vars,
+        )
+
+    def _prepare_request(
+        self,
+        request: Request,
+        context: ExecutionContext,
+        substitutions: Optional[Dict[str, Any]] = None,
+        extensions: Optional[RequestExtensions] = None,
+    ) -> Dict[str, Any]:
+        """
+        Prepare a request for execution by resolving variables, applying auth, and extensions.
+
+        Args:
+            request: The request to prepare
+            context: Execution context with variables
+            substitutions: Runtime variable substitutions
+            extensions: Runtime request extensions
+
+        Returns:
+            Dictionary containing prepared request parameters for httpx
+
+        Raises:
+            RequestExecutionError: If request preparation fails
+        """
+        try:
+            # Create a child context with substitutions
+            if substitutions:
+                child_context = ExecutionContext(
+                    collection_variables=context.collection_variables,
+                    folder_variables=context.folder_variables,
+                    environment_variables={
+                        **context.environment_variables,
+                        **substitutions,
+                    },
+                    request_variables=context.request_variables,
+                )
+            else:
+                child_context = context
+
+            # Apply extensions to create modified request if needed
+            working_request = request
+            if extensions:
+                working_request = extensions.apply_to_request(request, child_context)
+
+            # Initialize variable resolver
+            resolver = VariableResolver(child_context)
+
+            # Resolve URL
+            url = (
+                resolver.resolve_url(working_request.url) if working_request.url else ""
+            )
+            if not url:
+                raise RequestExecutionError("Request URL is required")
+
+            # Resolve headers
+            headers = resolver.resolve_headers(working_request.header or [])
+
+            # Add global headers
+            headers.update(self.global_headers)
+
+            # Resolve and apply authentication
+            collection_auth = None
+            if hasattr(working_request, "_collection") and working_request._collection:
+                collection_auth = getattr(working_request._collection, "auth", None)
+
+            auth_data = self.auth_handler.apply_auth(
+                working_request.auth, collection_auth, child_context
+            )
+
+            # Merge auth headers
+            if auth_data.get("headers"):
+                headers.update(auth_data["headers"])
+
+            # Resolve body
+            body = (
+                resolver.resolve_body(working_request.body)
+                if working_request.body
+                else None
+            )
+
+            # Prepare httpx request parameters
+            request_params = {
+                "method": (
+                    working_request.method.upper() if working_request.method else "GET"
+                ),
+                "url": url,
+                "headers": headers,
+            }
+
+            # Add body if present
+            if body is not None:
+                if isinstance(body, dict):
+                    request_params["json"] = body
+                elif isinstance(body, str):
+                    request_params["content"] = body
+                else:
+                    request_params["content"] = body
+
+            # Add query parameters from auth if present
+            if auth_data.get("params"):
+                request_params["params"] = auth_data["params"]
+
+            return request_params
+
+        except Exception as e:
+            if isinstance(e, RequestExecutionError):
+                raise
+            raise RequestExecutionError(f"Failed to prepare request: {str(e)}") from e
+
+    def close(self) -> None:
+        """Close HTTP clients and clean up resources."""
+        if self._sync_client:
+            self._sync_client.close()
+            self._sync_client = None
+        if self._async_client:
+            # Note: async client close should be awaited, but we can't do that in sync method
+            # Users should call aclose() for proper async cleanup
+            self._async_client = None
+
+    async def aclose(self) -> None:
+        """Close HTTP clients asynchronously and clean up resources."""
+        if self._sync_client:
+            self._sync_client.close()
+            self._sync_client = None
+        if self._async_client:
+            await self._async_client.aclose()
+            self._async_client = None
+
+    def __enter__(self):
+        """Context manager entry."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit."""
+        self.close()
+
+    async def __aenter__(self):
+        """Async context manager entry."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        await self.aclose()
+
+    async def execute_request(
+        self,
+        request: Request,
+        context: ExecutionContext,
+        substitutions: Optional[Dict[str, Any]] = None,
+        extensions: Optional[RequestExtensions] = None,
+    ) -> ExecutionResult:
+        """
+        Execute a single request asynchronously.
+
+        Args:
+            request: The request to execute
+            context: Execution context with variables and state
+            substitutions: Runtime variable substitutions
+            extensions: Runtime request extensions
+
+        Returns:
+            ExecutionResult: Result of the request execution
+        """
+        # Implementation will be added in task 10
+        raise NotImplementedError("Request execution will be implemented in task 10")
+
+    def execute_request_sync(
+        self,
+        request: Request,
+        context: ExecutionContext,
+        substitutions: Optional[Dict[str, Any]] = None,
+        extensions: Optional[RequestExtensions] = None,
+    ) -> ExecutionResult:
+        """
+        Execute a single request synchronously.
+
+        Args:
+            request: The request to execute
+            context: Execution context with variables and state
+            substitutions: Runtime variable substitutions
+            extensions: Runtime request extensions
+
+        Returns:
+            ExecutionResult: Result of the request execution
+        """
+        # Implementation will be added in task 10
+        raise NotImplementedError(
+            "Synchronous request execution will be implemented in task 10"
+        )
+
+    async def execute_collection(
+        self,
+        collection: Collection,
+        parallel: bool = False,
+        stop_on_error: bool = False,
+    ) -> CollectionExecutionResult:
+        """
+        Execute all requests in a collection.
+
+        Args:
+            collection: The collection to execute
+            parallel: Whether to execute requests in parallel
+            stop_on_error: Whether to stop execution on first error
+
+        Returns:
+            CollectionExecutionResult: Result of the collection execution
+        """
+        # Implementation will be added in task 12
+        raise NotImplementedError("Collection execution will be implemented in task 12")
+
+    async def execute_folder(
+        self,
+        folder: Folder,
+        context: ExecutionContext,
+        parallel: bool = False,
+        stop_on_error: bool = False,
+    ) -> FolderExecutionResult:
+        """
+        Execute all requests in a folder.
+
+        Args:
+            folder: The folder to execute
+            context: Execution context with variables and state
+            parallel: Whether to execute requests in parallel
+            stop_on_error: Whether to stop execution on first error
+
+        Returns:
+            FolderExecutionResult: Result of the folder execution
+        """
+        # Implementation will be added in task 13
+        raise NotImplementedError("Folder execution will be implemented in task 13")

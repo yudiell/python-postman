@@ -28,9 +28,13 @@ requires-python = ">=3.9"
 dependencies = []
 
 [project.optional-dependencies]
+execution = [
+    "httpx>=0.25.0",
+]
 dev = [
     "pytest>=8.4.2",
     "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
     "black>=23.0.0",
     "isort>=5.12.0",
     "mypy>=1.0.0",
@@ -55,6 +59,9 @@ addopts = [
     "--strict-markers",
     "--strict-config",
     "--verbose",
+]
+markers = [
+    "asyncio: marks tests as async",
 ]
 
 [tool.black]
@@ -95,3 +102,8 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+
+[dependency-groups]
+dev = [
+    "pytest-asyncio>=1.2.0",
+]

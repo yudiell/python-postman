@@ -1,0 +1,99 @@
+{
+	"info": {
+		"_postman_id": "4c7396f7-7e7d-4177-b777-fc6057c97a11",
+		"name": "cftc.gov",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3009653"
+	},
+	"item": [
+		{
+			"name": "getApiData",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/:datasetId?$offset=0&$limit=10&$order=report_date_as_yyyy_mm_dd",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						":datasetId"
+					],
+					"query": [
+						{
+							"key": "$offset",
+							"value": "0"
+						},
+						{
+							"key": "$limit",
+							"value": "10"
+						},
+						{
+							"key": "$order",
+							"value": "report_date_as_yyyy_mm_dd"
+						}
+					],
+					"variable": [
+						{
+							"key": "datasetId",
+							"value": "{{datasetId}}"
+						}
+					]
+				},
+				"description": "kh3c-gbw2: Disaggregated Futures-and-Options - Combined data\n\nyw9f-hn96: Traders in Financial Futures- Futures-and-Options - Combined data"
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "{{cftc-X-App-Token}}",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "X-App-Token",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "https://publicreporting.cftc.gov/resource"
+		},
+		{
+			"key": "reportDate",
+			"value": "2006-06-20"
+		},
+		{
+			"key": "datasetId",
+			"value": "kh3c-gbw2"
+		}
+	]
+}
