@@ -51,8 +51,9 @@ class VariableResolver:
         if url.raw:
             resolved_raw = self.resolve_string(url.raw)
 
-            # Add query parameters if they exist
-            if url.query:
+            # Only add query parameters if they don't already exist in the raw URL
+            # This prevents duplication when both raw URL contains query params AND url.query exists
+            if url.query and "?" not in resolved_raw:
                 query_parts = []
                 for param in url.query:
                     if not param.disabled and param.key:
@@ -63,8 +64,7 @@ class VariableResolver:
                         query_parts.append(f"{resolved_key}={resolved_value}")
 
                 if query_parts:
-                    separator = "?" if "?" not in resolved_raw else "&"
-                    resolved_raw += separator + "&".join(query_parts)
+                    resolved_raw += "?" + "&".join(query_parts)
 
             # Add hash/fragment if it exists
             if url.hash:
