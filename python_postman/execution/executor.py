@@ -7,11 +7,14 @@ authentication, script execution, and response handling.
 """
 
 import warnings
+import time
 from typing import Optional, Dict, Any, Union, TYPE_CHECKING
 from .context import ExecutionContext
 from .extensions import RequestExtensions
 from .variable_resolver import VariableResolver
 from .auth_handler import AuthHandler
+from .script_runner import ScriptRunner
+from .response import ExecutionResponse
 from .results import ExecutionResult, CollectionExecutionResult, FolderExecutionResult
 from .exceptions import ExecutionError, RequestExecutionError
 from ..models.request import Request
@@ -342,9 +345,62 @@ class RequestExecutor:
         Returns:
             ExecutionResult: Result of the request execution
         """
-        # Implementation will be added in task 10
-        raise NotImplementedError(
-            "Synchronous request execution will be implemented in task 10"
+        execution_start = time.time()
+        response = None
+        error = None
+        test_results = None
+
+        try:
+            # Initialize script runner
+            script_runner = ScriptRunner(timeout=self.script_timeout)
+
+            # Execute pre-request scripts
+            collection = getattr(request, "_collection", None)
+            script_runner.execute_pre_request_scripts(request, collection, context)
+
+            # Prepare the HTTP request
+            request_params = self._prepare_request(
+                request, context, substitutions, extensions
+            )
+
+            # Execute the HTTP request
+            client = self._get_sync_client()
+
+            # Add delay if configured
+            if self.request_delay > 0:
+                time.sleep(self.request_delay)
+
+            request_start = time.time()
+            httpx_response = client.request(**request_params)
+            request_end = time.time()
+
+            # Wrap response
+            response = ExecutionResponse(httpx_response, request_start, request_end)
+
+            # Execute test scripts
+            test_results = script_runner.execute_test_scripts(
+                request, response, context
+            )
+
+        except Exception as e:
+            error = e
+            if isinstance(e, RequestExecutionError):
+                # Re-raise execution errors as-is
+                pass
+            else:
+                # Wrap other exceptions
+                error = RequestExecutionError(f"Request execution failed: {str(e)}")
+
+        execution_end = time.time()
+        execution_time_ms = (execution_end - execution_start) * 1000
+
+        # Create and return execution result
+        return ExecutionResult(
+            request=request,
+            response=response,
+            error=error,
+            test_results=test_results,
+            execution_time_ms=execution_time_ms,
         )
 
     async def execute_collection(

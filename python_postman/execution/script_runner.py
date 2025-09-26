@@ -224,20 +224,24 @@ class ScriptRunner:
         self._console_logs: List[str] = []
 
     def execute_pre_request_scripts(
-        self, request: Request, collection: Collection, context: ExecutionContext
+        self,
+        request: Request,
+        collection: Optional[Collection],
+        context: ExecutionContext,
     ) -> None:
         """
         Execute pre-request scripts and update context.
 
         Args:
             request: Request object with potential pre-request scripts
-            collection: Collection object with potential collection-level scripts
+            collection: Collection object with potential collection-level scripts (optional)
             context: Execution context to update with script results
         """
         # Execute collection-level pre-request scripts first
-        for event in collection.events:
-            if event.is_prerequest() and event.has_script():
-                self._execute_script(event.get_script_content(), context, None)
+        if collection:
+            for event in collection.events:
+                if event.is_prerequest() and event.has_script():
+                    self._execute_script(event.get_script_content(), context, None)
 
         # Execute request-level pre-request scripts
         for event in request.events:

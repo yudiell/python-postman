@@ -501,6 +501,261 @@ class TestRequestExecutorResourceManagement:
         mock_async_client.aclose.assert_called_once()
 
 
+class TestRequestExecutorSynchronousExecution:
+    """Test synchronous request execution."""
+
+    @pytest.fixture
+    def executor(self):
+        """Create a RequestExecutor for testing."""
+        with patch("python_postman.execution.executor.HTTPX_AVAILABLE", True):
+            return RequestExecutor()
+
+    @pytest.fixture
+    def mock_request(self):
+        """Create a mock request for testing."""
+        request = Mock(spec=Request)
+        request.name = "Test Request"
+        request.method = "GET"
+        request.url = Mock()
+        request.header = []
+        request.body = None
+        request.auth = None
+        request.events = []
+        request._collection = None
+        return request
+
+    @pytest.fixture
+    def mock_context(self):
+        """Create a mock execution context."""
+        return Mock(spec=ExecutionContext)
+
+    def test_execute_request_sync_success(self, executor, mock_request, mock_context):
+        """Test successful synchronous request execution."""
+        # Mock the HTTP client and response
+        mock_client = Mock()
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.headers = {"Content-Type": "application/json"}
+        mock_response.text = '{"result": "success"}'
+        mock_response.json.return_value = {"result": "success"}
+        mock_response.content = b'{"result": "success"}'
+        mock_response.url = "https://api.example.com/test"
+        mock_response.request.method = "GET"
+        mock_client.request.return_value = mock_response
+
+        # Mock script runner
+        mock_script_runner = Mock()
+        mock_test_results = Mock()
+        mock_script_runner.execute_test_scripts.return_value = mock_test_results
+
+        with patch.object(executor, "_get_sync_client", return_value=mock_client):
+            with patch.object(executor, "_prepare_request") as mock_prepare:
+                mock_prepare.return_value = {
+                    "method": "GET",
+                    "url": "https://api.example.com/test",
+                    "headers": {},
+                }
+                with patch(
+                    "python_postman.execution.executor.ScriptRunner",
+                    return_value=mock_script_runner,
+                ):
+                    with patch(
+                        "python_postman.execution.executor.time.time",
+                        side_effect=[1.0, 1.1, 1.2, 1.3],
+                    ):
+                        result = executor.execute_request_sync(
+                            mock_request, mock_context
+                        )
+
+        # Verify the result
+        assert result.request is mock_request
+        assert result.response is not None
+        assert result.error is None
+        assert result.test_results is mock_test_results
+        assert abs(result.execution_time_ms - 300.0) < 0.1  # (1.3 - 1.0) * 1000
+
+        # Verify script execution
+        mock_script_runner.execute_pre_request_scripts.assert_called_once()
+        mock_script_runner.execute_test_scripts.assert_called_once()
+
+        # Verify HTTP request
+        mock_client.request.assert_called_once()
+
+    def test_execute_request_sync_with_collection_scripts(
+        self, executor, mock_request, mock_context
+    ):
+        """Test synchronous request execution with collection-level scripts."""
+        mock_collection = Mock()
+        mock_request._collection = mock_collection
+
+        mock_client = Mock()
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_client.request.return_value = mock_response
+
+        mock_script_runner = Mock()
+
+        with patch.object(executor, "_get_sync_client", return_value=mock_client):
+            with patch.object(executor, "_prepare_request") as mock_prepare:
+                mock_prepare.return_value = {
+                    "method": "GET",
+                    "url": "https://api.example.com/test",
+                }
+                with patch(
+                    "python_postman.execution.executor.ScriptRunner",
+                    return_value=mock_script_runner,
+                ):
+                    executor.execute_request_sync(mock_request, mock_context)
+
+        # Verify collection was passed to script runner
+        mock_script_runner.execute_pre_request_scripts.assert_called_once_with(
+            mock_request, mock_collection, mock_context
+        )
+
+    def test_execute_request_sync_with_delay(
+        self, executor, mock_request, mock_context
+    ):
+        """Test synchronous request execution with request delay."""
+        executor.request_delay = 0.1
+
+        mock_client = Mock()
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_client.request.return_value = mock_response
+
+        with patch.object(executor, "_get_sync_client", return_value=mock_client):
+            with patch.object(executor, "_prepare_request") as mock_prepare:
+                mock_prepare.return_value = {
+                    "method": "GET",
+                    "url": "https://api.example.com/test",
+                }
+                with patch(
+                    "python_postman.execution.executor.time.sleep"
+                ) as mock_sleep:
+                    with patch("python_postman.execution.executor.ScriptRunner"):
+                        executor.execute_request_sync(mock_request, mock_context)
+
+        mock_sleep.assert_called_once_with(0.1)
+
+    def test_execute_request_sync_with_substitutions(
+        self, executor, mock_request, mock_context
+    ):
+        """Test synchronous request execution with substitutions."""
+        substitutions = {"api_key": "test123"}
+
+        mock_client = Mock()
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_client.request.return_value = mock_response
+
+        with patch.object(executor, "_get_sync_client", return_value=mock_client):
+            with patch.object(executor, "_prepare_request") as mock_prepare:
+                mock_prepare.return_value = {
+                    "method": "GET",
+                    "url": "https://api.example.com/test",
+                }
+                with patch("python_postman.execution.executor.ScriptRunner"):
+                    executor.execute_request_sync(
+                        mock_request, mock_context, substitutions=substitutions
+                    )
+
+        # Verify substitutions were passed to prepare_request
+        mock_prepare.assert_called_once_with(
+            mock_request, mock_context, substitutions, None
+        )
+
+    def test_execute_request_sync_with_extensions(
+        self, executor, mock_request, mock_context
+    ):
+        """Test synchronous request execution with extensions."""
+        extensions = Mock(spec=RequestExtensions)
+
+        mock_client = Mock()
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_client.request.return_value = mock_response
+
+        with patch.object(executor, "_get_sync_client", return_value=mock_client):
+            with patch.object(executor, "_prepare_request") as mock_prepare:
+                mock_prepare.return_value = {
+                    "method": "GET",
+                    "url": "https://api.example.com/test",
+                }
+                with patch("python_postman.execution.executor.ScriptRunner"):
+                    executor.execute_request_sync(
+                        mock_request, mock_context, extensions=extensions
+                    )
+
+        # Verify extensions were passed to prepare_request
+        mock_prepare.assert_called_once_with(
+            mock_request, mock_context, None, extensions
+        )
+
+    def test_execute_request_sync_http_error(
+        self, executor, mock_request, mock_context
+    ):
+        """Test synchronous request execution with HTTP error."""
+        mock_client = Mock()
+        mock_client.request.side_effect = Exception("Connection failed")
+
+        with patch.object(executor, "_get_sync_client", return_value=mock_client):
+            with patch.object(executor, "_prepare_request") as mock_prepare:
+                mock_prepare.return_value = {
+                    "method": "GET",
+                    "url": "https://api.example.com/test",
+                }
+                with patch("python_postman.execution.executor.ScriptRunner"):
+                    result = executor.execute_request_sync(mock_request, mock_context)
+
+        # Verify error handling
+        assert result.request is mock_request
+        assert result.response is None
+        assert result.error is not None
+        assert "Request execution failed" in str(result.error)
+        assert result.execution_time_ms > 0
+
+    def test_execute_request_sync_preparation_error(
+        self, executor, mock_request, mock_context
+    ):
+        """Test synchronous request execution with request preparation error."""
+        with patch.object(executor, "_prepare_request") as mock_prepare:
+            mock_prepare.side_effect = RequestExecutionError("Invalid URL")
+            with patch("python_postman.execution.executor.ScriptRunner"):
+                result = executor.execute_request_sync(mock_request, mock_context)
+
+        # Verify error handling
+        assert result.request is mock_request
+        assert result.response is None
+        assert result.error is not None
+        assert "Invalid URL" in str(result.error)
+
+    def test_execute_request_sync_script_error(
+        self, executor, mock_request, mock_context
+    ):
+        """Test synchronous request execution with script execution error."""
+        mock_script_runner = Mock()
+        mock_script_runner.execute_pre_request_scripts.side_effect = Exception(
+            "Script failed"
+        )
+
+        with patch.object(executor, "_prepare_request") as mock_prepare:
+            mock_prepare.return_value = {
+                "method": "GET",
+                "url": "https://api.example.com/test",
+            }
+            with patch(
+                "python_postman.execution.executor.ScriptRunner",
+                return_value=mock_script_runner,
+            ):
+                result = executor.execute_request_sync(mock_request, mock_context)
+
+        # Verify error handling - script errors should cause overall execution failure
+        assert result.request is mock_request
+        assert result.response is None
+        assert result.error is not None
+        assert "Request execution failed" in str(result.error)
+
+
 class TestRequestExecutorMethodPlaceholders:
     """Test that execution methods have proper placeholders."""
 
@@ -509,11 +764,6 @@ class TestRequestExecutorMethodPlaceholders:
         """Create a RequestExecutor for testing."""
         with patch("python_postman.execution.executor.HTTPX_AVAILABLE", True):
             return RequestExecutor()
-
-    def test_execute_request_placeholder(self, executor):
-        """Test that execute_request has proper placeholder."""
-        with pytest.raises(NotImplementedError, match="task 10"):
-            executor.execute_request_sync(Mock(), Mock())
 
     @pytest.mark.asyncio
     async def test_execute_request_async_placeholder(self, executor):
