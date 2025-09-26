@@ -180,8 +180,8 @@ class RequestExecutor:
         """
         # Extract variables from collection
         collection_vars = {}
-        if collection and hasattr(collection, "variable") and collection.variable:
-            for var in collection.variable:
+        if collection and hasattr(collection, "variables") and collection.variables:
+            for var in collection.variables:
                 if hasattr(var, "key") and hasattr(var, "value"):
                     collection_vars[var.key] = var.value
 
@@ -548,6 +548,7 @@ class RequestExecutor:
         collection: Collection,
         parallel: bool = False,
         stop_on_error: bool = False,
+        context: Optional[ExecutionContext] = None,
     ) -> CollectionExecutionResult:
         """
         Execute all requests in a collection.
@@ -556,6 +557,7 @@ class RequestExecutor:
             collection: The collection to execute
             parallel: Whether to execute requests in parallel
             stop_on_error: Whether to stop execution on first error
+            context: Optional ExecutionContext to use. If not provided, one will be created from collection variables
 
         Returns:
             CollectionExecutionResult: Result of the collection execution
@@ -581,6 +583,16 @@ class RequestExecutor:
             ... )
             >>> if result.failed_requests > 0:
             ...     print("Execution stopped due to error")
+
+            With custom execution context:
+
+            >>> context = ExecutionContext(
+            ...     environment_variables={"api_key": "secret"},
+            ...     collection_variables={"base_url": "https://api.example.com"}
+            ... )
+            >>> result = await executor.execute_collection(
+            ...     collection, context=context
+            ... )
         """
         import asyncio
 
@@ -594,7 +606,8 @@ class RequestExecutor:
         )
 
         # Create execution context for the collection
-        context = self._create_execution_context(collection=collection)
+        if context is None:
+            context = self._create_execution_context(collection=collection)
 
         # Get all requests from the collection
         all_requests = list(collection.get_all_requests())
