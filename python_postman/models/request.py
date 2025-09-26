@@ -2,13 +2,22 @@
 Request class representing HTTP requests in a collection.
 """
 
-from typing import List, Optional, Iterator
+from typing import List, Optional, Iterator, Dict, Any, TYPE_CHECKING
 from .item import Item
 from .url import Url
 from .header import Header
 from .body import Body
 from .auth import Auth
 from .event import Event
+
+# Import execution types only for type checking to avoid circular imports
+if TYPE_CHECKING:
+    from ..execution import (
+        RequestExecutor,
+        ExecutionContext,
+        ExecutionResult,
+        RequestExtensions,
+    )
 
 
 class Request(Item):
@@ -145,3 +154,129 @@ class Request(Item):
             result["event"] = [event.to_dict() for event in self.events]
 
         return result
+
+    async def execute(
+        self,
+        executor: Optional["RequestExecutor"] = None,
+        context: Optional["ExecutionContext"] = None,
+        substitutions: Optional[Dict[str, Any]] = None,
+        extensions: Optional["RequestExtensions"] = None,
+    ) -> "ExecutionResult":
+        """
+        Execute this request asynchronously.
+
+        This is a convenience method that creates a default executor and context
+        if not provided, making it easy to execute individual requests.
+
+        Args:
+            executor: Optional RequestExecutor instance. If not provided, a default one will be created
+            context: Optional ExecutionContext. If not provided, an empty context will be created
+            substitutions: Optional runtime variable substitutions
+            extensions: Optional runtime request extensions
+
+        Returns:
+            ExecutionResult: Result of the request execution
+
+        Raises:
+            ExecutionError: If httpx is not available or execution fails
+
+        Example:
+            ```python
+            # Simple execution
+            result = await request.execute()
+
+            # With custom variables
+            result = await request.execute(
+                substitutions={"api_key": "my-key"},
+                extensions=RequestExtensions(
+                    header_extensions={"X-Custom": "value"}
+                )
+            )
+            ```
+        """
+        # Import here to avoid circular imports and handle optional dependency
+        try:
+            from ..execution import RequestExecutor, ExecutionContext
+        except ImportError as e:
+            raise ImportError(
+                "Execution functionality requires httpx. Install with: pip install httpx"
+            ) from e
+
+        # Create default executor if not provided
+        if executor is None:
+            executor = RequestExecutor()
+
+        # Create default context if not provided
+        if context is None:
+            context = ExecutionContext()
+
+        # Execute the request
+        return await executor.execute_request(
+            request=self,
+            context=context,
+            substitutions=substitutions,
+            extensions=extensions,
+        )
+
+    def execute_sync(
+        self,
+        executor: Optional["RequestExecutor"] = None,
+        context: Optional["ExecutionContext"] = None,
+        substitutions: Optional[Dict[str, Any]] = None,
+        extensions: Optional["RequestExtensions"] = None,
+    ) -> "ExecutionResult":
+        """
+        Execute this request synchronously.
+
+        This is a convenience method that creates a default executor and context
+        if not provided, making it easy to execute individual requests.
+
+        Args:
+            executor: Optional RequestExecutor instance. If not provided, a default one will be created
+            context: Optional ExecutionContext. If not provided, an empty context will be created
+            substitutions: Optional runtime variable substitutions
+            extensions: Optional runtime request extensions
+
+        Returns:
+            ExecutionResult: Result of the request execution
+
+        Raises:
+            ExecutionError: If httpx is not available or execution fails
+
+        Example:
+            ```python
+            # Simple execution
+            result = request.execute_sync()
+
+            # With custom variables
+            result = request.execute_sync(
+                substitutions={"api_key": "my-key"},
+                extensions=RequestExtensions(
+                    header_extensions={"X-Custom": "value"}
+                )
+            )
+            ```
+        """
+        # Import here to avoid circular imports and handle optional dependency
+        try:
+            from ..execution import RequestExecutor, ExecutionContext
+        except ImportError as e:
+            raise ImportError(
+                "Execution functionality requires httpx. Install with: pip install httpx"
+            ) from e
+
+        # Create default executor if not provided
+        if executor is None:
+            executor = RequestExecutor()
+
+        # Create default context if not provided
+        if context is None:
+            context = ExecutionContext()
+
+        # Execute the request
+        return executor.execute_request_sync(
+            request=self,
+            context=context,
+            substitutions=substitutions,
+            extensions=extensions,
+        )
