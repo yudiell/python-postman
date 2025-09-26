@@ -259,6 +259,8 @@ class VariableResolver:
         """
         Resolve variables in string with recursion protection.
 
+        Supports both Postman-style variables ({{variable}}) and path parameters (:parameter).
+
         Args:
             text: Text containing variable references
             max_depth: Maximum recursion depth to prevent infinite loops
@@ -269,10 +271,14 @@ class VariableResolver:
         if not isinstance(text, str):
             return str(text) if text is not None else ""
 
-        # Use the context's resolve_variables method which already has
-        # recursion protection and proper variable resolution logic
+        resolved_text = text
+
         try:
-            return self.context.resolve_variables(text, max_depth)
+            # Use the context's resolve_variables method which now handles both
+            # Postman-style variables {{variable}} and path parameters :parameter
+            resolved_text = self.context.resolve_variables(resolved_text, max_depth)
+
+            return resolved_text
         except VariableResolutionError:
             # Re-raise variable resolution errors as-is
             raise

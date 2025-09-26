@@ -68,6 +68,18 @@ class ExecutionContext:
         # More precise pattern that requires exactly two braces on each side
         self._variable_pattern = re.compile(r"\{\{([^{}]+)\}\}")
 
+        # Pattern for matching path parameters like :datasetId, :userId, etc.
+        # Matches :word_characters but not if preceded by http: or https: and must be followed by / or ? or end of string
+        self._path_param_pattern = re.compile(
+            r"(?<!http)(?<!https):([a-zA-Z_][a-zA-Z0-9_]*)(?=/|\?|$|&)"
+        )
+
+        # Pattern for matching path parameters like :datasetId, :userId, etc.
+        # Matches :word_characters but not if preceded by http: or https:
+        self._path_param_pattern = re.compile(
+            r"(?<!http)(?<!https):([a-zA-Z_][a-zA-Z0-9_]*)"
+        )
+
     def get_variable(self, key: str) -> Optional[Any]:
         """Get variable value following precedence: request > folder > collection > environment.
 
@@ -131,8 +143,10 @@ class ExecutionContext:
     def resolve_variables(self, text: str, max_depth: int = 10) -> str:
         """Resolve all variables in a text string with recursion protection.
 
+        Supports both Postman-style variables ({{variable_name}}) and path parameters (:parameter).
+
         Args:
-            text: Text containing variables in {{variable_name}} format
+            text: Text containing variables in {{variable_name}} format and/or :parameter format
             max_depth: Maximum recursion depth to prevent infinite loops
 
         Returns:
@@ -149,6 +163,22 @@ class ExecutionContext:
             ... )
             >>> url = context.resolve_variables("https://{{api_host}}:{{port}}/users")
             >>> print(url)  # "https://api.example.com:443/users"
+
+            Path parameter resolution:
+
+            >>> context = ExecutionContext(
+            ...     environment_variables={"datasetId": "abc123", "userId": "456"}
+            ... )
+            >>> url = context.resolve_variables("https://api.example.com/:datasetId/users/:userId")
+            >>> print(url)  # "https://api.example.com/abc123/users/456"
+
+            Mixed variable and path parameter resolution:
+
+            >>> context = ExecutionContext(
+            ...     environment_variables={"baseURL": "https://api.example.com", "datasetId": "xyz789"}
+            ... )
+            >>> url = context.resolve_variables("{{baseURL}}/:datasetId/data")
+            >>> print(url)  # "https://api.example.com/xyz789/data"
 
             Nested variable resolution:
 
@@ -173,34 +203,52 @@ class ExecutionContext:
         depth = 0
 
         while depth < max_depth:
-            # Find all variable references with their positions
-            matches = list(self._variable_pattern.finditer(resolved_text))
-
-            if not matches:
-                # No more variables to resolve
-                break
-
             # Track if any substitutions were made this iteration
             substitutions_made = False
 
-            # Process matches in reverse order to maintain positions
-            for match in reversed(matches):
-                var_name = match.group(1).strip()
+            # Process Postman-style variables first
+            postman_matches = list(self._variable_pattern.finditer(resolved_text))
+            if postman_matches:
+                # Process in reverse order to maintain positions
+                for match in reversed(postman_matches):
+                    var_name = match.group(1).strip()
 
-                # Check if variable exists (including None values)
-                if not self._variable_exists(var_name):
-                    raise VariableResolutionError(
-                        f"Variable '{var_name}' not found in any scope"
+                    # Check if variable exists (including None values)
+                    if not self._variable_exists(var_name):
+                        raise VariableResolutionError(
+                            f"Variable '{var_name}' not found in any scope"
+                        )
+
+                    var_value = self.get_variable(var_name)
+
+                    # Replace the variable reference with its value
+                    start, end = match.span()
+                    resolved_text = (
+                        resolved_text[:start] + str(var_value) + resolved_text[end:]
                     )
+                    substitutions_made = True
 
-                var_value = self.get_variable(var_name)
+            # Process path parameters (recalculate positions after Postman variables)
+            path_param_matches = list(self._path_param_pattern.finditer(resolved_text))
+            if path_param_matches:
+                # Process in reverse order to maintain positions
+                for match in reversed(path_param_matches):
+                    param_name = match.group(1)
 
-                # Replace the variable reference with its value
-                start, end = match.span()
-                resolved_text = (
-                    resolved_text[:start] + str(var_value) + resolved_text[end:]
-                )
-                substitutions_made = True
+                    # Check if parameter exists
+                    if not self._variable_exists(param_name):
+                        raise VariableResolutionError(
+                            f"Path parameter '{param_name}' not found in any scope"
+                        )
+
+                    param_value = self.get_variable(param_name)
+
+                    # Replace the path parameter with its value
+                    start, end = match.span()
+                    resolved_text = (
+                        resolved_text[:start] + str(param_value) + resolved_text[end:]
+                    )
+                    substitutions_made = True
 
             if not substitutions_made:
                 # No substitutions made, avoid infinite loop
@@ -209,7 +257,10 @@ class ExecutionContext:
             depth += 1
 
         # Check if we hit max depth with unresolved variables
-        if depth >= max_depth and self._variable_pattern.search(resolved_text):
+        remaining_postman_vars = self._variable_pattern.search(resolved_text)
+        remaining_path_params = self._path_param_pattern.search(resolved_text)
+
+        if depth >= max_depth and (remaining_postman_vars or remaining_path_params):
             raise VariableResolutionError(
                 f"Maximum recursion depth ({max_depth}) exceeded while resolving variables. "
                 f"Possible circular reference in: {resolved_text}"

@@ -298,6 +298,29 @@ print(url)  # "https://api.example.com/v1/users/12345"
 context.set_variable("session_token", "abc123", "environment")
 ```
 
+### Path Parameters
+
+The library supports both Postman-style variables (`{{variable}}`) and path parameters (`:parameter`):
+
+```python
+# Path parameters use :parameterName syntax
+context = ExecutionContext(
+    environment_variables={
+        "baseURL": "https://api.example.com",
+        "userId": "12345",
+        "datasetId": "abc123"
+    }
+)
+
+# Mix Postman variables and path parameters
+url = context.resolve_variables("{{baseURL}}/users/:userId/datasets/:datasetId")
+print(url)  # "https://api.example.com/users/12345/datasets/abc123"
+
+# Path parameters follow the same scoping rules as Postman variables
+url = context.resolve_variables("{{baseURL}}/:datasetId?$offset=0&$limit=10")
+print(url)  # "https://api.example.com/abc123?$offset=0&$limit=10"
+```
+
 ### Request Extensions
 
 ```python
