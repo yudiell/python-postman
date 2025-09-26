@@ -5,7 +5,45 @@ import json
 
 
 class ExecutionResponse:
-    """Wraps httpx response with timing information and convenience methods."""
+    """Wraps httpx response with timing information and convenience methods.
+
+    Examples:
+        Basic response access:
+
+        >>> result = await executor.execute_request(request, context)
+        >>> if result.success:
+        ...     response = result.response
+        ...     print(f"Status: {response.status_code}")
+        ...     print(f"Headers: {response.headers}")
+        ...     print(f"Body: {response.text}")
+        ...     print(f"Time: {response.elapsed_ms:.2f}ms")
+
+        JSON response handling:
+
+        >>> if response.headers.get("content-type", "").startswith("application/json"):
+        ...     try:
+        ...         data = response.json
+        ...         print(f"User ID: {data['id']}")
+        ...         print(f"Name: {data['name']}")
+        ...     except json.JSONDecodeError:
+        ...         print("Invalid JSON response")
+
+        Status code checking:
+
+        >>> if response.is_success():
+        ...     print("Request successful")
+        ... elif response.is_client_error():
+        ...     print(f"Client error: {response.status_code}")
+        ... elif response.is_server_error():
+        ...     print(f"Server error: {response.status_code}")
+
+        Converting to dictionary for scripts:
+
+        >>> response_dict = response.to_dict()
+        >>> # This format is used by test scripts
+        >>> print(response_dict["status"])
+        >>> print(response_dict["json"]["user_id"])
+    """
 
     def __init__(
         self,

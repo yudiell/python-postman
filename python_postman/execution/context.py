@@ -12,6 +12,36 @@ class ExecutionContext:
     Manages variable scoping with precedence: request > folder > collection > environment.
     Provides methods for getting, setting, and resolving variables with support for
     nested variable references.
+
+    Examples:
+        Basic usage:
+
+        >>> context = ExecutionContext(
+        ...     environment_variables={"base_url": "https://api.example.com"},
+        ...     collection_variables={"api_version": "v1", "timeout": "30"},
+        ...     folder_variables={"endpoint": "/users"},
+        ...     request_variables={"user_id": "12345"}
+        ... )
+        >>>
+        >>> # Variable precedence: request > folder > collection > environment
+        >>> print(context.get_variable("user_id"))  # "12345" (from request)
+        >>> print(context.get_variable("endpoint"))  # "/users" (from folder)
+
+        Variable resolution:
+
+        >>> context = ExecutionContext(
+        ...     environment_variables={"protocol": "https", "domain": "api.example.com"},
+        ...     collection_variables={"base_url": "{{protocol}}://{{domain}}"}
+        ... )
+        >>>
+        >>> resolved = context.resolve_variables("{{base_url}}/v1/users")
+        >>> print(resolved)  # "https://api.example.com/v1/users"
+
+        Dynamic variable updates:
+
+        >>> context.set_variable("session_token", "abc123", "environment")
+        >>> token = context.get_variable("session_token")
+        >>> print(f"Token: {token}")  # "Token: abc123"
     """
 
     def __init__(
@@ -110,6 +140,31 @@ class ExecutionContext:
 
         Raises:
             VariableResolutionError: If variable not found or max depth exceeded
+
+        Examples:
+            Simple variable resolution:
+
+            >>> context = ExecutionContext(
+            ...     collection_variables={"api_host": "api.example.com", "port": "443"}
+            ... )
+            >>> url = context.resolve_variables("https://{{api_host}}:{{port}}/users")
+            >>> print(url)  # "https://api.example.com:443/users"
+
+            Nested variable resolution:
+
+            >>> context = ExecutionContext(
+            ...     environment_variables={"env": "prod"},
+            ...     collection_variables={"host": "{{env}}.api.example.com"}
+            ... )
+            >>> resolved = context.resolve_variables("https://{{host}}/api")
+            >>> print(resolved)  # "https://prod.api.example.com/api"
+
+            Error handling:
+
+            >>> try:
+            ...     context.resolve_variables("{{missing_variable}}")
+            ... except VariableResolutionError as e:
+            ...     print(f"Error: {e}")
         """
         if not isinstance(text, str):
             return str(text)

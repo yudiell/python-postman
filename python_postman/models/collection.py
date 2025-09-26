@@ -353,6 +353,42 @@ class Collection:
 
         Raises:
             ImportError: If execution module is not available
+
+        Examples:
+            Simple collection execution:
+
+            >>> import asyncio
+            >>> result = await collection.execute()
+            >>> print(f"Executed {result.total_requests} requests")
+            >>> print(f"Success rate: {result.successful_requests}/{result.total_requests}")
+
+            Parallel execution:
+
+            >>> result = await collection.execute(parallel=True)
+            >>> print(f"Parallel execution completed in {result.total_time_ms:.2f}ms")
+
+            With custom executor:
+
+            >>> from python_postman.execution import RequestExecutor
+            >>>
+            >>> executor = RequestExecutor(
+            ...     client_config={"timeout": 60.0},
+            ...     global_headers={"User-Agent": "my-test-suite/1.0"}
+            ... )
+            >>> result = await collection.execute(
+            ...     executor=executor,
+            ...     parallel=True,
+            ...     stop_on_error=True
+            ... )
+
+            Error handling:
+
+            >>> result = await collection.execute(stop_on_error=False)
+            >>> if result.failed_requests > 0:
+            ...     print(f"⚠️  {result.failed_requests} requests failed")
+            ...     for exec_result in result.results:
+            ...         if not exec_result.success:
+            ...             print(f"  ❌ {exec_result.request.name}: {exec_result.error}")
         """
         try:
             from ..execution.executor import RequestExecutor

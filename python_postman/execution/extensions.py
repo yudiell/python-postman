@@ -25,6 +25,40 @@ class RequestExtensions:
 
     Supports substitution (replacing existing values) and extension (adding new values)
     for URL, headers, parameters, body, and authentication components.
+
+    Examples:
+        Header extensions and substitutions:
+
+        >>> extensions = RequestExtensions(
+        ...     header_substitutions={"Authorization": "Bearer {{new_token}}"},
+        ...     header_extensions={"X-Request-ID": "req-{{timestamp}}"}
+        ... )
+        >>> modified_request = extensions.apply_to_request(request, context)
+
+        URL and parameter modifications:
+
+        >>> extensions = RequestExtensions(
+        ...     url_substitutions={"host": "staging.api.example.com"},
+        ...     param_extensions={"debug": "true", "version": "v2"}
+        ... )
+        >>> modified_request = extensions.apply_to_request(request, context)
+
+        Body extensions for JSON:
+
+        >>> extensions = RequestExtensions(
+        ...     body_extensions={
+        ...         "metadata": {"client": "python-postman", "version": "1.0"},
+        ...         "timestamp": "{{current_time}}"
+        ...     }
+        ... )
+        >>> modified_request = extensions.apply_to_request(request, context)
+
+        Authentication substitutions:
+
+        >>> extensions = RequestExtensions(
+        ...     auth_substitutions={"token": "{{fresh_token}}"}
+        ... )
+        >>> modified_request = extensions.apply_to_request(request, context)
     """
 
     def __init__(

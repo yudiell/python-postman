@@ -41,6 +41,53 @@ class RequestExecutor:
     The RequestExecutor orchestrates the complete request execution flow,
     including variable resolution, authentication, pre-request scripts,
     HTTP request execution, and test script execution.
+
+    Examples:
+        Basic usage:
+
+        >>> import asyncio
+        >>> from python_postman import PythonPostman
+        >>> from python_postman.execution import RequestExecutor, ExecutionContext
+        >>>
+        >>> async def main():
+        ...     # Load collection
+        ...     collection = PythonPostman.from_file("api_collection.json")
+        ...
+        ...     # Create executor
+        ...     executor = RequestExecutor(
+        ...         client_config={"timeout": 30.0, "verify": True},
+        ...         global_headers={"User-Agent": "python-postman/1.0"}
+        ...     )
+        ...
+        ...     # Execute single request
+        ...     request = collection.get_request_by_name("Get Users")
+        ...     context = ExecutionContext(
+        ...         environment_variables={"base_url": "https://api.example.com"}
+        ...     )
+        ...
+        ...     result = await executor.execute_request(request, context)
+        ...     if result.success:
+        ...         print(f"Status: {result.response.status_code}")
+        ...         print(f"Response: {result.response.text}")
+        ...
+        ...     await executor.aclose()
+        >>>
+        >>> asyncio.run(main())
+
+        Using as context manager:
+
+        >>> async def main():
+        ...     async with RequestExecutor() as executor:
+        ...         # executor will be automatically closed
+        ...         result = await executor.execute_request(request, context)
+        >>>
+        >>> asyncio.run(main())
+
+        Synchronous execution:
+
+        >>> with RequestExecutor() as executor:
+        ...     result = executor.execute_request_sync(request, context)
+        ...     print(f"Status: {result.response.status_code}")
     """
 
     def __init__(
@@ -328,6 +375,36 @@ class RequestExecutor:
 
         Returns:
             ExecutionResult: Result of the request execution
+
+        Examples:
+            Basic request execution:
+
+            >>> result = await executor.execute_request(request, context)
+            >>> if result.success:
+            ...     print(f"Success: {result.response.status_code}")
+            ... else:
+            ...     print(f"Error: {result.error}")
+
+            With runtime substitutions:
+
+            >>> substitutions = {
+            ...     "user_id": "12345",
+            ...     "api_key": "secret-key"
+            ... }
+            >>> result = await executor.execute_request(
+            ...     request, context, substitutions=substitutions
+            ... )
+
+            With request extensions:
+
+            >>> from python_postman.execution import RequestExtensions
+            >>> extensions = RequestExtensions(
+            ...     header_extensions={"X-Request-ID": "req-123"},
+            ...     param_extensions={"debug": "true"}
+            ... )
+            >>> result = await executor.execute_request(
+            ...     request, context, extensions=extensions
+            ... )
         """
         execution_start = time.time()
         response = None
@@ -482,6 +559,28 @@ class RequestExecutor:
 
         Returns:
             CollectionExecutionResult: Result of the collection execution
+
+        Examples:
+            Sequential execution:
+
+            >>> result = await executor.execute_collection(collection)
+            >>> print(f"Executed {result.total_requests} requests")
+            >>> print(f"Success rate: {result.successful_requests}/{result.total_requests}")
+
+            Parallel execution:
+
+            >>> result = await executor.execute_collection(
+            ...     collection, parallel=True
+            ... )
+            >>> print(f"Parallel execution completed in {result.total_time_ms}ms")
+
+            Stop on first error:
+
+            >>> result = await executor.execute_collection(
+            ...     collection, stop_on_error=True
+            ... )
+            >>> if result.failed_requests > 0:
+            ...     print("Execution stopped due to error")
         """
         import asyncio
 

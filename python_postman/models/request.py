@@ -180,19 +180,39 @@ class Request(Item):
         Raises:
             ExecutionError: If httpx is not available or execution fails
 
-        Example:
-            ```python
-            # Simple execution
-            result = await request.execute()
+        Examples:
+            Simple execution:
 
-            # With custom variables
-            result = await request.execute(
-                substitutions={"api_key": "my-key"},
-                extensions=RequestExtensions(
-                    header_extensions={"X-Custom": "value"}
-                )
-            )
-            ```
+            >>> import asyncio
+            >>> result = await request.execute()
+            >>> if result.success:
+            ...     print(f"Status: {result.response.status_code}")
+            ...     print(f"Response: {result.response.text}")
+
+            With custom executor and context:
+
+            >>> from python_postman.execution import RequestExecutor, ExecutionContext
+            >>>
+            >>> executor = RequestExecutor(
+            ...     client_config={"timeout": 60.0},
+            ...     global_headers={"User-Agent": "my-app/1.0"}
+            ... )
+            >>> context = ExecutionContext(
+            ...     environment_variables={"base_url": "https://api.example.com"}
+            ... )
+            >>> result = await request.execute(executor=executor, context=context)
+
+            With runtime substitutions and extensions:
+
+            >>> from python_postman.execution import RequestExtensions
+            >>>
+            >>> result = await request.execute(
+            ...     substitutions={"api_key": "secret-key", "user_id": "12345"},
+            ...     extensions=RequestExtensions(
+            ...         header_extensions={"X-Request-ID": "req-123"},
+            ...         param_extensions={"debug": "true"}
+            ...     )
+            ... )
         """
         # Import here to avoid circular imports and handle optional dependency
         try:
@@ -243,19 +263,36 @@ class Request(Item):
         Raises:
             ExecutionError: If httpx is not available or execution fails
 
-        Example:
-            ```python
-            # Simple execution
-            result = request.execute_sync()
+        Examples:
+            Simple synchronous execution:
 
-            # With custom variables
-            result = request.execute_sync(
-                substitutions={"api_key": "my-key"},
-                extensions=RequestExtensions(
-                    header_extensions={"X-Custom": "value"}
-                )
-            )
-            ```
+            >>> result = request.execute_sync()
+            >>> if result.success:
+            ...     print(f"Status: {result.response.status_code}")
+            ...     print(f"Response time: {result.response.elapsed_ms:.2f}ms")
+
+            With custom executor:
+
+            >>> from python_postman.execution import RequestExecutor
+            >>>
+            >>> with RequestExecutor(client_config={"timeout": 10.0}) as executor:
+            ...     result = request.execute_sync(executor=executor)
+            ...     print(f"Request completed: {result.success}")
+
+            With variables and extensions:
+
+            >>> from python_postman.execution import ExecutionContext, RequestExtensions
+            >>>
+            >>> context = ExecutionContext(
+            ...     environment_variables={"api_key": "secret", "base_url": "https://api.example.com"}
+            ... )
+            >>> extensions = RequestExtensions(
+            ...     header_extensions={"X-Client": "python-postman"}
+            ... )
+            >>> result = request.execute_sync(
+            ...     context=context,
+            ...     extensions=extensions
+            ... )
         """
         # Import here to avoid circular imports and handle optional dependency
         try:
