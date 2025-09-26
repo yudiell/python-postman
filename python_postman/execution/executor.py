@@ -221,7 +221,7 @@ class RequestExecutor:
                 raise RequestExecutionError("Request URL is required")
 
             # Resolve headers
-            headers = resolver.resolve_headers(working_request.header or [])
+            headers = resolver.resolve_headers(working_request.headers or [])
 
             # Add global headers
             headers.update(self.global_headers)

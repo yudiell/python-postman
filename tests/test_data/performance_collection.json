@@ -1,0 +1,377 @@
+{
+    "info": {
+        "name": "Performance Test Collection",
+        "description": "Collection for testing performance and large-scale execution scenarios",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Fast Request 1",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{api_key}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/users/{{user_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users",
+                        "{{user_id}}"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Fast request 1 successful', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test('Response time under 1000ms', function () {",
+                            "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Fast Request 2",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{api_key}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/users/{{user_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users",
+                        "{{user_id}}"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Fast request 2 successful', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Fast Request 3",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{api_key}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/users/{{user_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users",
+                        "{{user_id}}"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Fast request 3 successful', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Fast Request 4",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{api_key}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/users/{{user_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users",
+                        "{{user_id}}"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Fast request 4 successful', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Fast Request 5",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{api_key}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/users/{{user_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users",
+                        "{{user_id}}"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Fast request 5 successful', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Variable Chain Request 1",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{api_key}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/users/{{user_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users",
+                        "{{user_id}}"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Variable chain 1 successful', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "const responseJson = pm.response.json();",
+                            "pm.collectionVariables.set('chain_user_name', responseJson.name);",
+                            "pm.collectionVariables.set('chain_user_email', responseJson.email);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Variable Chain Request 2",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"name\": \"{{chain_user_name}} Updated\",\n  \"email\": \"{{chain_user_email}}\",\n  \"source\": \"performance_test\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/users",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Variable chain 2 successful', function () {",
+                            "    pm.response.to.have.status(201);",
+                            "});",
+                            "",
+                            "const responseJson = pm.response.json();",
+                            "pm.collectionVariables.set('created_user_id', responseJson.id);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Variable Chain Request 3",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"name\": \"{{chain_user_name}} Final\",\n  \"email\": \"{{chain_user_email}}\",\n  \"status\": \"completed\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/users/{{created_user_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users",
+                        "{{created_user_id}}"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Variable chain 3 successful', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test('Final update contains correct data', function () {",
+                            "    const responseJson = pm.response.json();",
+                            "    pm.expect(responseJson.name).to.include('Final');",
+                            "    pm.expect(responseJson.status).to.equal('completed');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "exec": [
+                    "// Performance tracking",
+                    "pm.collectionVariables.set('request_start_time', Date.now());"
+                ],
+                "type": "text/javascript"
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "exec": [
+                    "// Performance validation",
+                    "const startTime = pm.collectionVariables.get('request_start_time');",
+                    "const duration = Date.now() - startTime;",
+                    "",
+                    "pm.test('Request completed within performance threshold', function () {",
+                    "    pm.expect(duration).to.be.below(2000);",
+                    "});"
+                ],
+                "type": "text/javascript"
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "api_key",
+            "value": "collection-api-key-456",
+            "type": "string"
+        },
+        {
+            "key": "user_id",
+            "value": "123",
+            "type": "string"
+        },
+        {
+            "key": "chain_user_name",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "chain_user_email",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "created_user_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "request_start_time",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
