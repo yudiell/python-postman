@@ -279,6 +279,20 @@ class Collection:
 
         return _search_folders(self.items)
 
+    def get_variables(self) -> Dict[str, Any]:
+        """
+        Get all collection variables as a dictionary.
+
+        Returns:
+            Dictionary with variable keys as keys and variable values as values.
+            Disabled variables are excluded from the result.
+        """
+        variables_dict = {}
+        for variable in self.variables:
+            if not variable.disabled:
+                variables_dict[variable.key] = variable.value
+        return variables_dict
+
     def __repr__(self) -> str:
         return f"Collection(name='{self.info.name}', items={len(self.items)}, variables={len(self.variables)})"
 
