@@ -281,6 +281,12 @@ async def execute_collection():
         parallel=True,
         stop_on_error=False
     )
+
+    # Get the request responses
+    for result in result.results:
+        print(f"Request: {result.request.name}")
+        print(f"Result Text: {result.response.text}")
+
     print(f"Parallel execution completed in {result.total_time_ms:.2f}ms")
 
     await executor.aclose()
