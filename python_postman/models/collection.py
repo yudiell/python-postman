@@ -240,6 +240,15 @@ class Collection:
         for item in self.items:
             yield from item.get_requests()
 
+    def list_requests(self) -> List[str]:
+        """
+        Get a list of all request names in the collection.
+
+        Returns:
+            List of request names
+        """
+        return [request.name for request in self.get_requests()]
+
     def get_request_by_name(self, name: str) -> Optional["Request"]:
         """
         Find a request by name.

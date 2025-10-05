@@ -72,6 +72,14 @@ if collection.auth:
 ### Working with Requests
 
 ```python
+# Get a list of requests by name
+collection.list_requests()
+
+# Find specific request by name
+login_request = collection.get_request_by_name("Login Request")
+if login_request:
+    print(f"Found request: {login_request.method} {login_request.url}")
+
 # Iterate through all requests (flattens folder structure)
 for request in collection.get_requests():
     print(f"Request: {request.method} {request.name}")
@@ -85,11 +93,6 @@ for request in collection.get_requests():
     if request.body:
         print(f"Body Type: {request.body.mode}")
         print(f"Body Content: {request.body.raw}")
-
-# Find specific request by name
-request = collection.get_request_by_name("Login Request")
-if request:
-    print(f"Found request: {request.method} {request.url}")
 ```
 
 ### Working with Folders
