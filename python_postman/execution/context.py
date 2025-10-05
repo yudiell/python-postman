@@ -69,15 +69,10 @@ class ExecutionContext:
         self._variable_pattern = re.compile(r"\{\{([^{}]+)\}\}")
 
         # Pattern for matching path parameters like :datasetId, :userId, etc.
-        # Matches :word_characters but not if preceded by http: or https: and must be followed by / or ? or end of string
+        # Ensures the colon is not preceded by alphanumeric chars (handles http:, https:, and resolved values)
+        # Must be followed by URL delimiters (/, ?, &, #) or end of string
         self._path_param_pattern = re.compile(
-            r"(?<!http)(?<!https):([a-zA-Z_][a-zA-Z0-9_]*)(?=/|\?|$|&)"
-        )
-
-        # Pattern for matching path parameters like :datasetId, :userId, etc.
-        # Matches :word_characters but not if preceded by http: or https:
-        self._path_param_pattern = re.compile(
-            r"(?<!http)(?<!https):([a-zA-Z_][a-zA-Z0-9_]*)"
+            r"(?<![a-zA-Z0-9_]):([a-zA-Z_][a-zA-Z0-9_]*)(?=/|\?|$|&|#)"
         )
 
     def get_variable(self, key: str) -> Optional[Any]:
