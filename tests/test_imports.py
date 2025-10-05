@@ -153,7 +153,7 @@ class TestImports:
         """Test that package metadata is correctly set."""
         import python_postman
 
-        assert python_postman.__version__ == "0.7.0"
+        assert python_postman.__version__ == "0.8.0"
         assert python_postman.__author__ == "Python Postman Contributors"
         assert python_postman.__license__ == "MIT"
         assert "Postman collection" in python_postman.__description__

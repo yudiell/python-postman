@@ -532,9 +532,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Changelog
 
-### 0.7.0 (Updated version)
+### 0.8.0 (Updated version)
 
-- Updated version to 0.7.0
+- Updated version to 0.8.0
 - Updated README.md
 - Updated pyproject.toml
 - Updated tests

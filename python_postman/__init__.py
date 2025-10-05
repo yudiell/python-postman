@@ -69,7 +69,7 @@ try:
 except ImportError:
     _EXECUTION_AVAILABLE = False
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 __author__ = "Python Postman Contributors"
 __email__ = "python-postman@example.com"
 __license__ = "MIT"
