@@ -1,6 +1,6 @@
 [project]
 name = "python-postman"
-version = "0.7.0"
+version = "0.8.0"
 description = "A Python library for parsing and working with Postman collection.json files"
 readme = "README.md"
 license = {text = "MIT"}
