@@ -1495,7 +1495,7 @@ class TestRequestExecutorCollectionExecution:
         # Create mock collection
         collection = Mock(spec=Collection)
         collection.info = CollectionInfo(name="Test Collection")
-        collection.get_all_requests.return_value = [request1, request2, request3]
+        collection.get_requests.return_value = [request1, request2, request3]
 
         return collection, [request1, request2, request3]
 
@@ -1506,7 +1506,7 @@ class TestRequestExecutorCollectionExecution:
 
         collection = Mock(spec=Collection)
         collection.info = CollectionInfo(name="Empty Collection")
-        collection.get_all_requests.return_value = []
+        collection.get_requests.return_value = []
 
         return collection
 

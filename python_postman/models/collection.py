@@ -230,7 +230,7 @@ class Collection:
 
         return result
 
-    def get_all_requests(self) -> Iterator["Request"]:
+    def get_requests(self) -> Iterator["Request"]:
         """
         Get all requests in the collection, traversing folders recursively.
 
@@ -250,7 +250,7 @@ class Collection:
         Returns:
             Request object if found, None otherwise
         """
-        for request in self.get_all_requests():
+        for request in self.get_requests():
             if request.name == name:
                 return request
         return None

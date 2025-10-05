@@ -69,7 +69,7 @@ if collection.auth:
 
 ```python
 # Iterate through all requests (flattens folder structure)
-for request in collection.get_all_requests():
+for request in collection.get_requests():
     print(f"Request: {request.method} {request.name}")
     print(f"URL: {request.url}")
 
@@ -143,7 +143,7 @@ if collection.auth:
         print(f"Basic Auth Username: {username}")
 
 # Request-level auth (overrides collection auth)
-for request in collection.get_all_requests():
+for request in collection.get_requests():
     if request.auth:
         print(f"Request '{request.name}' has {request.auth.type} auth")
 ```
@@ -157,7 +157,7 @@ for event in collection.events:
     print(f"Script: {event.script}")
 
 # Request-level events
-for request in collection.get_all_requests():
+for request in collection.get_requests():
     for event in request.events:
         if event.listen == "prerequest":
             print(f"Pre-request script for {request.name}")

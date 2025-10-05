@@ -112,7 +112,7 @@ class TestPythonPostmanFactoryMethods:
         assert len(collection.items) == 1
         assert collection.items[0].name == "API Folder"
         # The folder should contain one request
-        requests = list(collection.get_all_requests())
+        requests = list(collection.get_requests())
         assert len(requests) == 1
         assert requests[0].name == "Get Users"
 
@@ -376,7 +376,7 @@ class TestPythonPostmanFactoryMethods:
         assert len(collection.items) == 2
 
         # Test that we can get all requests
-        all_requests = list(collection.get_all_requests())
+        all_requests = list(collection.get_requests())
         assert len(all_requests) == 3  # 2 in folder + 1 direct
 
         # Test from_json
@@ -384,7 +384,7 @@ class TestPythonPostmanFactoryMethods:
         collection_from_json = PythonPostman.from_json(json_string)
 
         assert collection_from_json.info.name == collection.info.name
-        assert len(list(collection_from_json.get_all_requests())) == 3
+        assert len(list(collection_from_json.get_requests())) == 3
 
         # Test from_file
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
@@ -394,6 +394,6 @@ class TestPythonPostmanFactoryMethods:
         try:
             collection_from_file = PythonPostman.from_file(temp_path)
             assert collection_from_file.info.name == collection.info.name
-            assert len(list(collection_from_file.get_all_requests())) == 3
+            assert len(list(collection_from_file.get_requests())) == 3
         finally:
             os.unlink(temp_path)

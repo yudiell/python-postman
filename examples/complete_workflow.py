@@ -365,7 +365,7 @@ class APIWorkflow:
         report = {
             "workflow_summary": {
                 "collection_name": self.collection.info.name,
-                "total_requests": len(list(self.collection.get_all_requests())),
+                "total_requests": len(list(self.collection.get_requests())),
                 "execution_timestamp": time.time(),
             },
             "results": self.results,

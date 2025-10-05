@@ -18,7 +18,7 @@ async def main():
     collection = PythonPostman.from_file("sample_collection.json")
 
     print(f"Loaded collection: {collection.info.name}")
-    print(f"Total requests: {len(list(collection.get_all_requests()))}")
+    print(f"Total requests: {len(list(collection.get_requests()))}")
 
     # Create an executor with basic configuration
     executor = RequestExecutor(

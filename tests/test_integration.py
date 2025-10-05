@@ -39,7 +39,7 @@ class TestIntegrationBasicParsing:
         assert len(collection.items) == 2
 
         # Verify requests
-        requests = list(collection.get_all_requests())
+        requests = list(collection.get_requests())
         assert len(requests) == 2
 
         get_request = requests[0]
@@ -111,13 +111,13 @@ class TestIntegrationNestedStructures:
         assert len(user_mgmt_folder.items) == 2
 
     def test_recursive_request_iteration(self):
-        """Test that get_all_requests works with nested folders."""
+        """Test that get_requests works with nested folders."""
         file_path = Path(__file__).parent / "test_data" / "nested_collection.json"
 
         collection = PythonPostman.from_file(file_path)
 
         # Get all requests recursively
-        all_requests = list(collection.get_all_requests())
+        all_requests = list(collection.get_requests())
 
         # Should find 5 requests total across all nested folders
         assert len(all_requests) == 5
@@ -185,7 +185,7 @@ class TestIntegrationAuthenticationTypes:
         assert len(collection.items) == 4
 
         # Verify each request has different auth type
-        requests = list(collection.get_all_requests())
+        requests = list(collection.get_requests())
 
         basic_auth_request = next(
             req for req in requests if req.name == "Basic Auth Request"
@@ -208,7 +208,7 @@ class TestIntegrationAuthenticationTypes:
         file_path = Path(__file__).parent / "test_data" / "auth_collection.json"
 
         collection = PythonPostman.from_file(file_path)
-        requests = list(collection.get_all_requests())
+        requests = list(collection.get_requests())
 
         # Test basic auth configuration
         basic_auth_request = next(
@@ -260,7 +260,7 @@ class TestIntegrationEventsAndScripts:
         file_path = Path(__file__).parent / "test_data" / "events_collection.json"
 
         collection = PythonPostman.from_file(file_path)
-        requests = list(collection.get_all_requests())
+        requests = list(collection.get_requests())
 
         request_with_events = requests[0]
         assert len(request_with_events.events) == 2
@@ -342,7 +342,7 @@ class TestIntegrationEmptyCollections:
         assert len(collection.variables) == 0
 
         # Test iteration over empty collection
-        requests = list(collection.get_all_requests())
+        requests = list(collection.get_requests())
         assert len(requests) == 0
 
     def test_empty_collection_validation(self):
@@ -474,7 +474,7 @@ class TestIntegrationEndToEndWorkflow:
         assert "Updated bio" in profile_request.body.raw
 
         # 8. Iterate all requests
-        all_requests = list(collection.get_all_requests())
+        all_requests = list(collection.get_requests())
         assert len(all_requests) == 5
 
     def test_create_new_collection_workflow(self):
