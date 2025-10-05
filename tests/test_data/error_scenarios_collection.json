@@ -1,0 +1,349 @@
+{
+    "info": {
+        "name": "Error Scenarios Collection",
+        "description": "Collection for testing various error handling scenarios during execution",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Network Error Request",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "http://localhost:9999/nonexistent",
+                    "host": [
+                        "localhost:9999"
+                    ],
+                    "path": [
+                        "nonexistent"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "// This test should handle network errors gracefully",
+                            "pm.test('Network error handled', function () {",
+                            "    // This test will likely fail due to network error",
+                            "    // but should not crash the execution",
+                            "    console.log('Network error test executed');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "404 Not Found Request",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{base_url}}/nonexistent/endpoint",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "nonexistent",
+                        "endpoint"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('404 error handled correctly', function () {",
+                            "    pm.response.to.have.status(404);",
+                            "});",
+                            "",
+                            "pm.test('Error response has message', function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData).to.have.property('error');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "500 Server Error Request",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{base_url}}/error",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "error"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('500 error handled correctly', function () {",
+                            "    pm.response.to.have.status(500);",
+                            "});",
+                            "",
+                            "pm.test('Server error response has message', function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData).to.have.property('error');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Timeout Request",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{base_url}}/slow",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "slow"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Slow request completed', function () {",
+                            "    // This may timeout depending on client configuration",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test('Response time logged', function () {",
+                            "    console.log('Response time: ' + pm.response.responseTime + 'ms');",
+                            "    pm.expect(pm.response.responseTime).to.be.above(1000);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Invalid JSON Response Request",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{base_url}}/invalid-json",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "invalid-json"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Invalid JSON handled gracefully', function () {",
+                            "    // Test should handle JSON parsing errors",
+                            "    try {",
+                            "        const jsonData = pm.response.json();",
+                            "        console.log('JSON parsed successfully');",
+                            "    } catch (e) {",
+                            "        console.log('JSON parsing failed as expected: ' + e.message);",
+                            "        pm.expect(e.message).to.include('JSON');",
+                            "    }",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Variable Resolution Error Request",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{base_url}}/users/{{undefined_variable}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users",
+                        "{{undefined_variable}}"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Variable resolution error handled', function () {",
+                            "    // This test checks that undefined variables are handled",
+                            "    console.log('Variable resolution test executed');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Authentication Error Request",
+            "request": {
+                "method": "GET",
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "invalid-token-12345"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/protected/profile",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "protected",
+                        "profile"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Authentication error handled correctly', function () {",
+                            "    pm.response.to.have.status(401);",
+                            "});",
+                            "",
+                            "pm.test('Auth error response has message', function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData).to.have.property('error');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Script Error Request",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{api_key}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/users/{{user_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users",
+                        "{{user_id}}"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// This script intentionally has an error",
+                            "pm.collectionVariables.set('test_var', 'value');",
+                            "// Intentional error:",
+                            "nonExistentFunction();"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Script error handled gracefully', function () {",
+                            "    // Even with pre-request script error, test should run",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "// Another intentional error in test script:",
+                            "anotherNonExistentFunction();"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "exec": [
+                    "// Collection-level error handling setup",
+                    "console.log('Collection pre-request: ' + pm.info.requestName);",
+                    "pm.collectionVariables.set('error_test_timestamp', Date.now());"
+                ],
+                "type": "text/javascript"
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "exec": [
+                    "// Collection-level error validation",
+                    "pm.test('Request completed (success or expected failure)', function () {",
+                    "    // This test should always pass as we expect some requests to fail",
+                    "    console.log('Request completed with status: ' + pm.response.code);",
+                    "    pm.expect(pm.response.code).to.be.a('number');",
+                    "});"
+                ],
+                "type": "text/javascript"
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "api_key",
+            "value": "collection-api-key-456",
+            "type": "string"
+        },
+        {
+            "key": "user_id",
+            "value": "123",
+            "type": "string"
+        },
+        {
+            "key": "error_test_timestamp",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}

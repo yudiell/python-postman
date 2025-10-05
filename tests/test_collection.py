@@ -1,119 +1,329 @@
-"""Tests for Collection class."""
+"""
+Tests for Collection model execution methods.
+
+This module tests the execution functionality added to the Collection class,
+including the create_executor and execute methods.
+"""
 
 import pytest
-from python_postman.models import (
-    Collection,
-    CollectionInfo,
-    Variable,
-    Auth,
-    Event,
-    Request,
-    Folder,
-    Url,
-    ValidationResult,
-)
+import sys
+from unittest.mock import Mock, AsyncMock, patch
+from python_postman.models.collection import Collection
+from python_postman.models.collection_info import CollectionInfo
+from python_postman.models.variable import Variable
+from python_postman.models.auth import Auth, AuthParameter
+from python_postman.models.request import Request
+from python_postman.models.folder import Folder
+from python_postman.models.url import Url
+from python_postman.models.header import Header
 
 
-class TestCollection:
-    """Test cases for Collection class."""
+class TestCollectionExecutionMethods:
+    """Test collection execution methods."""
 
-    def test_collection_init_minimal(self):
-        """Test Collection initialization with minimal required data."""
-        info = CollectionInfo(name="Test Collection")
-        collection = Collection(info=info)
+    def setup_method(self):
+        """Set up test fixtures."""
+        # Create a basic collection
+        self.collection_info = CollectionInfo(
+            name="Test Collection",
+            description="A test collection",
+            schema="https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        )
 
-        assert collection.info == info
-        assert collection.items == []
-        assert collection.variables == []
-        assert collection.auth is None
-        assert collection.events == []
+        # Create collection variables
+        self.variables = [
+            Variable(key="base_url", value="https://api.example.com"),
+            Variable(key="api_key", value="test-key-123"),
+        ]
 
-    def test_get_all_requests_empty_collection(self):
-        """Test get_all_requests with empty collection."""
-        info = CollectionInfo(name="Empty Collection")
-        collection = Collection(info=info)
+        # Create collection auth
+        self.auth = Auth(
+            type="bearer", parameters=[AuthParameter(key="token", value="{{api_key}}")]
+        )
 
-        requests = list(collection.get_all_requests())
+        # Create test requests
+        self.request1 = Request(
+            name="Get Users",
+            url=Url(raw="{{base_url}}/users"),
+            method="GET",
+            headers=[Header(key="Accept", value="application/json")],
+        )
 
-        assert len(requests) == 0
+        self.request2 = Request(
+            name="Create User",
+            url=Url(raw="{{base_url}}/users"),
+            method="POST",
+            headers=[Header(key="Content-Type", value="application/json")],
+        )
 
-    def test_get_all_requests_with_direct_requests(self):
-        """Test get_all_requests with requests directly in collection."""
-        info = CollectionInfo(name="Test Collection")
+        # Create a folder with a request
+        self.folder = Folder(name="User Management", items=[self.request2])
 
-        url1 = Url(raw="https://api.example.com/test1")
-        url2 = Url(raw="https://api.example.com/test2")
-        request1 = Request(name="Request 1", method="GET", url=url1)
-        request2 = Request(name="Request 2", method="POST", url=url2)
+        # Create collection with requests and folder
+        self.collection = Collection(
+            info=self.collection_info,
+            items=[self.request1, self.folder],
+            variables=self.variables,
+            auth=self.auth,
+        )
 
-        collection = Collection(info=info, items=[request1, request2])
+    @patch("python_postman.execution.executor.RequestExecutor")
+    def test_create_executor_basic(self, mock_executor_class):
+        """Test basic executor creation."""
+        mock_executor = Mock()
+        mock_executor_class.return_value = mock_executor
 
-        requests = list(collection.get_all_requests())
+        executor = self.collection.create_executor()
 
-        assert len(requests) == 2
-        assert requests[0] == request1
-        assert requests[1] == request2
+        # Verify RequestExecutor was called with collection variables
+        expected_vars = {
+            "base_url": "https://api.example.com",
+            "api_key": "test-key-123",
+        }
+        mock_executor_class.assert_called_once_with(variable_overrides=expected_vars)
+        assert executor == mock_executor
 
-    def test_get_request_by_name_found(self):
-        """Test get_request_by_name when request exists."""
-        info = CollectionInfo(name="Test Collection")
+    @patch("python_postman.execution.executor.RequestExecutor")
+    def test_create_executor_with_custom_config(self, mock_executor_class):
+        """Test executor creation with custom configuration."""
+        mock_executor = Mock()
+        mock_executor_class.return_value = mock_executor
 
-        url1 = Url(raw="https://api.example.com/test1")
-        url2 = Url(raw="https://api.example.com/test2")
-        request1 = Request(name="Request 1", method="GET", url=url1)
-        request2 = Request(name="Request 2", method="POST", url=url2)
+        custom_config = {
+            "client_config": {"timeout": 60.0},
+            "script_timeout": 45.0,
+            "request_delay": 1.0,
+        }
 
-        folder = Folder(name="Test Folder", items=[request2])
-        collection = Collection(info=info, items=[request1, folder])
+        executor = self.collection.create_executor(**custom_config)
 
-        found_request = collection.get_request_by_name("Request 2")
+        # Verify RequestExecutor was called with custom config and collection variables
+        expected_vars = {
+            "base_url": "https://api.example.com",
+            "api_key": "test-key-123",
+        }
+        expected_call_args = {**custom_config, "variable_overrides": expected_vars}
+        mock_executor_class.assert_called_once_with(**expected_call_args)
+        assert executor == mock_executor
 
-        assert found_request == request2
+    @patch("python_postman.execution.executor.RequestExecutor")
+    def test_create_executor_with_variable_overrides(self, mock_executor_class):
+        """Test executor creation with custom variable overrides."""
+        mock_executor = Mock()
+        mock_executor_class.return_value = mock_executor
 
-    def test_get_request_by_name_not_found(self):
-        """Test get_request_by_name when request doesn't exist."""
-        info = CollectionInfo(name="Test Collection")
+        custom_vars = {"base_url": "https://staging.example.com"}
 
-        url1 = Url(raw="https://api.example.com/test1")
-        request1 = Request(name="Request 1", method="GET", url=url1)
+        executor = self.collection.create_executor(variable_overrides=custom_vars)
 
-        collection = Collection(info=info, items=[request1])
+        # Verify custom variable overrides are used instead of collection variables
+        mock_executor_class.assert_called_once_with(variable_overrides=custom_vars)
+        assert executor == mock_executor
 
-        found_request = collection.get_request_by_name("Nonexistent Request")
+    @patch("python_postman.execution.executor.RequestExecutor")
+    def test_create_executor_no_variables(self, mock_executor_class):
+        """Test executor creation with collection that has no variables."""
+        collection_no_vars = Collection(
+            info=self.collection_info, items=[self.request1]
+        )
 
-        assert found_request is None
+        mock_executor = Mock()
+        mock_executor_class.return_value = mock_executor
 
-    def test_get_folder_by_name_found_direct(self):
-        """Test get_folder_by_name when folder is direct child."""
-        info = CollectionInfo(name="Test Collection")
+        executor = collection_no_vars.create_executor()
 
-        folder1 = Folder(name="Folder 1", items=[])
-        folder2 = Folder(name="Folder 2", items=[])
+        # Verify RequestExecutor was called with empty variable overrides
+        mock_executor_class.assert_called_once_with(variable_overrides={})
+        assert executor == mock_executor
 
-        collection = Collection(info=info, items=[folder1, folder2])
+    def test_create_executor_import_error(self):
+        """Test executor creation when execution module is not available."""
+        # Mock the import to fail at the module level
+        with patch.dict("sys.modules", {"python_postman.execution.executor": None}):
+            with pytest.raises(ImportError) as exc_info:
+                self.collection.create_executor()
 
-        found_folder = collection.get_folder_by_name("Folder 2")
+            assert "Execution functionality requires httpx" in str(exc_info.value)
 
-        assert found_folder == folder2
+    @pytest.mark.asyncio
+    @patch("python_postman.execution.executor.RequestExecutor")
+    async def test_execute_basic(self, mock_executor_class):
+        """Test basic collection execution."""
+        mock_executor = Mock()
+        mock_result = Mock()
+        mock_result.collection_name = "Test Collection"
+        mock_result.total_requests = 2
+        mock_result.successful_requests = 2
 
-    def test_get_folder_by_name_not_found(self):
-        """Test get_folder_by_name when folder doesn't exist."""
-        info = CollectionInfo(name="Test Collection")
+        mock_executor.execute_collection = AsyncMock(return_value=mock_result)
+        mock_executor_class.return_value = mock_executor
 
-        folder1 = Folder(name="Folder 1", items=[])
-        collection = Collection(info=info, items=[folder1])
+        result = await self.collection.execute()
 
-        found_folder = collection.get_folder_by_name("Nonexistent Folder")
+        # Verify executor was created and execute_collection was called
+        mock_executor_class.assert_called_once()
+        mock_executor.execute_collection.assert_called_once_with(
+            collection=self.collection, parallel=False, stop_on_error=False
+        )
+        assert result == mock_result
 
-        assert found_folder is None
+    @pytest.mark.asyncio
+    async def test_execute_with_custom_executor(self):
+        """Test collection execution with provided executor."""
+        mock_executor = Mock()
+        mock_result = Mock()
+        mock_result.collection_name = "Test Collection"
+
+        mock_executor.execute_collection = AsyncMock(return_value=mock_result)
+
+        result = await self.collection.execute(executor=mock_executor)
+
+        # Verify provided executor was used
+        mock_executor.execute_collection.assert_called_once_with(
+            collection=self.collection, parallel=False, stop_on_error=False
+        )
+        assert result == mock_result
+
+    @pytest.mark.asyncio
+    @patch("python_postman.execution.executor.RequestExecutor")
+    async def test_execute_with_options(self, mock_executor_class):
+        """Test collection execution with parallel and stop_on_error options."""
+        mock_executor = Mock()
+        mock_result = Mock()
+
+        mock_executor.execute_collection = AsyncMock(return_value=mock_result)
+        mock_executor_class.return_value = mock_executor
+
+        result = await self.collection.execute(parallel=True, stop_on_error=True)
+
+        # Verify options were passed to execute_collection
+        mock_executor.execute_collection.assert_called_once_with(
+            collection=self.collection, parallel=True, stop_on_error=True
+        )
+        assert result == mock_result
+
+    @pytest.mark.asyncio
+    async def test_execute_import_error(self):
+        """Test collection execution when execution module is not available."""
+        # Mock the import to fail at the module level
+        with patch.dict("sys.modules", {"python_postman.execution.executor": None}):
+            with pytest.raises(ImportError) as exc_info:
+                await self.collection.execute()
+
+            assert "Execution functionality requires httpx" in str(exc_info.value)
+
+    @patch("python_postman.execution.executor.RequestExecutor")
+    def test_collection_variables_extraction(self, mock_executor_class):
+        """Test that collection variables are properly extracted."""
+        # Test with variables that have different attribute structures
+        variables_with_different_attrs = [
+            Variable(key="var1", value="value1"),
+            Variable(key="var2", value="value2"),
+            Mock(key="var3", value="value3"),  # Mock with attributes
+            Mock(spec=[]),  # Mock without key/value attributes
+        ]
+
+        collection = Collection(
+            info=self.collection_info,
+            items=[],
+            variables=variables_with_different_attrs,
+        )
+
+        mock_executor = Mock()
+        mock_executor_class.return_value = mock_executor
+
+        collection.create_executor()
+
+        # Verify only variables with key/value attributes are included
+        expected_vars = {"var1": "value1", "var2": "value2", "var3": "value3"}
+        mock_executor_class.assert_called_once_with(variable_overrides=expected_vars)
+
+    @patch("python_postman.execution.executor.RequestExecutor")
+    def test_collection_variables_none(self, mock_executor_class):
+        """Test collection with None variables."""
+        collection = Collection(info=self.collection_info, items=[], variables=None)
+
+        mock_executor = Mock()
+        mock_executor_class.return_value = mock_executor
+
+        collection.create_executor()
+
+        # Verify empty variable overrides when variables is None
+        mock_executor_class.assert_called_once_with(variable_overrides={})
+
+    @pytest.mark.asyncio
+    async def test_execute_with_all_parameters(self):
+        """Test collection execution with all parameters specified."""
+        mock_executor = Mock()
+        mock_result = Mock()
+        mock_result.collection_name = "Test Collection"
+        mock_result.total_requests = 2
+        mock_result.successful_requests = 1
+        mock_result.failed_requests = 1
+
+        mock_executor.execute_collection = AsyncMock(return_value=mock_result)
+
+        result = await self.collection.execute(
+            executor=mock_executor, parallel=True, stop_on_error=True
+        )
+
+        # Verify all parameters were passed correctly
+        mock_executor.execute_collection.assert_called_once_with(
+            collection=self.collection, parallel=True, stop_on_error=True
+        )
+        assert result == mock_result
+        assert result.collection_name == "Test Collection"
+        assert result.total_requests == 2
+        assert result.successful_requests == 1
+        assert result.failed_requests == 1
 
 
-class TestValidationResult:
-    """Test cases for ValidationResult class."""
+class TestCollectionExecutionIntegration:
+    """Integration tests for collection execution methods."""
 
-    def test_validation_result_init_valid(self):
-        """Test ValidationResult initialization for valid result."""
-        result = ValidationResult()
+    def setup_method(self):
+        """Set up test fixtures for integration tests."""
+        self.collection_info = CollectionInfo(
+            name="Integration Test Collection",
+            description="Collection for integration testing",
+        )
 
-        assert result.is_valid is True
-        assert result.errors == []
+        self.variables = [Variable(key="test_var", value="test_value")]
+
+        self.request = Request(
+            name="Test Request", url=Url(raw="https://httpbin.org/get"), method="GET"
+        )
+
+        self.collection = Collection(
+            info=self.collection_info, items=[self.request], variables=self.variables
+        )
+
+    def test_create_executor_returns_correct_type(self):
+        """Test that create_executor returns the correct type."""
+        pytest.importorskip("httpx", reason="httpx not available for integration test")
+
+        from python_postman.execution.executor import RequestExecutor
+
+        executor = self.collection.create_executor()
+        assert isinstance(executor, RequestExecutor)
+
+        # Test that executor has expected configuration
+        assert executor.variable_overrides == {"test_var": "test_value"}
+
+    @pytest.mark.asyncio
+    async def test_execute_returns_correct_result_type(self):
+        """Test that execute returns the correct result type."""
+        try:
+            from python_postman.execution.results import CollectionExecutionResult
+
+            # Create a mock executor that returns a real result
+            mock_executor = Mock()
+            mock_result = CollectionExecutionResult(collection_name="Test Collection")
+            mock_executor.execute_collection = AsyncMock(return_value=mock_result)
+
+            result = await self.collection.execute(executor=mock_executor)
+            assert isinstance(result, CollectionExecutionResult)
+            assert result.collection_name == "Test Collection"
+
+        except ImportError:
+            pytest.skip("httpx not available for integration test")

@@ -1,0 +1,324 @@
+{
+    "info": {
+        "name": "Authentication Execution Collection",
+        "description": "Collection for testing various authentication types during execution",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Basic Auth Request",
+            "request": {
+                "method": "GET",
+                "auth": {
+                    "type": "basic",
+                    "basic": [
+                        {
+                            "key": "username",
+                            "value": "{{basic_username}}"
+                        },
+                        {
+                            "key": "password",
+                            "value": "{{basic_password}}"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/auth/basic",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "auth",
+                        "basic"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Basic auth successful', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test('Response contains auth info', function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData).to.have.property('authenticated', true);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Bearer Token Request",
+            "request": {
+                "method": "GET",
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{bearer_token}}"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/protected/profile",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "protected",
+                        "profile"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Bearer auth successful', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test('Profile data returned', function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData).to.have.property('profile');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "API Key Header Request",
+            "request": {
+                "method": "GET",
+                "auth": {
+                    "type": "apikey",
+                    "apikey": [
+                        {
+                            "key": "key",
+                            "value": "X-API-Key"
+                        },
+                        {
+                            "key": "value",
+                            "value": "{{api_key_value}}"
+                        },
+                        {
+                            "key": "in",
+                            "value": "header"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/users/{{user_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users",
+                        "{{user_id}}"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('API key auth successful', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test('User data returned', function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData).to.have.property('id');",
+                            "    pm.expect(jsonData).to.have.property('name');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "API Key Query Request",
+            "request": {
+                "method": "GET",
+                "auth": {
+                    "type": "apikey",
+                    "apikey": [
+                        {
+                            "key": "key",
+                            "value": "api_key"
+                        },
+                        {
+                            "key": "value",
+                            "value": "{{api_key_value}}"
+                        },
+                        {
+                            "key": "in",
+                            "value": "query"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/public/data",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "public",
+                        "data"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('API key query auth successful', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test('Public data returned', function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData).to.have.property('data');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "No Auth Request",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{base_url}}/public/info",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "public",
+                        "info"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('No auth request successful', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test('Public info returned', function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData).to.have.property('info');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Collection Auth Override",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{base_url}}/users/{{user_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users",
+                        "{{user_id}}"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Collection auth used successfully', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test('User data with collection auth', function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData).to.have.property('id');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "apikey",
+        "apikey": [
+            {
+                "key": "key",
+                "value": "X-API-Key"
+            },
+            {
+                "key": "value",
+                "value": "{{collection_api_key}}"
+            },
+            {
+                "key": "in",
+                "value": "header"
+            }
+        ]
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "basic_username",
+            "value": "testuser",
+            "type": "string"
+        },
+        {
+            "key": "basic_password",
+            "value": "testpass",
+            "type": "string"
+        },
+        {
+            "key": "bearer_token",
+            "value": "test-bearer-token-123",
+            "type": "string"
+        },
+        {
+            "key": "api_key_value",
+            "value": "collection-api-key-456",
+            "type": "string"
+        },
+        {
+            "key": "collection_api_key",
+            "value": "collection-api-key-456",
+            "type": "string"
+        },
+        {
+            "key": "user_id",
+            "value": "123",
+            "type": "string"
+        }
+    ]
+}

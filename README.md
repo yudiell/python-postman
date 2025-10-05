@@ -7,6 +7,11 @@ A Python library for parsing and working with Postman collection.json files. Thi
 - **Parse Postman Collections**: Load collections from files, JSON strings, or dictionaries
 - **Object-Oriented API**: Work with collections using intuitive Python objects
 - **Full Collection Support**: Access requests, folders, variables, authentication, and scripts
+- **HTTP Request Execution**: Execute requests using httpx with full async/sync support
+- **Variable Resolution**: Dynamic variable substitution with proper scoping
+- **Authentication Handling**: Automatic auth processing for Bearer, Basic, and API Key
+- **Script Execution**: Run pre-request and test scripts with result collection
+- **Request Extensions**: Runtime modification of URLs, headers, body, and auth
 - **Validation**: Built-in validation for collection structure and schema compliance
 - **Iteration**: Easy iteration through all requests regardless of folder structure
 - **Search**: Find requests and folders by name
@@ -15,7 +20,13 @@ A Python library for parsing and working with Postman collection.json files. Thi
 ## Installation
 
 ```bash
+# Basic installation (parsing only)
 pip install python-postman
+
+# With HTTP execution support
+pip install python-postman[execution]
+# or
+pip install python-postman httpx
 ```
 
 ## Quick Start
@@ -182,6 +193,246 @@ collection = PythonPostman.create_collection(
 )
 
 print(f"Created collection: {collection.info.name}")
+```
+
+## HTTP Request Execution
+
+The library supports executing HTTP requests from Postman collections using httpx. This feature requires the `httpx` dependency.
+
+### Basic Request Execution
+
+```python
+import asyncio
+from python_postman import PythonPostman
+from python_postman.execution import RequestExecutor, ExecutionContext
+
+async def main():
+    # Load collection
+    collection = PythonPostman.from_file("api_collection.json")
+
+    # Create executor
+    executor = RequestExecutor(
+        client_config={"timeout": 30.0, "verify": True},
+        global_headers={"User-Agent": "python-postman/1.0"}
+    )
+
+    # Create execution context with variables
+    context = ExecutionContext(
+        environment_variables={
+            "base_url": "https://api.example.com",
+            "api_key": "your-api-key"
+        }
+    )
+
+    # Execute a single request
+    request = collection.get_request_by_name("Get Users")
+    result = await executor.execute_request(request, context)
+
+    if result.success:
+        print(f"Status: {result.response.status_code}")
+        print(f"Response: {result.response.json}")
+        print(f"Time: {result.response.elapsed_ms:.2f}ms")
+    else:
+        print(f"Error: {result.error}")
+
+    await executor.aclose()
+
+asyncio.run(main())
+```
+
+### Synchronous Execution
+
+```python
+from python_postman.execution import RequestExecutor, ExecutionContext
+
+# Synchronous execution
+with RequestExecutor() as executor:
+    context = ExecutionContext(
+        environment_variables={"base_url": "https://httpbin.org"}
+    )
+
+    result = executor.execute_request_sync(request, context)
+    if result.success:
+        print(f"Status: {result.response.status_code}")
+```
+
+### Collection Execution
+
+```python
+# Execute entire collection
+async def execute_collection():
+    executor = RequestExecutor()
+
+    # Sequential execution
+    result = await executor.execute_collection(collection)
+    print(f"Executed {result.total_requests} requests")
+    print(f"Success rate: {result.successful_requests}/{result.total_requests}")
+
+    # Parallel execution
+    result = await executor.execute_collection(
+        collection,
+        parallel=True,
+        stop_on_error=False
+    )
+    print(f"Parallel execution completed in {result.total_time_ms:.2f}ms")
+
+    await executor.aclose()
+```
+
+### Variable Management
+
+```python
+# Variable scoping: request > folder > collection > environment
+context = ExecutionContext(
+    environment_variables={"env": "production"},
+    collection_variables={"api_version": "v1", "timeout": "30"},
+    folder_variables={"endpoint": "/users"},
+    request_variables={"user_id": "12345"}
+)
+
+# Variables are resolved with proper precedence
+url = context.resolve_variables("{{base_url}}/{{api_version}}{{endpoint}}/{{user_id}}")
+print(url)  # "https://api.example.com/v1/users/12345"
+
+# Dynamic variable updates
+context.set_variable("session_token", "abc123", "environment")
+```
+
+### Path Parameters
+
+The library supports both Postman-style variables (`{{variable}}`) and path parameters (`:parameter`):
+
+```python
+# Path parameters use :parameterName syntax
+context = ExecutionContext(
+    environment_variables={
+        "baseURL": "https://api.example.com",
+        "userId": "12345",
+        "datasetId": "abc123"
+    }
+)
+
+# Mix Postman variables and path parameters
+url = context.resolve_variables("{{baseURL}}/users/:userId/datasets/:datasetId")
+print(url)  # "https://api.example.com/users/12345/datasets/abc123"
+
+# Path parameters follow the same scoping rules as Postman variables
+url = context.resolve_variables("{{baseURL}}/:datasetId?$offset=0&$limit=10")
+print(url)  # "https://api.example.com/abc123?$offset=0&$limit=10"
+```
+
+### Request Extensions
+
+```python
+from python_postman.execution import RequestExtensions
+
+# Runtime request modifications
+extensions = RequestExtensions(
+    # Substitute existing values
+    header_substitutions={"Authorization": "Bearer {{new_token}}"},
+    url_substitutions={"host": "staging.api.example.com"},
+
+    # Add new values
+    header_extensions={"X-Request-ID": "req-{{timestamp}}"},
+    param_extensions={"debug": "true", "version": "v2"},
+    body_extensions={"metadata": {"client": "python-postman"}}
+)
+
+result = await executor.execute_request(
+    request,
+    context,
+    extensions=extensions
+)
+```
+
+### Authentication
+
+```python
+# Authentication is handled automatically based on collection/request auth settings
+
+# Bearer Token
+context = ExecutionContext(
+    environment_variables={"bearer_token": "eyJhbGciOiJIUzI1NiIs..."}
+)
+
+# Basic Auth
+context = ExecutionContext(
+    environment_variables={
+        "username": "admin",
+        "password": "secret123"
+    }
+)
+
+# API Key
+context = ExecutionContext(
+    environment_variables={"api_key": "sk-1234567890abcdef"}
+)
+
+# Auth is applied automatically during request execution
+result = await executor.execute_request(request, context)
+```
+
+### Request Methods on Models
+
+```python
+# Execute requests directly from Request objects
+request = collection.get_request_by_name("Health Check")
+
+# Async execution
+result = await request.execute(
+    executor=executor,
+    context=context,
+    substitutions={"env": "staging"}
+)
+
+# Sync execution
+result = request.execute_sync(
+    executor=executor,
+    context=context
+)
+
+# Execute collections directly
+result = await collection.execute(
+    executor=executor,
+    parallel=True
+)
+```
+
+### Error Handling
+
+```python
+from python_postman.execution import (
+    ExecutionError,
+    RequestExecutionError,
+    VariableResolutionError,
+    AuthenticationError
+)
+
+try:
+    result = await executor.execute_request(request, context)
+    if not result.success:
+        print(f"Request failed: {result.error}")
+except VariableResolutionError as e:
+    print(f"Variable error: {e}")
+except AuthenticationError as e:
+    print(f"Auth error: {e}")
+except RequestExecutionError as e:
+    print(f"Execution error: {e}")
+```
+
+### Test Scripts and Results
+
+```python
+# Test results are automatically collected from test scripts
+result = await executor.execute_request(request, context)
+
+if result.test_results:
+    print(f"Tests: {result.test_results.passed} passed, {result.test_results.failed} failed")
+
+    # Check individual assertions
+    for assertion in result.test_results.assertions:
+        if not assertion.passed:
+            print(f"Failed: {assertion.name} - {assertion.error}")
 ```
 
 ## API Reference

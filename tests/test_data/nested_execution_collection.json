@@ -1,0 +1,355 @@
+{
+    "info": {
+        "name": "Nested Execution Collection",
+        "description": "Collection with nested folders for testing execution with variable scoping",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Login successful', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "if (pm.response.code === 200) {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    pm.collectionVariables.set('auth_token', responseJson.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{auth_token}}"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/logout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "logout"
+                            ]
+                        }
+                    }
+                }
+            ],
+            "variable": [
+                {
+                    "key": "username",
+                    "value": "testuser",
+                    "type": "string"
+                },
+                {
+                    "key": "password",
+                    "value": "testpass",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "User Management",
+            "item": [
+                {
+                    "name": "Users",
+                    "item": [
+                        {
+                            "name": "Get All Users",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/users?page={{page}}&limit={{limit}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "users"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "page",
+                                            "value": "{{page}}"
+                                        },
+                                        {
+                                            "key": "limit",
+                                            "value": "{{limit}}"
+                                        }
+                                    ]
+                                }
+                            },
+                            "event": [
+                                {
+                                    "listen": "prerequest",
+                                    "script": {
+                                        "exec": [
+                                            "// Set pagination defaults",
+                                            "if (!pm.collectionVariables.get('page')) {",
+                                            "    pm.collectionVariables.set('page', '1');",
+                                            "}",
+                                            "if (!pm.collectionVariables.get('limit')) {",
+                                            "    pm.collectionVariables.set('limit', '10');",
+                                            "}"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Get User by ID",
+                            "request": {
+                                "method": "GET",
+                                "url": {
+                                    "raw": "{{base_url}}/users/{{user_id}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "users",
+                                        "{{user_id}}"
+                                    ]
+                                }
+                            },
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('User found', function () {",
+                                            "    pm.response.to.have.status(200);",
+                                            "});",
+                                            "",
+                                            "if (pm.response.code === 200) {",
+                                            "    const user = pm.response.json();",
+                                            "    pm.collectionVariables.set('current_user_name', user.name);",
+                                            "    pm.collectionVariables.set('current_user_email', user.email);",
+                                            "}"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "variable": [
+                        {
+                            "key": "user_id",
+                            "value": "123",
+                            "type": "string"
+                        }
+                    ]
+                },
+                {
+                    "name": "Profiles",
+                    "item": [
+                        {
+                            "name": "Update Profile",
+                            "request": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"name\": \"{{current_user_name}} Updated\",\n  \"email\": \"{{current_user_email}}\",\n  \"bio\": \"{{profile_bio}}\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/users/{{user_id}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "users",
+                                        "{{user_id}}"
+                                    ]
+                                }
+                            },
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test('Profile updated successfully', function () {",
+                                            "    pm.response.to.have.status(200);",
+                                            "});",
+                                            "",
+                                            "pm.test('Updated profile contains new data', function () {",
+                                            "    const profile = pm.response.json();",
+                                            "    pm.expect(profile.name).to.include('Updated');",
+                                            "});"
+                                        ],
+                                        "type": "text/javascript"
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    "variable": [
+                        {
+                            "key": "profile_bio",
+                            "value": "Updated bio from nested folder",
+                            "type": "string"
+                        }
+                    ]
+                }
+            ],
+            "auth": {
+                "type": "bearer",
+                "bearer": [
+                    {
+                        "key": "token",
+                        "value": "{{auth_token}}"
+                    }
+                ]
+            },
+            "variable": [
+                {
+                    "key": "user_id",
+                    "value": "456",
+                    "type": "string"
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "apikey",
+        "apikey": [
+            {
+                "key": "key",
+                "value": "X-API-Key"
+            },
+            {
+                "key": "value",
+                "value": "{{global_api_key}}"
+            },
+            {
+                "key": "in",
+                "value": "header"
+            }
+        ]
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "exec": [
+                    "// Global pre-request setup",
+                    "console.log('Executing request: ' + pm.info.requestName);",
+                    "pm.collectionVariables.set('execution_timestamp', new Date().toISOString());"
+                ],
+                "type": "text/javascript"
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "exec": [
+                    "// Global test validation",
+                    "pm.test('Response time is acceptable', function () {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                    "});",
+                    "",
+                    "pm.test('Response has valid content type', function () {",
+                    "    pm.expect(pm.response.headers.get('Content-Type')).to.include('json');",
+                    "});"
+                ],
+                "type": "text/javascript"
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "global_api_key",
+            "value": "collection-api-key-456",
+            "type": "string"
+        },
+        {
+            "key": "auth_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "current_user_name",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "current_user_email",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "page",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "limit",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "execution_timestamp",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}

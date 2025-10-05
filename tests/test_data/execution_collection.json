@@ -1,0 +1,285 @@
+{
+    "info": {
+        "name": "Execution Test Collection",
+        "description": "Collection for testing HTTP request execution with variables, auth, and scripts",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Simple GET Request",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Accept",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "X-Test-Header",
+                        "value": "{{test_header_value}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/users/{{user_id}}",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users",
+                        "{{user_id}}"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Set dynamic user ID",
+                            "pm.collectionVariables.set('user_id', '123');"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Status code is 200', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test('Response has user data', function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData).to.have.property('id');",
+                            "    pm.expect(jsonData).to.have.property('name');",
+                            "});",
+                            "",
+                            "// Set variable for next request",
+                            "const responseJson = pm.response.json();",
+                            "pm.collectionVariables.set('user_name', responseJson.name);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "POST Request with Body",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"name\": \"{{user_name}} Updated\",\n  \"email\": \"{{user_email}}\",\n  \"timestamp\": \"{{$timestamp}}\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/users",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "users"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Status code is 201', function () {",
+                            "    pm.response.to.have.status(201);",
+                            "});",
+                            "",
+                            "pm.test('Response contains created user', function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData).to.have.property('id');",
+                            "    pm.expect(jsonData.name).to.include('Updated');",
+                            "});",
+                            "",
+                            "// Store created user ID",
+                            "const responseJson = pm.response.json();",
+                            "pm.collectionVariables.set('created_user_id', responseJson.id);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Authenticated Request",
+            "request": {
+                "method": "GET",
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{auth_token}}"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/protected/profile",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "protected",
+                        "profile"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Status code is 200', function () {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "",
+                            "pm.test('Response has profile data', function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData).to.have.property('profile');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Error Handling Request",
+            "request": {
+                "method": "GET",
+                "url": {
+                    "raw": "{{base_url}}/nonexistent",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "nonexistent"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Status code is 404', function () {",
+                            "    pm.response.to.have.status(404);",
+                            "});",
+                            "",
+                            "pm.test('Error response has message', function () {",
+                            "    const jsonData = pm.response.json();",
+                            "    pm.expect(jsonData).to.have.property('error');",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "apikey",
+        "apikey": [
+            {
+                "key": "key",
+                "value": "X-API-Key"
+            },
+            {
+                "key": "value",
+                "value": "{{collection_api_key}}"
+            },
+            {
+                "key": "in",
+                "value": "header"
+            }
+        ]
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "exec": [
+                    "// Collection-level pre-request script",
+                    "console.log('Collection pre-request: ' + pm.info.requestName);",
+                    "pm.collectionVariables.set('request_start_time', Date.now());"
+                ],
+                "type": "text/javascript"
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "exec": [
+                    "// Collection-level test script",
+                    "const startTime = pm.collectionVariables.get('request_start_time');",
+                    "const duration = Date.now() - startTime;",
+                    "console.log('Request duration: ' + duration + 'ms');",
+                    "",
+                    "pm.test('Request completed within reasonable time', function () {",
+                    "    pm.expect(duration).to.be.below(5000);",
+                    "});"
+                ],
+                "type": "text/javascript"
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "test_header_value",
+            "value": "test-value-123",
+            "type": "string"
+        },
+        {
+            "key": "user_email",
+            "value": "test@example.com",
+            "type": "string"
+        },
+        {
+            "key": "auth_token",
+            "value": "test-bearer-token-123",
+            "type": "string"
+        },
+        {
+            "key": "collection_api_key",
+            "value": "collection-api-key-456",
+            "type": "string"
+        },
+        {
+            "key": "user_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "user_name",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "created_user_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "request_start_time",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
