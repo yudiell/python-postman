@@ -11,7 +11,7 @@ Example:
     >>> from python_postman import PythonPostman
     >>> collection = PythonPostman.from_file("collection.json")
     >>> print(f"Collection: {collection.info.name}")
-    >>> for request in collection.get_all_requests():
+    >>> for request in collection.get_requests():
     ...     print(f"Request: {request.method} {request.name}")
 """
 

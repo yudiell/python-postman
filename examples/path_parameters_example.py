@@ -120,7 +120,7 @@ def demonstrate_path_parameter_resolution():
     )
 
     # Test each request
-    for request in collection.get_all_requests():
+    for request in collection.get_requests():
         print(f"\n--- {request.name} ---")
 
         if request.url and request.url.raw:
@@ -195,7 +195,7 @@ async def demonstrate_full_execution():
         )
 
         # Execute requests
-        for request in collection.get_all_requests():
+        for request in collection.get_requests():
             print(f"\n--- Executing {request.name} ---")
 
             result = await executor.execute_request(request, context)

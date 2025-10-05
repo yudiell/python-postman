@@ -57,8 +57,12 @@ print(f"Description: {collection.info.description}")
 print(f"Schema: {collection.info.schema}")
 
 # Collection-level variables
-for variable in collection.variables:
+for variable in collection.variables: # This requests a list of Variable objects
     print(f"Variable: {variable.key} = {variable.value}")
+
+# Collection variables dictionary. This is a quick way to get key-value pairs.
+# You can pass/update these and add them to the execution context.
+collection_variables = collection.get_variables()
 
 # Collection-level authentication
 if collection.auth:
@@ -68,8 +72,16 @@ if collection.auth:
 ### Working with Requests
 
 ```python
+# Get a list of requests by name
+collection.list_requests()
+
+# Find specific request by name
+login_request = collection.get_request_by_name("Login Request")
+if login_request:
+    print(f"Found request: {login_request.method} {login_request.url}")
+
 # Iterate through all requests (flattens folder structure)
-for request in collection.get_all_requests():
+for request in collection.get_requests():
     print(f"Request: {request.method} {request.name}")
     print(f"URL: {request.url}")
 
@@ -81,11 +93,6 @@ for request in collection.get_all_requests():
     if request.body:
         print(f"Body Type: {request.body.mode}")
         print(f"Body Content: {request.body.raw}")
-
-# Find specific request by name
-request = collection.get_request_by_name("Login Request")
-if request:
-    print(f"Found request: {request.method} {request.url}")
 ```
 
 ### Working with Folders
@@ -143,7 +150,7 @@ if collection.auth:
         print(f"Basic Auth Username: {username}")
 
 # Request-level auth (overrides collection auth)
-for request in collection.get_all_requests():
+for request in collection.get_requests():
     if request.auth:
         print(f"Request '{request.name}' has {request.auth.type} auth")
 ```
@@ -157,7 +164,7 @@ for event in collection.events:
     print(f"Script: {event.script}")
 
 # Request-level events
-for request in collection.get_all_requests():
+for request in collection.get_requests():
     for event in request.events:
         if event.listen == "prerequest":
             print(f"Pre-request script for {request.name}")
@@ -274,6 +281,12 @@ async def execute_collection():
         parallel=True,
         stop_on_error=False
     )
+
+    # Get the request responses
+    for result in result.results:
+        print(f"Request: {result.request.name}")
+        print(f"Result Text: {result.response.text}")
+
     print(f"Parallel execution completed in {result.total_time_ms:.2f}ms")
 
     await executor.aclose()

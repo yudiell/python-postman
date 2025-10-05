@@ -610,7 +610,7 @@ class RequestExecutor:
             context = self._create_execution_context(collection=collection)
 
         # Get all requests from the collection
-        all_requests = list(collection.get_all_requests())
+        all_requests = list(collection.get_requests())
 
         # Set collection reference on requests for auth inheritance
         for request in all_requests:

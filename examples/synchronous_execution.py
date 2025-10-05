@@ -29,7 +29,7 @@ def main():
         )
 
         # Execute requests synchronously
-        for request in collection.get_all_requests():
+        for request in collection.get_requests():
             print(f"\nExecuting: {request.name}")
 
             # Execute synchronously
@@ -53,7 +53,7 @@ def main():
                 print(f"  ❌ Failed: {result.error}")
 
         print(
-            f"\nCompleted execution of {len(list(collection.get_all_requests()))} requests"
+            f"\nCompleted execution of {len(list(collection.get_requests()))} requests"
         )
 
 
@@ -116,7 +116,7 @@ def demonstrate_collection_methods():
     # Execute the collection (this would be async in real usage)
     # For sync demo, we'll show the setup
     print("Collection executor created with custom configuration")
-    print(f"Ready to execute {len(list(collection.get_all_requests()))} requests")
+    print(f"Ready to execute {len(list(collection.get_requests()))} requests")
 
     executor.close()
 
