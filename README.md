@@ -57,8 +57,12 @@ print(f"Description: {collection.info.description}")
 print(f"Schema: {collection.info.schema}")
 
 # Collection-level variables
-for variable in collection.variables:
+for variable in collection.variables: # This requests a list of Variable objects
     print(f"Variable: {variable.key} = {variable.value}")
+
+# Collection variables dictionary. This is a quick way to get key-value pairs.
+# You can pass/update these and add them to the execution context.
+collection_variables = collection.get_variables()
 
 # Collection-level authentication
 if collection.auth:
