@@ -31,6 +31,16 @@ from .models.body import Body, BodyMode, FormParameter
 from .models.collection_info import CollectionInfo
 from .models.item import Item
 
+# Type definitions for enhanced type safety
+from .types import (
+    HttpMethod,
+    HttpMethodLiteral,
+    HttpMethodType,
+    AuthTypeEnum,
+    AuthTypeLiteral,
+    AuthTypeType,
+)
+
 # Exception classes
 from .exceptions import (
     PostmanCollectionError,
@@ -110,6 +120,13 @@ __all__ = [
     "FormParameter",
     "CollectionInfo",
     "Item",
+    # Type definitions
+    "HttpMethod",
+    "HttpMethodLiteral",
+    "HttpMethodType",
+    "AuthTypeEnum",
+    "AuthTypeLiteral",
+    "AuthTypeType",
     # Validation
     "ValidationResult",
     # Exception classes

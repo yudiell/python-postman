@@ -10,6 +10,7 @@ from .body import Body
 from .auth import Auth
 from .event import Event
 from .response import ExampleResponse
+from ..types.http_methods import HttpMethodType, HttpMethod
 
 # Import execution types only for type checking to avoid circular imports
 if TYPE_CHECKING:
@@ -29,7 +30,7 @@ class Request(Item):
     def __init__(
         self,
         name: str,
-        method: str,
+        method: HttpMethodType,
         url: Url,
         description: Optional[str] = None,
         headers: Optional[List[Header]] = None,
@@ -53,6 +54,7 @@ class Request(Item):
             responses: Optional list of example responses
         """
         super().__init__(name, description)
+        self._validate_method(method)
         self.method = method
         self.url = url
         self.headers = headers or []
@@ -60,6 +62,31 @@ class Request(Item):
         self.auth = auth
         self.events = events or []
         self.responses = responses or []
+
+    def _validate_method(self, method: str) -> None:
+        """
+        Validate HTTP method at runtime.
+        
+        Args:
+            method: HTTP method to validate
+            
+        Raises:
+            ValueError: If the method is not a valid HTTP method
+        """
+        if not method or not isinstance(method, str):
+            raise ValueError(
+                "HTTP method must be a non-empty string. "
+                f"Valid methods are: {', '.join(m.value for m in HttpMethod)}"
+            )
+        
+        try:
+            HttpMethod(method.upper())
+        except ValueError:
+            valid_methods = [m.value for m in HttpMethod]
+            raise ValueError(
+                f"Invalid HTTP method '{method}'. "
+                f"Valid methods are: {', '.join(valid_methods)}"
+            ) from None
 
     def get_requests(self) -> Iterator["Request"]:
         """
