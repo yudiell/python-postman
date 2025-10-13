@@ -12,7 +12,7 @@ from ..models.request import Request
 
 
 @dataclass
-class TestAssertion:
+class ScriptAssertion:
     """
     Individual test assertion result.
 
@@ -32,7 +32,7 @@ class TestAssertion:
 
 
 @dataclass
-class TestResults:
+class ScriptResults:
     """
     Results from test script execution.
 
@@ -42,7 +42,7 @@ class TestResults:
 
     passed: int = 0
     failed: int = 0
-    assertions: List[TestAssertion] = field(default_factory=list)
+    assertions: List[ScriptAssertion] = field(default_factory=list)
 
     @property
     def total(self) -> int:
@@ -56,7 +56,7 @@ class TestResults:
             return 1.0
         return self.passed / self.total
 
-    def add_assertion(self, assertion: TestAssertion) -> None:
+    def add_assertion(self, assertion: ScriptAssertion) -> None:
         """
         Add a test assertion result.
 
@@ -85,7 +85,7 @@ class ExecutionResult:
     request: Request
     response: Optional["ExecutionResponse"] = None
     error: Optional[Exception] = None
-    test_results: Optional[TestResults] = None
+    test_results: Optional[ScriptResults] = None
     execution_time_ms: float = 0.0
 
     @property
@@ -146,9 +146,9 @@ class FolderExecutionResult:
         return self.successful_requests / self.total_requests
 
     @property
-    def test_results(self) -> TestResults:
+    def test_results(self) -> ScriptResults:
         """Aggregated test results from all requests."""
-        aggregated = TestResults()
+        aggregated = ScriptResults()
         for result in self.results:
             if result.test_results:
                 aggregated.passed += result.test_results.passed
@@ -211,9 +211,9 @@ class CollectionExecutionResult:
         return self.successful_requests / self.total_requests
 
     @property
-    def test_results(self) -> TestResults:
+    def test_results(self) -> ScriptResults:
         """Aggregated test results from all requests."""
-        aggregated = TestResults()
+        aggregated = ScriptResults()
         for result in self.results:
             if result.test_results:
                 aggregated.passed += result.test_results.passed

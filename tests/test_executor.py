@@ -180,7 +180,7 @@ class TestRequestExecutorContextCreation:
     def test_create_context_with_collection(self, executor):
         """Test creating context with collection variables."""
         collection = Mock()
-        collection.variable = [
+        collection.variables = [
             Mock(key="col_var1", value="col_value1"),
             Mock(key="col_var2", value="col_value2"),
         ]
@@ -228,8 +228,7 @@ class TestRequestExecutorContextCreation:
 
     def test_create_context_no_variables_attribute(self, executor):
         """Test creating context when objects don't have variable attributes."""
-        collection = Mock()
-        del collection.variable  # Remove variable attribute
+        collection = Mock(spec=[])  # Mock with no attributes
 
         context = executor._create_execution_context(collection=collection)
 
@@ -253,7 +252,7 @@ class TestRequestExecutorRequestPreparation:
         request = Mock(spec=Request)
         request.method = "POST"
         request.url = Mock()
-        request.header = [Mock(key="Content-Type", value="application/json")]
+        request.headers = [Mock(key="Content-Type", value="application/json")]
         request.body = Mock()
         request.auth = None
         return request
@@ -1035,7 +1034,7 @@ class TestRequestExecutorFolderExecution:
             mock_folder_context.environment_variables = MagicMock()
             mock_create_context.return_value = mock_folder_context
 
-            with patch.object(executor, "execute_request") as mock_execute:
+            with patch.object(executor, "execute_request", new_callable=AsyncMock) as mock_execute:
                 mock_execute.return_value = mock_result
 
                 await executor.execute_folder(

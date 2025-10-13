@@ -12,7 +12,7 @@ import time
 from typing import Optional, Dict, Any, List
 from .context import ExecutionContext
 from .response import ExecutionResponse
-from .results import TestResults, TestAssertion
+from .results import ScriptResults, ScriptAssertion
 from .exceptions import ScriptExecutionError
 from ..models.request import Request
 from ..models.collection import Collection
@@ -39,7 +39,7 @@ class PostmanAPI:
         """
         self.context = context
         self._response_obj = response
-        self.test_results = TestResults()
+        self.test_results = ScriptResults()
         self._variables = PostmanVariables(context)
         self._response = PostmanResponse(response) if response else None
         self._request = PostmanRequest()
@@ -69,10 +69,10 @@ class PostmanAPI:
         """
         try:
             test_function()
-            assertion = TestAssertion(name=name, passed=True)
+            assertion = ScriptAssertion(name=name, passed=True)
             self.test_results.add_assertion(assertion)
         except Exception as e:
-            assertion = TestAssertion(name=name, passed=False, error=str(e))
+            assertion = ScriptAssertion(name=name, passed=False, error=str(e))
             self.test_results.add_assertion(assertion)
 
     def expect(self, actual: Any) -> "PostmanExpect":
@@ -250,7 +250,7 @@ class ScriptRunner:
 
     def execute_test_scripts(
         self, request: Request, response: ExecutionResponse, context: ExecutionContext
-    ) -> TestResults:
+    ) -> ScriptResults:
         """
         Execute test scripts and return results.
 
@@ -260,9 +260,9 @@ class ScriptRunner:
             context: Execution context for variable access and updates
 
         Returns:
-            TestResults: Results of test script execution
+            ScriptResults: Results of test script execution
         """
-        aggregated_results = TestResults()
+        aggregated_results = ScriptResults()
 
         # Execute request-level test scripts
         for event in request.events:
@@ -326,7 +326,7 @@ class ScriptRunner:
         script_content: str,
         context: ExecutionContext,
         response: Optional[ExecutionResponse],
-    ) -> Optional[TestResults]:
+    ) -> Optional[ScriptResults]:
         """
         Execute a single script in a sandboxed environment.
 
@@ -336,7 +336,7 @@ class ScriptRunner:
             response: Optional response object for test scripts
 
         Returns:
-            TestResults if this was a test script, None for pre-request scripts
+            ScriptResults if this was a test script, None for pre-request scripts
         """
         if not script_content or not script_content.strip():
             return None

@@ -71,8 +71,8 @@ try:
         ExecutionResponse,
         RequestExtensions,
         ExecutionResult,
-        TestResults,
-        TestAssertion,
+        ScriptResults,
+        ScriptAssertion,
         CollectionExecutionResult,
         FolderExecutionResult,
         VariableResolver,
@@ -176,8 +176,8 @@ if _EXECUTION_AVAILABLE:
             "RequestExtensions",
             # Result classes
             "ExecutionResult",
-            "TestResults",
-            "TestAssertion",
+            "ScriptResults",
+            "ScriptAssertion",
             "CollectionExecutionResult",
             "FolderExecutionResult",
             # Utility classes

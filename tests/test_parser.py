@@ -53,7 +53,12 @@ class TestPythonPostmanFactoryMethods:
 
     def test_from_dict_minimal_collection(self):
         """Test creating collection from minimal valid dictionary."""
-        collection_data = {"info": {"name": "Minimal Collection"}}
+        collection_data = {
+            "info": {
+                "name": "Minimal Collection",
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+            }
+        }
 
         collection = PythonPostman.from_dict(collection_data)
 
@@ -90,7 +95,10 @@ class TestPythonPostmanFactoryMethods:
     def test_from_dict_with_folders(self):
         """Test creating collection with nested folders."""
         collection_data = {
-            "info": {"name": "Collection with Folders"},
+            "info": {
+                "name": "Collection with Folders",
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+            },
             "item": [
                 {
                     "name": "API Folder",
@@ -154,7 +162,8 @@ class TestPythonPostmanFactoryMethods:
         {
             "info": {
                 "name": "JSON Test Collection",
-                "description": "Created from JSON string"
+                "description": "Created from JSON string",
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
             },
             "item": []
         }
@@ -188,7 +197,11 @@ class TestPythonPostmanFactoryMethods:
     def test_from_file_valid_collection(self):
         """Test loading collection from valid file."""
         collection_data = {
-            "info": {"name": "File Test Collection", "description": "Loaded from file"},
+            "info": {
+                "name": "File Test Collection",
+                "description": "Loaded from file",
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+            },
             "item": [
                 {
                     "name": "File Request",
@@ -215,7 +228,12 @@ class TestPythonPostmanFactoryMethods:
 
     def test_from_file_with_path_object(self):
         """Test loading collection using Path object."""
-        collection_data = {"info": {"name": "Path Test Collection"}}
+        collection_data = {
+            "info": {
+                "name": "Path Test Collection",
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+            }
+        }
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(collection_data, f)
@@ -279,7 +297,12 @@ class TestPythonPostmanFactoryMethods:
 
     def test_validate_collection_dict_valid(self):
         """Test validation of valid collection dictionary."""
-        valid_data = {"info": {"name": "Valid Collection"}}
+        valid_data = {
+            "info": {
+                "name": "Valid Collection",
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+            }
+        }
 
         is_valid = PythonPostman.validate_collection_dict(valid_data)
         assert is_valid is True
