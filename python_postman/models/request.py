@@ -20,6 +20,9 @@ if TYPE_CHECKING:
         ExecutionResult,
         RequestExtensions,
     )
+    from .folder import Folder
+    from .collection import Collection
+    from ..introspection.auth_resolver import ResolvedAuth
 
 
 class Request(Item):
@@ -62,6 +65,10 @@ class Request(Item):
         self.auth = auth
         self.events = events or []
         self.responses = responses or []
+        
+        # Hierarchy references for authentication resolution
+        self._parent_folder: Optional["Folder"] = None
+        self._collection: Optional["Collection"] = None
 
     def _validate_method(self, method: str) -> None:
         """
@@ -219,6 +226,66 @@ class Request(Item):
             if response.name == name:
                 return response
         return None
+
+    def set_parent(self, parent: Optional["Folder"]) -> None:
+        """
+        Set parent folder for hierarchy traversal.
+        
+        Args:
+            parent: Parent folder or None if this is a top-level request
+        """
+        self._parent_folder = parent
+
+    def set_collection(self, collection: Optional["Collection"]) -> None:
+        """
+        Set collection reference for hierarchy traversal.
+        
+        Args:
+            collection: Collection containing this request
+        """
+        self._collection = collection
+
+    def get_effective_auth(
+        self,
+        parent_folder: Optional["Folder"] = None,
+        collection: Optional["Collection"] = None
+    ) -> "ResolvedAuth":
+        """
+        Get the effective authentication for this request.
+        
+        Resolves authentication by walking up the hierarchy:
+        Request auth > Folder auth > Collection auth
+        
+        Args:
+            parent_folder: Optional parent folder to use for resolution.
+                          If not provided, uses self._parent_folder
+            collection: Optional collection to use for resolution.
+                       If not provided, uses self._collection
+        
+        Returns:
+            ResolvedAuth: Contains the resolved auth, its source, and hierarchy path
+            
+        Examples:
+            >>> # Get effective auth using stored hierarchy references
+            >>> resolved = request.get_effective_auth()
+            >>> print(f"Auth type: {resolved.auth.type if resolved.auth else 'None'}")
+            >>> print(f"Source: {resolved.source.value}")
+            >>> 
+            >>> # Get effective auth with explicit hierarchy
+            >>> resolved = request.get_effective_auth(
+            ...     parent_folder=my_folder,
+            ...     collection=my_collection
+            ... )
+            >>> if resolved.auth:
+            ...     print(f"Using {resolved.auth.type} auth from {resolved.source.value}")
+        """
+        from ..introspection.auth_resolver import AuthResolver
+        
+        # Use provided arguments or fall back to stored references
+        folder = parent_folder if parent_folder is not None else self._parent_folder
+        coll = collection if collection is not None else self._collection
+        
+        return AuthResolver.resolve_auth(self, folder, coll)
 
     async def execute(
         self,

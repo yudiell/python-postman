@@ -52,6 +52,9 @@ from .exceptions import (
 # Utility functions
 from .utils import parse_json_safely, load_json_file
 
+# Introspection utilities
+from .introspection import AuthResolver, AuthSource, ResolvedAuth
+
 # Optional execution functionality (requires httpx)
 try:
     from .execution import (
@@ -137,6 +140,10 @@ __all__ = [
     # Utility functions
     "parse_json_safely",
     "load_json_file",
+    # Introspection utilities
+    "AuthResolver",
+    "AuthSource",
+    "ResolvedAuth",
     # Execution availability check
     "is_execution_available",
 ]
