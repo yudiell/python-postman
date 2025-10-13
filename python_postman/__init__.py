@@ -30,6 +30,8 @@ from .models.header import Header, HeaderCollection
 from .models.body import Body, BodyMode, FormParameter
 from .models.collection_info import CollectionInfo
 from .models.item import Item
+from .models.cookie import Cookie, CookieJar
+from .models.response import Response, ExampleResponse
 
 # Type definitions for enhanced type safety
 from .types import (
@@ -126,6 +128,10 @@ __all__ = [
     "FormParameter",
     "CollectionInfo",
     "Item",
+    "Cookie",
+    "CookieJar",
+    "Response",
+    "ExampleResponse",
     # Type definitions
     "HttpMethod",
     "HttpMethodLiteral",

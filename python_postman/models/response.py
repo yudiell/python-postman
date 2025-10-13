@@ -3,6 +3,7 @@
 from typing import List, Optional, Dict, Any
 import json
 from .header import Header
+from .cookie import Cookie, CookieJar
 
 
 class Response:
@@ -196,6 +197,45 @@ class Response:
             return True
 
         return False
+
+    def get_cookies(self) -> CookieJar:
+        """
+        Extract cookies from response.
+
+        Cookies can come from two sources:
+        1. Set-Cookie headers
+        2. Postman's cookie array (stored in self.cookie)
+
+        Returns:
+            CookieJar containing all cookies from the response
+        """
+        jar = CookieJar()
+
+        # Extract from Set-Cookie headers
+        for header in self.headers:
+            if header.key.lower() == "set-cookie":
+                try:
+                    cookie = Cookie.from_header(header.value)
+                    jar.add(cookie)
+                except (ValueError, AttributeError):
+                    # Skip invalid cookies
+                    pass
+
+        # Extract from Postman cookie array
+        if self.cookie:
+            for cookie_data in self.cookie:
+                if isinstance(cookie_data, dict):
+                    # Validate that required fields exist
+                    if "name" not in cookie_data or "value" not in cookie_data:
+                        continue
+                    try:
+                        cookie = Cookie.from_dict(cookie_data)
+                        jar.add(cookie)
+                    except (ValueError, KeyError, TypeError):
+                        # Skip invalid cookies
+                        pass
+
+        return jar
 
     def __repr__(self) -> str:
         return f"Response(name='{self.name}', code={self.code}, status='{self.status}')"
