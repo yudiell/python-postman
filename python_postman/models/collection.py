@@ -8,6 +8,7 @@ from .collection_info import CollectionInfo
 from .variable import Variable
 from .auth import Auth
 from .event import Event
+from .schema import SchemaValidator, SchemaVersion
 
 if TYPE_CHECKING:
     from .request import Request
@@ -72,6 +73,9 @@ class Collection:
         self.variables = variables or []
         self.auth = auth
         self.events = events or []
+        
+        # Detect and store schema version
+        self.schema_version = SchemaValidator.detect_version(info.schema)
 
     def validate(self) -> ValidationResult:
         """
@@ -140,18 +144,10 @@ class Collection:
                             f"Event '{event.listen}' validation failed: {str(e)}"
                         )
 
-        # Check for Postman schema version compatibility
-        if self.info.schema:
-            schema_version = self.info.schema.lower()
-            supported_versions = [
-                "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-                "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
-            ]
-
-            if not any(version in schema_version for version in supported_versions):
-                result.add_error(
-                    f"Unsupported schema version: {self.info.schema}. Supported versions: v2.0.0, v2.1.0"
-                )
+        # Validate schema version using SchemaValidator
+        is_valid, error_message = SchemaValidator.validate_version(self.info.schema)
+        if not is_valid:
+            result.add_error(error_message)
 
         return result
 

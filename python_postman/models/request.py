@@ -9,6 +9,7 @@ from .header import Header
 from .body import Body
 from .auth import Auth
 from .event import Event
+from .response import ExampleResponse
 
 # Import execution types only for type checking to avoid circular imports
 if TYPE_CHECKING:
@@ -35,6 +36,7 @@ class Request(Item):
         body: Optional[Body] = None,
         auth: Optional[Auth] = None,
         events: Optional[List[Event]] = None,
+        responses: Optional[List[ExampleResponse]] = None,
     ):
         """
         Initialize a Request.
@@ -48,6 +50,7 @@ class Request(Item):
             body: Optional request body
             auth: Optional authentication override
             events: Optional list of events (pre-request scripts, tests)
+            responses: Optional list of example responses
         """
         super().__init__(name, description)
         self.method = method
@@ -56,6 +59,7 @@ class Request(Item):
         self.body = body
         self.auth = auth
         self.events = events or []
+        self.responses = responses or []
 
     def get_requests(self) -> Iterator["Request"]:
         """
@@ -114,6 +118,12 @@ class Request(Item):
         for event_data in events_data:
             events.append(Event.from_dict(event_data))
 
+        # Parse example responses
+        responses = []
+        responses_data = data.get("response", [])
+        for response_data in responses_data:
+            responses.append(ExampleResponse.from_dict(response_data))
+
         return cls(
             name=name,
             method=method,
@@ -123,6 +133,7 @@ class Request(Item):
             body=body,
             auth=auth,
             events=events,
+            responses=responses,
         )
 
     def to_dict(self) -> dict:
@@ -153,7 +164,34 @@ class Request(Item):
         if self.events:
             result["event"] = [event.to_dict() for event in self.events]
 
+        if self.responses:
+            result["response"] = [response.to_dict() for response in self.responses]
+
         return result
+
+    def add_response(self, response: ExampleResponse) -> None:
+        """
+        Add an example response to this request.
+
+        Args:
+            response: ExampleResponse to add
+        """
+        self.responses.append(response)
+
+    def get_response_by_name(self, name: str) -> Optional[ExampleResponse]:
+        """
+        Find an example response by name.
+
+        Args:
+            name: Name of the response to find
+
+        Returns:
+            ExampleResponse if found, None otherwise
+        """
+        for response in self.responses:
+            if response.name == name:
+                return response
+        return None
 
     async def execute(
         self,
