@@ -1,0 +1,2 @@
+postman-collection-runner
+pytest>=7.0.0

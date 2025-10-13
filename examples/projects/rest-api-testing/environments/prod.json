@@ -1,0 +1,15 @@
+{
+    "name": "Production",
+    "values": [
+        {
+            "key": "baseUrl",
+            "value": "https://api.example.com",
+            "enabled": true
+        },
+        {
+            "key": "userId",
+            "value": "1",
+            "enabled": true
+        }
+    ]
+}

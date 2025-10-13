@@ -1,0 +1,59 @@
+{
+    "info": {
+        "name": "User Service",
+        "description": "User management microservice",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Get User Profile",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{userServiceUrl}}/profile",
+                    "host": [
+                        "{{userServiceUrl}}"
+                    ],
+                    "path": [
+                        "profile"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Update Profile",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"name\": \"Updated Name\", \"email\": \"user@example.com\"}"
+                },
+                "url": {
+                    "raw": "{{userServiceUrl}}/profile",
+                    "host": [
+                        "{{userServiceUrl}}"
+                    ],
+                    "path": [
+                        "profile"
+                    ]
+                }
+            }
+        }
+    ]
+}

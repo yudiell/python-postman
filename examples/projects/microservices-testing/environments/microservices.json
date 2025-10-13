@@ -1,0 +1,30 @@
+{
+    "name": "Microservices Environment",
+    "values": [
+        {
+            "key": "authServiceUrl",
+            "value": "https://auth.example.com",
+            "enabled": true
+        },
+        {
+            "key": "userServiceUrl",
+            "value": "https://users.example.com",
+            "enabled": true
+        },
+        {
+            "key": "orderServiceUrl",
+            "value": "https://orders.example.com",
+            "enabled": true
+        },
+        {
+            "key": "username",
+            "value": "testuser",
+            "enabled": true
+        },
+        {
+            "key": "password",
+            "value": "testpass",
+            "enabled": true
+        }
+    ]
+}
