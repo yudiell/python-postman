@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from ..execution.executor import RequestExecutor
     from ..execution.results import CollectionExecutionResult
     from ..search.query import RequestQuery
+    from ..statistics.collector import CollectionStatistics
 else:
     # Import for runtime use in search methods
     from .folder import Folder
@@ -330,6 +331,39 @@ class Collection:
         """
         from ..search.query import RequestQuery
         return RequestQuery(self)
+
+    def get_statistics(self) -> "CollectionStatistics":
+        """
+        Get statistics and metadata about this collection.
+        
+        Returns:
+            CollectionStatistics: Statistics analyzer for this collection
+            
+        Examples:
+            >>> # Get basic statistics
+            >>> stats = collection.get_statistics()
+            >>> data = stats.collect()
+            >>> print(f"Total requests: {data['total_requests']}")
+            >>> print(f"Total folders: {data['total_folders']}")
+            >>> print(f"Max depth: {data['max_nesting_depth']}")
+            >>> 
+            >>> # Get breakdown by method
+            >>> by_method = stats.count_by_method()
+            >>> print(f"GET: {by_method.get('GET', 0)}")
+            >>> print(f"POST: {by_method.get('POST', 0)}")
+            >>> 
+            >>> # Export to JSON
+            >>> json_output = stats.to_json()
+            >>> with open("collection_stats.json", "w") as f:
+            ...     f.write(json_output)
+            >>> 
+            >>> # Export to CSV
+            >>> csv_output = stats.to_csv()
+            >>> with open("collection_stats.csv", "w") as f:
+            ...     f.write(csv_output)
+        """
+        from ..statistics.collector import CollectionStatistics
+        return CollectionStatistics(self)
 
     def __repr__(self) -> str:
         return f"Collection(name='{self.info.name}', items={len(self.items)}, variables={len(self.variables)})"

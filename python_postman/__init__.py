@@ -60,6 +60,9 @@ from .introspection import AuthResolver, AuthSource, ResolvedAuth
 # Search and filtering
 from .search import SearchResult, RequestQuery
 
+# Statistics
+from .statistics import CollectionStatistics
+
 # Optional execution functionality (requires httpx)
 try:
     from .execution import (
@@ -156,6 +159,8 @@ __all__ = [
     # Search and filtering
     "SearchResult",
     "RequestQuery",
+    # Statistics
+    "CollectionStatistics",
     # Execution availability check
     "is_execution_available",
 ]
