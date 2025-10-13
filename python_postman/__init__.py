@@ -55,6 +55,9 @@ from .utils import parse_json_safely, load_json_file
 # Introspection utilities
 from .introspection import AuthResolver, AuthSource, ResolvedAuth
 
+# Search and filtering
+from .search import SearchResult, RequestQuery
+
 # Optional execution functionality (requires httpx)
 try:
     from .execution import (
@@ -144,6 +147,9 @@ __all__ = [
     "AuthResolver",
     "AuthSource",
     "ResolvedAuth",
+    # Search and filtering
+    "SearchResult",
+    "RequestQuery",
     # Execution availability check
     "is_execution_available",
 ]

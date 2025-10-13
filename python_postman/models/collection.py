@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from .folder import Folder
     from ..execution.executor import RequestExecutor
     from ..execution.results import CollectionExecutionResult
+    from ..search.query import RequestQuery
 else:
     # Import for runtime use in search methods
     from .folder import Folder
@@ -297,6 +298,38 @@ class Collection:
             if not variable.disabled:
                 variables_dict[variable.key] = variable.value
         return variables_dict
+
+    def search(self) -> "RequestQuery":
+        """
+        Create a new search query builder for this collection.
+        
+        Returns:
+            RequestQuery: Query builder for searching and filtering requests
+            
+        Examples:
+            >>> # Find all POST requests
+            >>> results = collection.search().by_method("POST").execute()
+            >>> 
+            >>> # Find requests to a specific host with bearer auth
+            >>> results = collection.search() \\
+            ...     .by_host("api.example.com") \\
+            ...     .by_auth_type("bearer") \\
+            ...     .execute()
+            >>> 
+            >>> # Find requests with test scripts
+            >>> results = collection.search().has_scripts("test").execute()
+            >>> for result in results:
+            ...     print(f"{result.full_path}: {result.request.name}")
+            >>> 
+            >>> # Complex query with multiple filters
+            >>> results = collection.search() \\
+            ...     .by_method("GET") \\
+            ...     .by_url_pattern(r"/api/v\\d+/users") \\
+            ...     .in_folder("User Management") \\
+            ...     .execute()
+        """
+        from ..search.query import RequestQuery
+        return RequestQuery(self)
 
     def __repr__(self) -> str:
         return f"Collection(name='{self.info.name}', items={len(self.items)}, variables={len(self.variables)})"
