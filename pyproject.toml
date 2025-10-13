@@ -38,6 +38,9 @@ dev = [
     "isort>=5.12.0",
     "mypy>=1.0.0",
 ]
+execution = [
+    "python-dotenv>=1.0.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/python-postman/python-postman"
