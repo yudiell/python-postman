@@ -109,13 +109,13 @@ class TestUrl:
         assert len(url.query) == 3  # active, sort (2 values)
         assert url.hash == "section"
 
-    def test_get_url_string_from_raw(self):
+    def test_to_string_from_raw(self):
         """Test getting URL string when raw URL is provided."""
         raw_url = "https://example.com/test"
         url = Url(raw=raw_url)
-        assert url.get_url_string() == raw_url
+        assert url.to_string() == raw_url
 
-    def test_get_url_string_from_components(self):
+    def test_to_string_from_components(self):
         """Test constructing URL string from components."""
         url = Url(
             protocol="https",
@@ -125,12 +125,12 @@ class TestUrl:
             query=[QueryParam("active", "true"), QueryParam("limit", "10")],
         )
 
-        result = url.get_url_string()
+        result = url.to_string()
         assert "https://api.example.com:8080/v1/users" in result
         assert "active=true" in result
         assert "limit=10" in result
 
-    def test_get_url_string_with_variables(self):
+    def test_to_string_with_variables(self):
         """Test URL string construction with variable resolution."""
         url = Url(
             protocol="https",
@@ -141,7 +141,7 @@ class TestUrl:
 
         variables = {"host": "api.example.com", "userId": "123", "apiKey": "secret123"}
 
-        result = url.get_url_string(resolve_variables=True, variable_context=variables)
+        result = url.to_string(resolve_variables=True, variable_context=variables)
         assert "https://api.example.com/api/v1/users/123" in result
         assert "token=secret123" in result
 
@@ -338,7 +338,7 @@ class TestUrl:
             ],
         )
 
-        result = url.get_url_string()
+        result = url.to_string()
         assert "active=true" in result
         assert "limit=10" in result
         assert "disabled=value" not in result
@@ -360,3 +360,11 @@ class TestUrl:
         assert url.raw == "not-a-valid-url"
         # Components should remain empty/default
         assert url.protocol is None
+
+    def test_get_url_string_deprecated(self):
+        """Test that get_url_string() still works but raises deprecation warning."""
+        url = Url(raw="https://example.com/test")
+        
+        with pytest.warns(DeprecationWarning, match="get_url_string\\(\\) is deprecated"):
+            result = url.get_url_string()
+            assert result == "https://example.com/test"

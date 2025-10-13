@@ -121,20 +121,20 @@ class Url:
             # If parsing fails, keep the raw URL as is
             pass
 
-    def get_url_string(
+    def to_string(
         self,
         resolve_variables: bool = False,
         variable_context: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
-        Construct URL string from components.
+        Convert URL to string representation.
 
         Args:
             resolve_variables: Whether to resolve variable placeholders
             variable_context: Dictionary of variables for resolution
 
         Returns:
-            Constructed URL string
+            URL as string
         """
         if self.raw and not resolve_variables:
             return self.raw
@@ -188,6 +188,32 @@ class Url:
             fragment = self._resolve_variables(fragment, variable_context)
 
         return urlunparse((scheme, netloc, path, "", query, fragment))
+
+    def get_url_string(
+        self,
+        resolve_variables: bool = False,
+        variable_context: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """
+        Construct URL string from components.
+
+        .. deprecated:: 
+            Use :meth:`to_string` instead. This method is maintained for backward compatibility.
+
+        Args:
+            resolve_variables: Whether to resolve variable placeholders
+            variable_context: Dictionary of variables for resolution
+
+        Returns:
+            Constructed URL string
+        """
+        import warnings
+        warnings.warn(
+            "get_url_string() is deprecated, use to_string() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self.to_string(resolve_variables, variable_context)
 
     def _resolve_variables(self, text: str, variable_context: Dict[str, Any]) -> str:
         """
