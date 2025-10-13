@@ -49,12 +49,24 @@ class Request(Item):
             name: Name of the request
             method: HTTP method (GET, POST, etc.)
             url: Request URL object
-            description: Optional description
+            description: Optional description of what this request does. Should include
+                        information about the endpoint's purpose, authentication requirements,
+                        expected parameters, response codes, and any important notes.
+                        Supports Markdown formatting for rich documentation.
             headers: Optional list of headers
             body: Optional request body
             auth: Optional authentication override
             events: Optional list of events (pre-request scripts, tests)
             responses: Optional list of example responses
+            
+        Examples:
+            >>> request = Request(
+            ...     name="Get User",
+            ...     method="GET",
+            ...     url=Url.from_string("https://api.example.com/users/{{id}}"),
+            ...     description="Retrieves a user by ID. Requires Bearer token authentication. "
+            ...                 "Returns 200 with user object or 404 if not found."
+            ... )
         """
         super().__init__(name, description)
         self._validate_method(method)

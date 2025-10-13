@@ -61,10 +61,18 @@ class Item(ABC):
 
         Args:
             name: The name of the item
-            description: Optional description of the item
+            description: Optional description of the item. This field provides human-readable
+                        documentation for the item. For folders, describe the purpose of the
+                        grouping. For requests, describe what the endpoint does, authentication
+                        requirements, and expected responses. Supports Markdown formatting.
             
         Raises:
             TypeError: If attempting to instantiate Item directly
+            
+        Note:
+            The description field is used for documentation and can be leveraged to generate
+            API documentation, provide context to team members, or audit your collection.
+            See the Description Field Usage Guide for best practices and examples.
         """
         # Prevent direct instantiation of the abstract Item class
         if self.__class__ == Item:

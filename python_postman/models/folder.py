@@ -32,10 +32,21 @@ class Folder(Item):
         Args:
             name: Name of the folder
             items: List of items contained in this folder
-            description: Optional description
+            description: Optional description of the folder's purpose. Should explain why
+                        these requests are grouped together, any common authentication or
+                        configuration, and the API domain or feature area covered.
+                        Supports Markdown formatting for rich documentation.
             auth: Optional folder-level authentication
             events: Optional list of folder-level events
             variables: Optional list of folder-level variables
+            
+        Examples:
+            >>> folder = Folder(
+            ...     name="User Management",
+            ...     items=[],
+            ...     description="All endpoints for user CRUD operations. "
+            ...                 "Requires admin authentication via Bearer token."
+            ... )
         """
         super().__init__(name, description)
         self.items = items or []

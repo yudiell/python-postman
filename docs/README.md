@@ -19,6 +19,8 @@ Practical guides for common tasks:
 
 - **[Decision Tree](guides/decision-tree.md)** - Choose the right features for your use case
 - **[Optional Dependencies](guides/optional-dependencies.md)** - Understanding dependency groups
+- **[Variable Scoping](guides/variable-scoping.md)** - Understanding variable scopes and resolution
+- **[Description Fields](guides/description-fields.md)** - Using description fields effectively
 - **[Troubleshooting](guides/troubleshooting.md)** - Diagnose and fix common issues
 
 ### Examples
@@ -27,6 +29,8 @@ Complete working examples:
 
 - **[Parse → Inspect → Modify → Execute](examples/parse-inspect-modify-execute.py)** - Complete workflow example
 - **[Generate Documentation](examples/generate-documentation.py)** - Generate API docs from collections
+- **[Variable Introspection](examples/variable-introspection.py)** - Trace and analyze variable usage
+- **[Description Usage](examples/description-usage.py)** - Working with description fields
 
 ## Quick Start
 
