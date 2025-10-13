@@ -1,16 +1,15 @@
-# Python Postman Collection Parser
+# Python Postman
 
-A Python library for parsing and working with Postman collection.json files. This library provides a clean, object-oriented interface for reading Postman collections and accessing their components programmatically.
+A comprehensive Python library for working with Postman collections. Parse, execute, search, and analyze Postman collection.json files with a clean, object-oriented interface. Execute HTTP requests with full async/sync support, dynamic variable resolution, and authentication handling.
 
 ## Features
 
 - **Parse Postman Collections**: Load collections from files, JSON strings, or dictionaries
 - **Object-Oriented API**: Work with collections using intuitive Python objects
-- **Full Collection Support**: Access requests, folders, variables, authentication, and scripts
+- **Full Collection Support**: Access requests, folders, variables, authentication, and events
 - **HTTP Request Execution**: Execute requests using httpx with full async/sync support
 - **Variable Resolution**: Dynamic variable substitution with proper scoping
 - **Authentication Handling**: Automatic auth processing for Bearer, Basic, and API Key
-- **Script Execution**: Run pre-request and test scripts with result collection
 - **Request Extensions**: Runtime modification of URLs, headers, body, and auth
 - **Validation**: Built-in validation for collection structure and schema compliance
 - **Iteration**: Easy iteration through all requests regardless of folder structure
@@ -158,18 +157,19 @@ for request in collection.get_requests():
 ### Events (Scripts)
 
 ```python
-# Collection-level events
+# Access script content from collection-level events
 for event in collection.events:
     print(f"Collection Event: {event.listen}")
-    print(f"Script: {event.script}")
+    print(f"Script Content: {event.script}")
 
-# Request-level events
+# Access script content from request-level events
+# Note: JavaScript execution is not supported - scripts are accessible as text only
 for request in collection.get_requests():
     for event in request.events:
         if event.listen == "prerequest":
-            print(f"Pre-request script for {request.name}")
+            print(f"Pre-request script for {request.name}: {event.script}")
         elif event.listen == "test":
-            print(f"Test script for {request.name}")
+            print(f"Test script for {request.name}: {event.script}")
 ```
 
 ### Validation
@@ -433,21 +433,6 @@ except RequestExecutionError as e:
     print(f"Execution error: {e}")
 ```
 
-### Test Scripts and Results
-
-```python
-# Test results are automatically collected from test scripts
-result = await executor.execute_request(request, context)
-
-if result.test_results:
-    print(f"Tests: {result.test_results.passed} passed, {result.test_results.failed} failed")
-
-    # Check individual assertions
-    for assertion in result.test_results.assertions:
-        if not assertion.passed:
-            print(f"Failed: {assertion.name} - {assertion.error}")
-```
-
 ## API Reference
 
 ### Main Classes
@@ -458,7 +443,7 @@ if result.test_results:
 - **`Folder`**: Container for organizing requests and sub-folders
 - **`Variable`**: Collection, folder, or request-level variables
 - **`Auth`**: Authentication configuration
-- **`Event`**: Pre-request scripts and test scripts
+- **`Event`**: Pre-request and test script definitions (text only, execution not supported)
 
 ### Exception Handling
 

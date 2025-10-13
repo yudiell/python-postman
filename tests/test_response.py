@@ -1,306 +1,485 @@
-"""Tests for ExecutionResponse wrapper."""
+"""
+Tests for the Response and ExampleResponse classes.
+"""
 
-import json
 import pytest
-from unittest.mock import Mock, MagicMock
-from python_postman.execution.response import ExecutionResponse
+from python_postman.models.response import Response, ExampleResponse
+from python_postman.models.header import Header
 
 
-class TestExecutionResponse:
-    """Test cases for ExecutionResponse class."""
+class TestResponse:
+    """Tests for the Response class."""
 
-    def create_mock_httpx_response(
-        self,
-        status_code: int = 200,
-        headers: dict = None,
-        text: str = "test response",
-        json_data: dict = None,
-        content: bytes = None,
-        url: str = "https://api.example.com/test",
-        method: str = "GET",
-    ):
-        """Create a mock httpx response for testing."""
-        mock_response = Mock()
-        mock_response.status_code = status_code
-        mock_response.headers = headers or {"Content-Type": "application/json"}
-        mock_response.text = text
-        mock_response.content = content or text.encode("utf-8")
-        mock_response.url = url
+    def test_response_initialization_minimal(self):
+        """Test Response initialization with minimal parameters."""
+        response = Response(name="Success Response", status="OK", code=200)
 
-        # Mock request object
-        mock_request = Mock()
-        mock_request.method = method
-        mock_response.request = mock_request
+        assert response.name == "Success Response"
+        assert response.status == "OK"
+        assert response.code == 200
+        assert response.headers == []
+        assert response.body is None
+        assert response.cookie == []
+        assert response._postman_previewlanguage is None
+        assert response._time is None
+        assert response.response_time is None
 
-        # Mock json() method
-        if json_data is not None:
-            mock_response.json.return_value = json_data
-        else:
-            mock_response.json.side_effect = json.JSONDecodeError("No JSON", "", 0)
+    def test_response_initialization_full(self):
+        """Test Response initialization with all parameters."""
+        headers = [
+            Header("Content-Type", "application/json"),
+            Header("Cache-Control", "no-cache"),
+        ]
+        body = '{"message": "Success", "data": {"id": 1}}'
+        cookies = [{"name": "session", "value": "abc123"}]
 
-        return mock_response
+        response = Response(
+            name="Success Response",
+            status="OK",
+            code=200,
+            headers=headers,
+            body=body,
+            cookie=cookies,
+            _postman_previewlanguage="json",
+            _time=150,
+            response_time=150,
+        )
 
-    def test_initialization(self):
-        """Test ExecutionResponse initialization."""
-        mock_response = self.create_mock_httpx_response()
-        start_time = 1000.0
-        end_time = 1001.5
-
-        response = ExecutionResponse(mock_response, start_time, end_time)
-
-        assert response._response == mock_response
-        assert response._request_start_time == start_time
-        assert response._request_end_time == end_time
-
-    def test_status_code_property(self):
-        """Test status_code property."""
-        mock_response = self.create_mock_httpx_response(status_code=404)
-        response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-
-        assert response.status_code == 404
-
-    def test_headers_property(self):
-        """Test headers property."""
-        headers = {"Content-Type": "application/json", "X-Custom": "value"}
-        mock_response = self.create_mock_httpx_response(headers=headers)
-        response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-
+        assert response.name == "Success Response"
+        assert response.status == "OK"
+        assert response.code == 200
         assert response.headers == headers
+        assert response.body == body
+        assert response.cookie == cookies
+        assert response._postman_previewlanguage == "json"
+        assert response._time == 150
+        assert response.response_time == 150
 
-    def test_text_property(self):
-        """Test text property."""
-        text_content = "Hello, World!"
-        mock_response = self.create_mock_httpx_response(text=text_content)
-        response = ExecutionResponse(mock_response, 1000.0, 1001.0)
+    def test_response_from_dict_minimal(self):
+        """Test Response.from_dict with minimal data."""
+        data = {"name": "Test Response", "status": "OK", "code": 200}
 
-        assert response.text == text_content
+        response = Response.from_dict(data)
 
-    def test_json_property_valid_json(self):
-        """Test json property with valid JSON response."""
-        json_data = {"message": "success", "data": [1, 2, 3]}
-        mock_response = self.create_mock_httpx_response(json_data=json_data)
-        response = ExecutionResponse(mock_response, 1000.0, 1001.0)
+        assert response.name == "Test Response"
+        assert response.status == "OK"
+        assert response.code == 200
+        assert response.headers == []
+        assert response.body is None
 
-        assert response.json == json_data
+    def test_response_from_dict_full(self):
+        """Test Response.from_dict with complete data."""
+        data = {
+            "name": "Success Response",
+            "status": "OK",
+            "code": 200,
+            "header": [
+                {"key": "Content-Type", "value": "application/json"},
+                {"key": "Cache-Control", "value": "no-cache"},
+            ],
+            "body": '{"message": "Success"}',
+            "cookie": [{"name": "session", "value": "abc123"}],
+            "_postman_previewlanguage": "json",
+            "_time": 150,
+            "responseTime": 150,
+        }
 
-    def test_json_property_invalid_json(self):
-        """Test json property with invalid JSON response."""
-        mock_response = self.create_mock_httpx_response(text="not json")
-        response = ExecutionResponse(mock_response, 1000.0, 1001.0)
+        response = Response.from_dict(data)
 
-        with pytest.raises(json.JSONDecodeError):
-            _ = response.json
+        assert response.name == "Success Response"
+        assert response.status == "OK"
+        assert response.code == 200
+        assert len(response.headers) == 2
+        assert response.headers[0].key == "Content-Type"
+        assert response.headers[0].value == "application/json"
+        assert response.body == '{"message": "Success"}'
+        assert response.cookie == [{"name": "session", "value": "abc123"}]
+        assert response._postman_previewlanguage == "json"
+        assert response._time == 150
+        assert response.response_time == 150
 
-    def test_content_property(self):
-        """Test content property."""
-        content = b"binary content"
-        mock_response = self.create_mock_httpx_response(content=content)
-        response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-
-        assert response.content == content
-
-    def test_elapsed_ms_property(self):
-        """Test elapsed_ms property."""
-        start_time = 1000.0
-        end_time = 1001.5  # 1.5 seconds difference
-        mock_response = self.create_mock_httpx_response()
-        response = ExecutionResponse(mock_response, start_time, end_time)
-
-        assert response.elapsed_ms == 1500.0  # 1.5 seconds = 1500 ms
-
-    def test_elapsed_seconds_property(self):
-        """Test elapsed_seconds property."""
-        start_time = 1000.0
-        end_time = 1002.25  # 2.25 seconds difference
-        mock_response = self.create_mock_httpx_response()
-        response = ExecutionResponse(mock_response, start_time, end_time)
-
-        assert response.elapsed_seconds == 2.25
-
-    def test_url_property(self):
-        """Test url property."""
-        url = "https://api.example.com/users/123"
-        mock_response = self.create_mock_httpx_response(url=url)
-        response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-
-        assert response.url == url
-
-    def test_request_method_property(self):
-        """Test request_method property."""
-        method = "POST"
-        mock_response = self.create_mock_httpx_response(method=method)
-        response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-
-        assert response.request_method == method
-
-    def test_to_dict_with_json_response(self):
-        """Test to_dict method with JSON response."""
-        json_data = {"id": 1, "name": "test"}
-        headers = {"Content-Type": "application/json"}
-        mock_response = self.create_mock_httpx_response(
-            status_code=200,
-            headers=headers,
-            text='{"id": 1, "name": "test"}',
-            json_data=json_data,
-            url="https://api.example.com/test",
-            method="GET",
-        )
-
-        start_time = 1000.0
-        end_time = 1001.5
-        response = ExecutionResponse(mock_response, start_time, end_time)
+    def test_response_to_dict_minimal(self):
+        """Test Response.to_dict with minimal data."""
+        response = Response(name="Test Response", status="OK", code=200)
 
         result = response.to_dict()
 
-        expected = {
-            "status": 200,
-            "headers": headers,
-            "body": '{"id": 1, "name": "test"}',
-            "url": "https://api.example.com/test",
+        assert result == {"name": "Test Response", "status": "OK", "code": 200}
+
+    def test_response_to_dict_full(self):
+        """Test Response.to_dict with complete data."""
+        headers = [Header("Content-Type", "application/json")]
+        response = Response(
+            name="Success Response",
+            status="OK",
+            code=200,
+            headers=headers,
+            body='{"message": "Success"}',
+            cookie=[{"name": "session", "value": "abc123"}],
+            _postman_previewlanguage="json",
+            _time=150,
+            response_time=150,
+        )
+
+        result = response.to_dict()
+
+        assert result["name"] == "Success Response"
+        assert result["status"] == "OK"
+        assert result["code"] == 200
+        assert len(result["header"]) == 1
+        assert result["body"] == '{"message": "Success"}'
+        assert result["cookie"] == [{"name": "session", "value": "abc123"}]
+        assert result["_postman_previewlanguage"] == "json"
+        assert result["_time"] == 150
+        assert result["responseTime"] == 150
+
+    def test_response_get_json_valid(self):
+        """Test get_json with valid JSON body."""
+        response = Response(
+            name="JSON Response",
+            status="OK",
+            code=200,
+            body='{"message": "Success", "count": 42}',
+        )
+
+        json_data = response.get_json()
+
+        assert json_data is not None
+        assert json_data["message"] == "Success"
+        assert json_data["count"] == 42
+
+    def test_response_get_json_invalid(self):
+        """Test get_json with invalid JSON body."""
+        response = Response(
+            name="Text Response", status="OK", code=200, body="Not JSON"
+        )
+
+        json_data = response.get_json()
+
+        assert json_data is None
+
+    def test_response_get_json_empty(self):
+        """Test get_json with empty body."""
+        response = Response(name="Empty Response", status="OK", code=200, body=None)
+
+        json_data = response.get_json()
+
+        assert json_data is None
+
+    def test_response_get_content_type(self):
+        """Test get_content_type method."""
+        headers = [
+            Header("Content-Type", "application/json"),
+            Header("Cache-Control", "no-cache"),
+        ]
+        response = Response(
+            name="Test Response", status="OK", code=200, headers=headers
+        )
+
+        content_type = response.get_content_type()
+
+        assert content_type == "application/json"
+
+    def test_response_get_content_type_missing(self):
+        """Test get_content_type when header is missing."""
+        response = Response(name="Test Response", status="OK", code=200)
+
+        content_type = response.get_content_type()
+
+        assert content_type is None
+
+    def test_response_is_json_by_content_type(self):
+        """Test is_json detection by Content-Type header."""
+        headers = [Header("Content-Type", "application/json")]
+        response = Response(
+            name="JSON Response", status="OK", code=200, headers=headers
+        )
+
+        assert response.is_json() is True
+
+    def test_response_is_json_by_preview_language(self):
+        """Test is_json detection by preview language."""
+        response = Response(
+            name="JSON Response",
+            status="OK",
+            code=200,
+            _postman_previewlanguage="json",
+        )
+
+        assert response.is_json() is True
+
+    def test_response_is_json_by_parsing(self):
+        """Test is_json detection by parsing body."""
+        response = Response(
+            name="JSON Response", status="OK", code=200, body='{"valid": "json"}'
+        )
+
+        assert response.is_json() is True
+
+    def test_response_is_json_false(self):
+        """Test is_json returns False for non-JSON."""
+        response = Response(
+            name="Text Response", status="OK", code=200, body="Plain text"
+        )
+
+        assert response.is_json() is False
+
+    def test_response_is_xml_by_content_type(self):
+        """Test is_xml detection by Content-Type header."""
+        headers = [Header("Content-Type", "application/xml")]
+        response = Response(
+            name="XML Response", status="OK", code=200, headers=headers
+        )
+
+        assert response.is_xml() is True
+
+    def test_response_is_xml_by_preview_language(self):
+        """Test is_xml detection by preview language."""
+        response = Response(
+            name="XML Response",
+            status="OK",
+            code=200,
+            _postman_previewlanguage="xml",
+        )
+
+        assert response.is_xml() is True
+
+    def test_response_is_xml_by_content(self):
+        """Test is_xml detection by XML declaration."""
+        response = Response(
+            name="XML Response",
+            status="OK",
+            code=200,
+            body='<?xml version="1.0"?><root></root>',
+        )
+
+        assert response.is_xml() is True
+
+    def test_response_is_xml_false(self):
+        """Test is_xml returns False for non-XML."""
+        response = Response(
+            name="JSON Response", status="OK", code=200, body='{"valid": "json"}'
+        )
+
+        assert response.is_xml() is False
+
+    def test_response_is_html_by_content_type(self):
+        """Test is_html detection by Content-Type header."""
+        headers = [Header("Content-Type", "text/html")]
+        response = Response(
+            name="HTML Response", status="OK", code=200, headers=headers
+        )
+
+        assert response.is_html() is True
+
+    def test_response_is_html_by_preview_language(self):
+        """Test is_html detection by preview language."""
+        response = Response(
+            name="HTML Response",
+            status="OK",
+            code=200,
+            _postman_previewlanguage="html",
+        )
+
+        assert response.is_html() is True
+
+    def test_response_is_html_by_doctype(self):
+        """Test is_html detection by DOCTYPE."""
+        response = Response(
+            name="HTML Response",
+            status="OK",
+            code=200,
+            body="<!DOCTYPE html><html></html>",
+        )
+
+        assert response.is_html() is True
+
+    def test_response_is_html_by_html_tag(self):
+        """Test is_html detection by <html> tag."""
+        response = Response(
+            name="HTML Response", status="OK", code=200, body="<html><body></body></html>"
+        )
+
+        assert response.is_html() is True
+
+    def test_response_is_html_false(self):
+        """Test is_html returns False for non-HTML."""
+        response = Response(
+            name="JSON Response", status="OK", code=200, body='{"valid": "json"}'
+        )
+
+        assert response.is_html() is False
+
+    def test_response_repr(self):
+        """Test Response __repr__ method."""
+        response = Response(name="Test Response", status="OK", code=200)
+
+        assert repr(response) == "Response(name='Test Response', code=200, status='OK')"
+
+
+class TestExampleResponse:
+    """Tests for the ExampleResponse class."""
+
+    def test_example_response_initialization_minimal(self):
+        """Test ExampleResponse initialization with minimal parameters."""
+        response = ExampleResponse(name="Example", status="OK", code=200)
+
+        assert response.name == "Example"
+        assert response.status == "OK"
+        assert response.code == 200
+        assert response.original_request is None
+        assert response.id is None
+
+    def test_example_response_initialization_full(self):
+        """Test ExampleResponse initialization with all parameters."""
+        original_request = {"method": "GET", "url": "https://api.example.com"}
+        headers = [Header("Content-Type", "application/json")]
+
+        response = ExampleResponse(
+            name="Success Example",
+            status="OK",
+            code=200,
+            headers=headers,
+            body='{"result": "success"}',
+            original_request=original_request,
+            id="example-123",
+        )
+
+        assert response.name == "Success Example"
+        assert response.status == "OK"
+        assert response.code == 200
+        assert response.headers == headers
+        assert response.body == '{"result": "success"}'
+        assert response.original_request == original_request
+        assert response.id == "example-123"
+
+    def test_example_response_from_dict_minimal(self):
+        """Test ExampleResponse.from_dict with minimal data."""
+        data = {"name": "Example", "response": {"status": "OK", "code": 200}}
+
+        response = ExampleResponse.from_dict(data)
+
+        assert response.name == "Example"
+        assert response.status == "OK"
+        assert response.code == 200
+
+    def test_example_response_from_dict_full(self):
+        """Test ExampleResponse.from_dict with complete data."""
+        data = {
+            "name": "Success Example",
+            "id": "example-123",
+            "originalRequest": {"method": "GET", "url": "https://api.example.com"},
+            "response": {
+                "status": "OK",
+                "code": 200,
+                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "body": '{"result": "success"}',
+                "cookie": [],
+                "_postman_previewlanguage": "json",
+                "responseTime": 100,
+            },
+        }
+
+        response = ExampleResponse.from_dict(data)
+
+        assert response.name == "Success Example"
+        assert response.id == "example-123"
+        assert response.original_request == {
             "method": "GET",
-            "elapsed_ms": 1500.0,
-            "elapsed_seconds": 1.5,
-            "json": json_data,
+            "url": "https://api.example.com",
         }
+        assert response.status == "OK"
+        assert response.code == 200
+        assert len(response.headers) == 1
+        assert response.body == '{"result": "success"}'
+        assert response._postman_previewlanguage == "json"
+        assert response.response_time == 100
 
-        assert result == expected
-
-    def test_to_dict_with_non_json_response(self):
-        """Test to_dict method with non-JSON response."""
-        headers = {"Content-Type": "text/plain"}
-        mock_response = self.create_mock_httpx_response(
-            status_code=200,
-            headers=headers,
-            text="plain text response",
-            url="https://api.example.com/text",
-            method="POST",
-        )
-
-        start_time = 1000.0
-        end_time = 1000.75
-        response = ExecutionResponse(mock_response, start_time, end_time)
+    def test_example_response_to_dict_minimal(self):
+        """Test ExampleResponse.to_dict with minimal data."""
+        response = ExampleResponse(name="Example", status="OK", code=200)
 
         result = response.to_dict()
 
-        expected = {
-            "status": 200,
-            "headers": headers,
-            "body": "plain text response",
-            "url": "https://api.example.com/text",
-            "method": "POST",
-            "elapsed_ms": 750.0,
-            "elapsed_seconds": 0.75,
-        }
+        assert result["name"] == "Example"
+        assert result["response"]["status"] == "OK"
+        assert result["response"]["code"] == 200
 
-        assert result == expected
-        assert "json" not in result
+    def test_example_response_to_dict_full(self):
+        """Test ExampleResponse.to_dict with complete data."""
+        original_request = {"method": "GET", "url": "https://api.example.com"}
+        headers = [Header("Content-Type", "application/json")]
 
-    def test_is_success(self):
-        """Test is_success method for various status codes."""
-        # Success cases (2xx)
-        for status in [200, 201, 204, 299]:
-            mock_response = self.create_mock_httpx_response(status_code=status)
-            response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-            assert response.is_success(), f"Status {status} should be success"
+        response = ExampleResponse(
+            name="Success Example",
+            status="OK",
+            code=200,
+            headers=headers,
+            body='{"result": "success"}',
+            original_request=original_request,
+            id="example-123",
+            _postman_previewlanguage="json",
+            response_time=100,
+        )
 
-        # Non-success cases
-        for status in [199, 300, 400, 500]:
-            mock_response = self.create_mock_httpx_response(status_code=status)
-            response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-            assert not response.is_success(), f"Status {status} should not be success"
+        result = response.to_dict()
 
-    def test_is_redirect(self):
-        """Test is_redirect method for various status codes."""
-        # Redirect cases (3xx)
-        for status in [300, 301, 302, 304, 399]:
-            mock_response = self.create_mock_httpx_response(status_code=status)
-            response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-            assert response.is_redirect(), f"Status {status} should be redirect"
+        assert result["name"] == "Success Example"
+        assert result["id"] == "example-123"
+        assert result["originalRequest"] == original_request
+        assert result["response"]["status"] == "OK"
+        assert result["response"]["code"] == 200
+        assert len(result["response"]["header"]) == 1
+        assert result["response"]["body"] == '{"result": "success"}'
+        assert result["response"]["_postman_previewlanguage"] == "json"
+        assert result["response"]["responseTime"] == 100
 
-        # Non-redirect cases
-        for status in [200, 299, 400, 500]:
-            mock_response = self.create_mock_httpx_response(status_code=status)
-            response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-            assert not response.is_redirect(), f"Status {status} should not be redirect"
+    def test_example_response_inherits_response_methods(self):
+        """Test that ExampleResponse inherits Response methods."""
+        response = ExampleResponse(
+            name="JSON Example",
+            status="OK",
+            code=200,
+            body='{"message": "test"}',
+            _postman_previewlanguage="json",
+        )
 
-    def test_is_client_error(self):
-        """Test is_client_error method for various status codes."""
-        # Client error cases (4xx)
-        for status in [400, 401, 404, 422, 499]:
-            mock_response = self.create_mock_httpx_response(status_code=status)
-            response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-            assert response.is_client_error(), f"Status {status} should be client error"
+        # Test inherited methods
+        assert response.is_json() is True
+        assert response.get_json() == {"message": "test"}
+        assert response.is_xml() is False
+        assert response.is_html() is False
 
-        # Non-client error cases
-        for status in [200, 300, 399, 500]:
-            mock_response = self.create_mock_httpx_response(status_code=status)
-            response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-            assert (
-                not response.is_client_error()
-            ), f"Status {status} should not be client error"
+    def test_example_response_repr(self):
+        """Test ExampleResponse __repr__ method."""
+        response = ExampleResponse(name="Test Example", status="OK", code=200)
 
-    def test_is_server_error(self):
-        """Test is_server_error method for various status codes."""
-        # Server error cases (5xx)
-        for status in [500, 501, 502, 503, 599]:
-            mock_response = self.create_mock_httpx_response(status_code=status)
-            response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-            assert response.is_server_error(), f"Status {status} should be server error"
+        assert (
+            repr(response) == "ExampleResponse(name='Test Example', code=200, status='OK')"
+        )
 
-        # Non-server error cases
-        for status in [200, 300, 400, 499]:
-            mock_response = self.create_mock_httpx_response(status_code=status)
-            response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-            assert (
-                not response.is_server_error()
-            ), f"Status {status} should not be server error"
+    def test_example_response_roundtrip(self):
+        """Test that ExampleResponse can be serialized and deserialized."""
+        original = ExampleResponse(
+            name="Roundtrip Test",
+            status="Created",
+            code=201,
+            headers=[Header("Location", "/api/users/123")],
+            body='{"id": 123}',
+            original_request={"method": "POST"},
+            id="test-id",
+        )
 
-    def test_repr(self):
-        """Test string representation of ExecutionResponse."""
-        mock_response = self.create_mock_httpx_response(status_code=201)
-        start_time = 1000.0
-        end_time = 1001.234
-        response = ExecutionResponse(mock_response, start_time, end_time)
+        # Serialize to dict
+        data = original.to_dict()
 
-        repr_str = repr(response)
-        assert "ExecutionResponse" in repr_str
-        assert "status=201" in repr_str
-        assert "elapsed_ms=1234.00" in repr_str
+        # Deserialize from dict
+        restored = ExampleResponse.from_dict(data)
 
-    def test_timing_precision(self):
-        """Test timing calculations with high precision."""
-        mock_response = self.create_mock_httpx_response()
-        start_time = 1000.123456
-        end_time = 1000.987654
-        response = ExecutionResponse(mock_response, start_time, end_time)
-
-        expected_seconds = end_time - start_time
-        expected_ms = expected_seconds * 1000
-
-        assert abs(response.elapsed_seconds - expected_seconds) < 1e-10
-        assert abs(response.elapsed_ms - expected_ms) < 1e-7
-
-    def test_headers_dict_conversion(self):
-        """Test that headers are properly converted to dict."""
-        # Mock httpx headers object that might not be a plain dict
-        mock_headers = MagicMock()
-        headers_data = [("Content-Type", "application/json"), ("X-Test", "value")]
-        mock_headers.__iter__ = lambda self: iter(headers_data)
-        mock_headers.items = lambda: headers_data
-
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.headers = mock_headers
-        mock_response.text = "test"
-        mock_response.content = b"test"
-        mock_response.url = "https://example.com"
-        mock_response.request = Mock()
-        mock_response.request.method = "GET"
-        mock_response.json.side_effect = json.JSONDecodeError("No JSON", "", 0)
-
-        response = ExecutionResponse(mock_response, 1000.0, 1001.0)
-
-        # Should convert to dict properly
-        headers_dict = response.headers
-        assert isinstance(headers_dict, dict)
-        assert headers_dict == {"Content-Type": "application/json", "X-Test": "value"}
+        assert restored.name == original.name
+        assert restored.status == original.status
+        assert restored.code == original.code
+        assert len(restored.headers) == len(original.headers)
+        assert restored.body == original.body
+        assert restored.original_request == original.original_request
+        assert restored.id == original.id

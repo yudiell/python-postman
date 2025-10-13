@@ -8,12 +8,15 @@ from .collection_info import CollectionInfo
 from .variable import Variable
 from .auth import Auth
 from .event import Event
+from .schema import SchemaValidator, SchemaVersion
 
 if TYPE_CHECKING:
     from .request import Request
     from .folder import Folder
     from ..execution.executor import RequestExecutor
     from ..execution.results import CollectionExecutionResult
+    from ..search.query import RequestQuery
+    from ..statistics.collector import CollectionStatistics
 else:
     # Import for runtime use in search methods
     from .folder import Folder
@@ -72,6 +75,9 @@ class Collection:
         self.variables = variables or []
         self.auth = auth
         self.events = events or []
+        
+        # Detect and store schema version
+        self.schema_version = SchemaValidator.detect_version(info.schema)
 
     def validate(self) -> ValidationResult:
         """
@@ -140,18 +146,10 @@ class Collection:
                             f"Event '{event.listen}' validation failed: {str(e)}"
                         )
 
-        # Check for Postman schema version compatibility
-        if self.info.schema:
-            schema_version = self.info.schema.lower()
-            supported_versions = [
-                "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-                "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
-            ]
-
-            if not any(version in schema_version for version in supported_versions):
-                result.add_error(
-                    f"Unsupported schema version: {self.info.schema}. Supported versions: v2.0.0, v2.1.0"
-                )
+        # Validate schema version using SchemaValidator
+        is_valid, error_message = SchemaValidator.validate_version(self.info.schema)
+        if not is_valid:
+            result.add_error(error_message)
 
         return result
 
@@ -301,6 +299,71 @@ class Collection:
             if not variable.disabled:
                 variables_dict[variable.key] = variable.value
         return variables_dict
+
+    def search(self) -> "RequestQuery":
+        """
+        Create a new search query builder for this collection.
+        
+        Returns:
+            RequestQuery: Query builder for searching and filtering requests
+            
+        Examples:
+            >>> # Find all POST requests
+            >>> results = collection.search().by_method("POST").execute()
+            >>> 
+            >>> # Find requests to a specific host with bearer auth
+            >>> results = collection.search() \\
+            ...     .by_host("api.example.com") \\
+            ...     .by_auth_type("bearer") \\
+            ...     .execute()
+            >>> 
+            >>> # Find requests with test scripts
+            >>> results = collection.search().has_scripts("test").execute()
+            >>> for result in results:
+            ...     print(f"{result.full_path}: {result.request.name}")
+            >>> 
+            >>> # Complex query with multiple filters
+            >>> results = collection.search() \\
+            ...     .by_method("GET") \\
+            ...     .by_url_pattern(r"/api/v\\d+/users") \\
+            ...     .in_folder("User Management") \\
+            ...     .execute()
+        """
+        from ..search.query import RequestQuery
+        return RequestQuery(self)
+
+    def get_statistics(self) -> "CollectionStatistics":
+        """
+        Get statistics and metadata about this collection.
+        
+        Returns:
+            CollectionStatistics: Statistics analyzer for this collection
+            
+        Examples:
+            >>> # Get basic statistics
+            >>> stats = collection.get_statistics()
+            >>> data = stats.collect()
+            >>> print(f"Total requests: {data['total_requests']}")
+            >>> print(f"Total folders: {data['total_folders']}")
+            >>> print(f"Max depth: {data['max_nesting_depth']}")
+            >>> 
+            >>> # Get breakdown by method
+            >>> by_method = stats.count_by_method()
+            >>> print(f"GET: {by_method.get('GET', 0)}")
+            >>> print(f"POST: {by_method.get('POST', 0)}")
+            >>> 
+            >>> # Export to JSON
+            >>> json_output = stats.to_json()
+            >>> with open("collection_stats.json", "w") as f:
+            ...     f.write(json_output)
+            >>> 
+            >>> # Export to CSV
+            >>> csv_output = stats.to_csv()
+            >>> with open("collection_stats.csv", "w") as f:
+            ...     f.write(csv_output)
+        """
+        from ..statistics.collector import CollectionStatistics
+        return CollectionStatistics(self)
 
     def __repr__(self) -> str:
         return f"Collection(name='{self.info.name}', items={len(self.items)}, variables={len(self.variables)})"

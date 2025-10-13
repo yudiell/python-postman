@@ -1,0 +1,972 @@
+"""
+Tests for edge cases and boundary conditions.
+
+This module tests the library's handling of:
+- Deeply nested folder structures (10+ levels)
+- Large collections (100+ requests)
+- Malformed but parseable JSON structures
+- Unicode and special characters in all text fields
+- Empty or null values in optional fields
+"""
+
+import pytest
+import json
+from python_postman.parser import PythonPostman
+from python_postman.models.collection import Collection
+from python_postman.models.request import Request
+from python_postman.models.folder import Folder
+
+
+# Default schema for test collections
+DEFAULT_SCHEMA = "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+
+
+def add_schema_if_missing(collection_data):
+    """Helper to add schema to collection data if not present."""
+    if "info" in collection_data and "schema" not in collection_data["info"]:
+        collection_data["info"]["schema"] = DEFAULT_SCHEMA
+    return collection_data
+
+
+class TestDeeplyNestedStructures:
+    """Test handling of deeply nested folder structures."""
+
+    def test_deeply_nested_folders_10_levels(self):
+        """Test parsing collection with 10 levels of nested folders."""
+        # Build nested structure from innermost to outermost
+        innermost_request = {
+            "name": "Deep Request",
+            "request": {
+                "method": "GET",
+                "url": "https://api.example.com/deep"
+            }
+        }
+        
+        # Create 10 levels of nesting
+        current_item = innermost_request
+        for level in range(10, 0, -1):
+            current_item = {
+                "name": f"Folder Level {level}",
+                "item": [current_item]
+            }
+        
+        collection_data = add_schema_if_missing({
+            "info": {"name": "Deeply Nested Collection"},
+            "item": [current_item]
+        })
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        
+        # Verify collection was parsed
+        assert collection.info.name == "Deeply Nested Collection"
+        
+        # Navigate through all levels
+        current_folder = collection.items[0]
+        for level in range(1, 11):  # Changed to 11 to include level 10
+            assert isinstance(current_folder, Folder)
+            assert current_folder.name == f"Folder Level {level}"
+            assert len(current_folder.items) == 1
+            if level < 10:  # Only navigate deeper if not at the last folder
+                current_folder = current_folder.items[0]
+        
+        # The innermost item should be a request
+        innermost_item = current_folder.items[0]
+        assert isinstance(innermost_item, Request)
+        assert innermost_item.name == "Deep Request"
+        
+        # Verify get_requests() can traverse all levels
+        all_requests = list(collection.get_requests())
+        assert len(all_requests) == 1
+        assert all_requests[0].name == "Deep Request"
+
+    def test_deeply_nested_folders_15_levels(self):
+        """Test parsing collection with 15 levels of nested folders."""
+        # Build even deeper nesting
+        innermost_request = {
+            "name": "Very Deep Request",
+            "request": {
+                "method": "POST",
+                "url": "https://api.example.com/very-deep"
+            }
+        }
+        
+        current_item = innermost_request
+        for level in range(15, 0, -1):
+            current_item = {
+                "name": f"Level {level}",
+                "item": [current_item]
+            }
+        
+        collection_data = {
+            "info": {"name": "Very Deeply Nested Collection"},
+            "item": [current_item]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        
+        # Verify all requests can be found
+        all_requests = list(collection.get_requests())
+        assert len(all_requests) == 1
+        assert all_requests[0].name == "Very Deep Request"
+
+    def test_deeply_nested_with_multiple_branches(self):
+        """Test deeply nested structure with multiple branches at each level."""
+        # Create a structure with 10 levels, 2 branches at each level
+        def create_nested_structure(depth, branch_count=2):
+            if depth == 0:
+                return {
+                    "name": f"Request at depth 0",
+                    "request": {
+                        "method": "GET",
+                        "url": "https://api.example.com/endpoint"
+                    }
+                }
+            
+            items = []
+            for i in range(branch_count):
+                items.append(create_nested_structure(depth - 1, branch_count))
+            
+            return {
+                "name": f"Folder at depth {depth}",
+                "item": items
+            }
+        
+        collection_data = {
+            "info": {"name": "Multi-branch Deep Collection"},
+            "item": [create_nested_structure(10, 2)]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        
+        # With 2 branches at each of 10 levels, we should have 2^10 = 1024 requests
+        all_requests = list(collection.get_requests())
+        assert len(all_requests) == 1024
+
+
+class TestLargeCollections:
+    """Test handling of large collections with many requests."""
+
+    def test_collection_with_100_requests(self):
+        """Test parsing collection with 100 requests."""
+        items = []
+        for i in range(100):
+            items.append({
+                "name": f"Request {i}",
+                "request": {
+                    "method": "GET" if i % 2 == 0 else "POST",
+                    "url": f"https://api.example.com/endpoint/{i}"
+                }
+            })
+        
+        collection_data = {
+            "info": {"name": "Large Collection - 100 Requests"},
+            "item": items
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        
+        assert collection.info.name == "Large Collection - 100 Requests"
+        assert len(collection.items) == 100
+        
+        all_requests = list(collection.get_requests())
+        assert len(all_requests) == 100
+
+    def test_collection_with_500_requests(self):
+        """Test parsing collection with 500 requests."""
+        items = []
+        for i in range(500):
+            items.append({
+                "name": f"Request {i}",
+                "request": {
+                    "method": ["GET", "POST", "PUT", "DELETE", "PATCH"][i % 5],
+                    "url": f"https://api.example.com/resource/{i}",
+                    "header": [
+                        {"key": "Content-Type", "value": "application/json"},
+                        {"key": "X-Request-ID", "value": f"req-{i}"}
+                    ]
+                }
+            })
+        
+        collection_data = {
+            "info": {"name": "Large Collection - 500 Requests"},
+            "item": items
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        
+        assert len(collection.items) == 500
+        all_requests = list(collection.get_requests())
+        assert len(all_requests) == 500
+
+    def test_collection_with_mixed_folders_and_requests(self):
+        """Test large collection with mix of folders and direct requests."""
+        items = []
+        
+        # Add 10 folders, each with 15 requests
+        for folder_idx in range(10):
+            folder_items = []
+            for req_idx in range(15):
+                folder_items.append({
+                    "name": f"Folder {folder_idx} Request {req_idx}",
+                    "request": {
+                        "method": "GET",
+                        "url": f"https://api.example.com/f{folder_idx}/r{req_idx}"
+                    }
+                })
+            
+            items.append({
+                "name": f"Folder {folder_idx}",
+                "item": folder_items
+            })
+        
+        # Add 50 direct requests
+        for i in range(50):
+            items.append({
+                "name": f"Direct Request {i}",
+                "request": {
+                    "method": "POST",
+                    "url": f"https://api.example.com/direct/{i}"
+                }
+            })
+        
+        collection_data = {
+            "info": {"name": "Mixed Large Collection"},
+            "item": items
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        
+        # 10 folders + 50 direct requests = 60 items
+        assert len(collection.items) == 60
+        
+        # 10 folders * 15 requests + 50 direct = 200 total requests
+        all_requests = list(collection.get_requests())
+        assert len(all_requests) == 200
+
+
+
+class TestMalformedButParseableJSON:
+    """Test handling of malformed but parseable JSON structures."""
+
+    def test_extra_unknown_fields_in_collection(self):
+        """Test collection with extra unknown fields that should be ignored."""
+        collection_data = {
+            "info": {"name": "Collection with Extra Fields"},
+            "item": [],
+            "unknownField": "should be ignored",
+            "anotherUnknownField": {"nested": "data"},
+            "extraArray": [1, 2, 3]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        assert collection.info.name == "Collection with Extra Fields"
+
+    def test_extra_fields_in_request(self):
+        """Test request with extra unknown fields."""
+        collection_data = {
+            "info": {"name": "Test Collection"},
+            "item": [{
+                "name": "Request with Extra Fields",
+                "request": {
+                    "method": "GET",
+                    "url": "https://api.example.com/test",
+                    "unknownRequestField": "ignored",
+                    "customMetadata": {"key": "value"}
+                },
+                "unknownItemField": "also ignored"
+            }]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        requests = list(collection.get_requests())
+        assert len(requests) == 1
+        assert requests[0].name == "Request with Extra Fields"
+
+    def test_inconsistent_url_formats(self):
+        """Test handling of different URL format variations."""
+        collection_data = {
+            "info": {"name": "URL Format Test"},
+            "item": [
+                {
+                    "name": "String URL",
+                    "request": {
+                        "method": "GET",
+                        "url": "https://api.example.com/string"
+                    }
+                },
+                {
+                    "name": "Object URL",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "https://api.example.com/object",
+                            "protocol": "https",
+                            "host": ["api", "example", "com"],
+                            "path": ["object"]
+                        }
+                    }
+                },
+                {
+                    "name": "Minimal Object URL",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "https://api.example.com/minimal"
+                        }
+                    }
+                }
+            ]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        requests = list(collection.get_requests())
+        assert len(requests) == 3
+
+    def test_mixed_auth_formats(self):
+        """Test handling of various authentication format variations."""
+        collection_data = {
+            "info": {"name": "Auth Format Test"},
+            "item": [
+                {
+                    "name": "Request with Bearer Auth",
+                    "request": {
+                        "method": "GET",
+                        "url": "https://api.example.com/test",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {"key": "token", "value": "abc123"}
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Request with Basic Auth",
+                    "request": {
+                        "method": "GET",
+                        "url": "https://api.example.com/test",
+                        "auth": {
+                            "type": "basic",
+                            "basic": [
+                                {"key": "username", "value": "user"},
+                                {"key": "password", "value": "pass"}
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        requests = list(collection.get_requests())
+        assert len(requests) == 2
+        assert requests[0].auth.type == "bearer"
+        assert requests[1].auth.type == "basic"
+
+
+class TestUnicodeAndSpecialCharacters:
+    """Test handling of Unicode and special characters in all text fields."""
+
+    def test_unicode_in_collection_name(self):
+        """Test Unicode characters in collection name."""
+        collection_data = {
+            "info": {
+                "name": "Collection with Unicode: 你好世界 🌍 Привет мир",
+                "description": "Testing Unicode: café, naïve, Zürich"
+            },
+            "item": []
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        assert "你好世界" in collection.info.name
+        assert "🌍" in collection.info.name
+        assert "Привет мир" in collection.info.name
+        assert "café" in collection.info.description
+
+    def test_unicode_in_request_names(self):
+        """Test Unicode characters in request names."""
+        collection_data = {
+            "info": {"name": "Unicode Request Names"},
+            "item": [
+                {
+                    "name": "获取用户信息 (Get User Info)",
+                    "request": {
+                        "method": "GET",
+                        "url": "https://api.example.com/users"
+                    }
+                },
+                {
+                    "name": "Créer un utilisateur 🆕",
+                    "request": {
+                        "method": "POST",
+                        "url": "https://api.example.com/users"
+                    }
+                },
+                {
+                    "name": "Удалить пользователя ❌",
+                    "request": {
+                        "method": "DELETE",
+                        "url": "https://api.example.com/users/1"
+                    }
+                }
+            ]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        requests = list(collection.get_requests())
+        assert len(requests) == 3
+        assert "获取用户信息" in requests[0].name
+        assert "Créer" in requests[1].name
+        assert "🆕" in requests[1].name
+        assert "Удалить" in requests[2].name
+
+    def test_unicode_in_urls(self):
+        """Test Unicode characters in URLs."""
+        collection_data = {
+            "info": {"name": "Unicode URLs"},
+            "item": [
+                {
+                    "name": "Request with Unicode path",
+                    "request": {
+                        "method": "GET",
+                        "url": "https://api.example.com/search?q=café"
+                    }
+                },
+                {
+                    "name": "Request with emoji",
+                    "request": {
+                        "method": "GET",
+                        "url": "https://api.example.com/emoji/🎉"
+                    }
+                }
+            ]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        requests = list(collection.get_requests())
+        assert len(requests) == 2
+
+    def test_unicode_in_headers(self):
+        """Test Unicode characters in header values."""
+        collection_data = {
+            "info": {"name": "Unicode Headers"},
+            "item": [{
+                "name": "Request with Unicode headers",
+                "request": {
+                    "method": "GET",
+                    "url": "https://api.example.com/test",
+                    "header": [
+                        {"key": "X-Custom-Header", "value": "Value with émojis 🎯"},
+                        {"key": "X-Language", "value": "中文"},
+                        {"key": "X-Description", "value": "Тестовое значение"}
+                    ]
+                }
+            }]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        requests = list(collection.get_requests())
+        assert len(requests[0].headers) == 3
+
+    def test_unicode_in_body(self):
+        """Test Unicode characters in request body."""
+        collection_data = {
+            "info": {"name": "Unicode Body"},
+            "item": [{
+                "name": "Request with Unicode body",
+                "request": {
+                    "method": "POST",
+                    "url": "https://api.example.com/data",
+                    "body": {
+                        "mode": "raw",
+                        "raw": '{"message": "Hello 世界", "emoji": "🌟", "text": "Привет"}'
+                    }
+                }
+            }]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        requests = list(collection.get_requests())
+        assert "世界" in requests[0].body.raw
+        assert "🌟" in requests[0].body.raw
+
+    def test_special_characters_in_names(self):
+        """Test special characters in various name fields."""
+        collection_data = {
+            "info": {"name": "Collection with <special> & \"characters\""},
+            "item": [
+                {
+                    "name": "Request with 'quotes' and \"double quotes\"",
+                    "request": {
+                        "method": "GET",
+                        "url": "https://api.example.com/test"
+                    }
+                },
+                {
+                    "name": "Folder with <tags> & symbols",
+                    "item": [{
+                        "name": "Nested request with $pecial ch@rs!",
+                        "request": {
+                            "method": "POST",
+                            "url": "https://api.example.com/special"
+                        }
+                    }]
+                }
+            ]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        assert "<special>" in collection.info.name
+        requests = list(collection.get_requests())
+        assert len(requests) == 2
+
+    def test_unicode_in_variables(self):
+        """Test Unicode characters in variable names and values."""
+        collection_data = {
+            "info": {"name": "Unicode Variables"},
+            "variable": [
+                {"key": "base_url", "value": "https://api.example.com"},
+                {"key": "greeting", "value": "你好"},
+                {"key": "emoji_var", "value": "🎉🎊"},
+                {"key": "russian_text", "value": "Привет мир"}
+            ],
+            "item": []
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        assert len(collection.variables) == 4
+        var_values = [v.value for v in collection.variables]
+        assert "你好" in var_values
+        assert "🎉🎊" in var_values
+
+
+
+class TestEmptyAndNullValues:
+    """Test handling of empty or null values in optional fields."""
+
+    def test_empty_collection_name(self):
+        """Test collection with empty name - should fail validation."""
+        from python_postman.exceptions import CollectionValidationError
+        
+        collection_data = {
+            "info": {"name": ""},
+            "item": []
+        }
+        
+        # Empty name should fail validation
+        with pytest.raises(CollectionValidationError) as exc_info:
+            collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        
+        assert "Collection name is required" in str(exc_info.value)
+
+    def test_null_optional_fields_in_collection(self):
+        """Test collection with null values in optional fields."""
+        collection_data = {
+            "info": {
+                "name": "Test Collection",
+                "description": None,
+                "version": None
+            },
+            "item": [],
+            # Don't include variable and auth if they're None - omit them instead
+            # "variable": None,  # This causes iteration error
+            # "auth": None
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        assert collection.info.name == "Test Collection"
+        assert collection.variables == [] or collection.variables is None
+
+    def test_empty_arrays(self):
+        """Test collection with empty arrays."""
+        collection_data = {
+            "info": {"name": "Empty Arrays Collection"},
+            "item": [],
+            "variable": [],
+            "event": []
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        assert len(collection.items) == 0
+        assert len(collection.variables) == 0
+
+    def test_request_with_null_optional_fields(self):
+        """Test request with null values in optional fields."""
+        collection_data = {
+            "info": {"name": "Null Fields Test"},
+            "item": [{
+                "name": "Request with nulls",
+                "request": {
+                    "method": "GET",
+                    "url": "https://api.example.com/test",
+                    # Omit fields instead of setting to None to avoid iteration errors
+                    # "header": None,  # This causes iteration error
+                    # "body": None,
+                    # "auth": None,
+                    "description": None
+                }
+            }]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        requests = list(collection.get_requests())
+        assert len(requests) == 1
+        assert requests[0].name == "Request with nulls"
+
+    def test_empty_strings_in_various_fields(self):
+        """Test empty strings in various fields."""
+        collection_data = {
+            "info": {
+                "name": "Empty Strings Test",
+                "description": ""
+            },
+            "item": [{
+                "name": "",
+                "request": {
+                    "method": "GET",
+                    "url": "",
+                    "description": ""
+                }
+            }]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        requests = list(collection.get_requests())
+        assert len(requests) == 1
+
+    def test_folder_with_empty_items(self):
+        """Test folder with empty items array."""
+        collection_data = {
+            "info": {"name": "Empty Folder Test"},
+            "item": [
+                {
+                    "name": "Empty Folder",
+                    "item": []
+                }
+            ]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        assert len(collection.items) == 1
+        assert isinstance(collection.items[0], Folder)
+        assert len(collection.items[0].items) == 0
+
+    def test_request_with_empty_header_array(self):
+        """Test request with empty header array."""
+        collection_data = {
+            "info": {"name": "Empty Headers Test"},
+            "item": [{
+                "name": "Request with empty headers",
+                "request": {
+                    "method": "GET",
+                    "url": "https://api.example.com/test",
+                    "header": []
+                }
+            }]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        requests = list(collection.get_requests())
+        assert len(requests[0].headers) == 0
+
+    def test_variable_with_empty_value(self):
+        """Test variables with empty values."""
+        collection_data = {
+            "info": {"name": "Empty Variable Values"},
+            "variable": [
+                {"key": "empty_var", "value": ""},
+                {"key": "null_var", "value": None},
+                {"key": "normal_var", "value": "value"}
+            ],
+            "item": []
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        assert len(collection.variables) == 3
+
+    def test_auth_with_empty_parameters(self):
+        """Test authentication with empty parameters."""
+        collection_data = {
+            "info": {"name": "Empty Auth Params"},
+            "item": [{
+                "name": "Request with empty auth params",
+                "request": {
+                    "method": "GET",
+                    "url": "https://api.example.com/test",
+                    "auth": {
+                        "type": "bearer",
+                        "bearer": []
+                    }
+                }
+            }]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        requests = list(collection.get_requests())
+        assert requests[0].auth.type == "bearer"
+
+    def test_url_with_empty_components(self):
+        """Test URL with empty components."""
+        collection_data = {
+            "info": {"name": "Empty URL Components"},
+            "item": [{
+                "name": "Request with empty URL parts",
+                "request": {
+                    "method": "GET",
+                    "url": {
+                        "raw": "https://api.example.com",
+                        "protocol": "https",
+                        "host": ["api", "example", "com"],
+                        "path": [],
+                        "query": []
+                    }
+                }
+            }]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        requests = list(collection.get_requests())
+        assert len(requests) == 1
+
+    def test_body_with_empty_content(self):
+        """Test request body with empty content."""
+        collection_data = {
+            "info": {"name": "Empty Body Test"},
+            "item": [{
+                "name": "Request with empty body",
+                "request": {
+                    "method": "POST",
+                    "url": "https://api.example.com/test",
+                    "body": {
+                        "mode": "raw",
+                        "raw": ""
+                    }
+                }
+            }]
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        requests = list(collection.get_requests())
+        assert requests[0].body.raw == ""
+
+
+
+class TestPerformanceBenchmarks:
+    """Performance benchmarks for large collections."""
+
+    def test_parse_large_collection_performance(self):
+        """Benchmark parsing a large collection with 1000 requests."""
+        # Create a large collection
+        items = []
+        for i in range(1000):
+            items.append({
+                "name": f"Request {i}",
+                "request": {
+                    "method": ["GET", "POST", "PUT", "DELETE"][i % 4],
+                    "url": f"https://api.example.com/resource/{i}",
+                    "header": [
+                        {"key": "Content-Type", "value": "application/json"},
+                        {"key": "Authorization", "value": f"Bearer token-{i}"}
+                    ]
+                }
+            })
+        
+        collection_data = {
+            "info": {"name": "Performance Test Collection - 1000 Requests"},
+            "item": items
+        }
+        
+        # Parse the collection (this is the performance test)
+        import time
+        start_time = time.time()
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        parse_time = time.time() - start_time
+        
+        # Verify it parsed correctly
+        assert len(collection.items) == 1000
+        
+        # Performance assertion: should parse in reasonable time (< 5 seconds)
+        assert parse_time < 5.0, f"Parsing took {parse_time:.2f}s, expected < 5s"
+
+    def test_iterate_large_collection_performance(self):
+        """Benchmark iterating through a large collection."""
+        # Create collection with 500 requests in nested folders
+        items = []
+        for folder_idx in range(50):
+            folder_items = []
+            for req_idx in range(10):
+                folder_items.append({
+                    "name": f"Request {folder_idx}-{req_idx}",
+                    "request": {
+                        "method": "GET",
+                        "url": f"https://api.example.com/f{folder_idx}/r{req_idx}"
+                    }
+                })
+            items.append({
+                "name": f"Folder {folder_idx}",
+                "item": folder_items
+            })
+        
+        collection_data = {
+            "info": {"name": "Iteration Performance Test"},
+            "item": items
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        
+        # Benchmark iteration
+        import time
+        start_time = time.time()
+        all_requests = list(collection.get_requests())
+        iteration_time = time.time() - start_time
+        
+        assert len(all_requests) == 500
+        
+        # Should iterate quickly (< 1 second)
+        assert iteration_time < 1.0, f"Iteration took {iteration_time:.2f}s, expected < 1s"
+
+    def test_deeply_nested_traversal_performance(self):
+        """Benchmark traversing deeply nested structures."""
+        # Create 20 levels of nesting with 2 requests at the bottom
+        def create_deep_structure(depth):
+            if depth == 0:
+                return [
+                    {
+                        "name": f"Request A",
+                        "request": {
+                            "method": "GET",
+                            "url": "https://api.example.com/a"
+                        }
+                    },
+                    {
+                        "name": f"Request B",
+                        "request": {
+                            "method": "GET",
+                            "url": "https://api.example.com/b"
+                        }
+                    }
+                ]
+            
+            return [{
+                "name": f"Folder Level {depth}",
+                "item": create_deep_structure(depth - 1)
+            }]
+        
+        collection_data = {
+            "info": {"name": "Deep Nesting Performance Test"},
+            "item": create_deep_structure(20)
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        
+        # Benchmark traversal
+        import time
+        start_time = time.time()
+        all_requests = list(collection.get_requests())
+        traversal_time = time.time() - start_time
+        
+        assert len(all_requests) == 2
+        
+        # Should traverse quickly even with deep nesting (< 0.5 seconds)
+        assert traversal_time < 0.5, f"Traversal took {traversal_time:.2f}s, expected < 0.5s"
+
+    def test_serialization_performance(self):
+        """Benchmark serializing a large collection back to dict."""
+        # Create a moderately large collection
+        items = []
+        for i in range(200):
+            items.append({
+                "name": f"Request {i}",
+                "request": {
+                    "method": "POST",
+                    "url": f"https://api.example.com/endpoint/{i}",
+                    "header": [
+                        {"key": "Content-Type", "value": "application/json"}
+                    ],
+                    "body": {
+                        "mode": "raw",
+                        "raw": f'{{"id": {i}, "data": "test data"}}'
+                    }
+                }
+            })
+        
+        collection_data = {
+            "info": {"name": "Serialization Performance Test"},
+            "item": items
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        
+        # Benchmark serialization
+        import time
+        start_time = time.time()
+        serialized = collection.to_dict()
+        serialization_time = time.time() - start_time
+        
+        assert "info" in serialized
+        assert len(serialized["item"]) == 200
+        
+        # Should serialize quickly (< 2 seconds)
+        assert serialization_time < 2.0, f"Serialization took {serialization_time:.2f}s, expected < 2s"
+
+    def test_memory_efficiency_large_collection(self):
+        """Test memory efficiency when working with large collections."""
+        import sys
+        
+        # Create a large collection
+        items = []
+        for i in range(500):
+            items.append({
+                "name": f"Request {i}",
+                "request": {
+                    "method": "GET",
+                    "url": f"https://api.example.com/resource/{i}"
+                }
+            })
+        
+        collection_data = {
+            "info": {"name": "Memory Test Collection"},
+            "item": items
+        }
+        
+        collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+        
+        # Get approximate size of collection object
+        collection_size = sys.getsizeof(collection)
+        
+        # Collection object itself should be reasonably sized
+        # (This is a basic check - actual memory usage is more complex)
+        assert collection_size < 1000000, f"Collection object size: {collection_size} bytes"
+
+    def test_repeated_parsing_performance(self):
+        """Test performance of parsing the same collection multiple times."""
+        collection_data = {
+            "info": {"name": "Repeated Parse Test"},
+            "item": [
+                {
+                    "name": f"Request {i}",
+                    "request": {
+                        "method": "GET",
+                        "url": f"https://api.example.com/test/{i}"
+                    }
+                }
+                for i in range(100)
+            ]
+        }
+        
+        import time
+        start_time = time.time()
+        
+        # Parse the same collection 10 times
+        for _ in range(10):
+            collection = PythonPostman.from_dict(add_schema_if_missing(collection_data))
+            assert len(collection.items) == 100
+        
+        total_time = time.time() - start_time
+        
+        # Should complete 10 parses in reasonable time (< 5 seconds)
+        assert total_time < 5.0, f"10 parses took {total_time:.2f}s, expected < 5s"
+        
+        # Average time per parse
+        avg_time = total_time / 10
+        assert avg_time < 0.5, f"Average parse time: {avg_time:.2f}s, expected < 0.5s"

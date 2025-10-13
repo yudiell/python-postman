@@ -1,0 +1,60 @@
+{
+    "info": {
+        "name": "Order Service",
+        "description": "Order management microservice",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Create Order",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"userId\": \"{{userId}}\", \"items\": [{\"productId\": \"123\", \"quantity\": 2}]}"
+                },
+                "url": {
+                    "raw": "{{orderServiceUrl}}/orders",
+                    "host": [
+                        "{{orderServiceUrl}}"
+                    ],
+                    "path": [
+                        "orders"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Get Order Status",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{orderServiceUrl}}/orders/{{orderId}}",
+                    "host": [
+                        "{{orderServiceUrl}}"
+                    ],
+                    "path": [
+                        "orders",
+                        "{{orderId}}"
+                    ]
+                }
+            }
+        }
+    ]
+}

@@ -30,6 +30,18 @@ from .models.header import Header, HeaderCollection
 from .models.body import Body, BodyMode, FormParameter
 from .models.collection_info import CollectionInfo
 from .models.item import Item
+from .models.cookie import Cookie, CookieJar
+from .models.response import Response, ExampleResponse
+
+# Type definitions for enhanced type safety
+from .types import (
+    HttpMethod,
+    HttpMethodLiteral,
+    HttpMethodType,
+    AuthTypeEnum,
+    AuthTypeLiteral,
+    AuthTypeType,
+)
 
 # Exception classes
 from .exceptions import (
@@ -42,6 +54,15 @@ from .exceptions import (
 # Utility functions
 from .utils import parse_json_safely, load_json_file
 
+# Introspection utilities
+from .introspection import AuthResolver, AuthSource, ResolvedAuth
+
+# Search and filtering
+from .search import SearchResult, RequestQuery
+
+# Statistics
+from .statistics import CollectionStatistics
+
 # Optional execution functionality (requires httpx)
 try:
     from .execution import (
@@ -50,8 +71,8 @@ try:
         ExecutionResponse,
         RequestExtensions,
         ExecutionResult,
-        TestResults,
-        TestAssertion,
+        ScriptResults,
+        ScriptAssertion,
         CollectionExecutionResult,
         FolderExecutionResult,
         VariableResolver,
@@ -110,6 +131,17 @@ __all__ = [
     "FormParameter",
     "CollectionInfo",
     "Item",
+    "Cookie",
+    "CookieJar",
+    "Response",
+    "ExampleResponse",
+    # Type definitions
+    "HttpMethod",
+    "HttpMethodLiteral",
+    "HttpMethodType",
+    "AuthTypeEnum",
+    "AuthTypeLiteral",
+    "AuthTypeType",
     # Validation
     "ValidationResult",
     # Exception classes
@@ -120,6 +152,15 @@ __all__ = [
     # Utility functions
     "parse_json_safely",
     "load_json_file",
+    # Introspection utilities
+    "AuthResolver",
+    "AuthSource",
+    "ResolvedAuth",
+    # Search and filtering
+    "SearchResult",
+    "RequestQuery",
+    # Statistics
+    "CollectionStatistics",
     # Execution availability check
     "is_execution_available",
 ]
@@ -135,8 +176,8 @@ if _EXECUTION_AVAILABLE:
             "RequestExtensions",
             # Result classes
             "ExecutionResult",
-            "TestResults",
-            "TestAssertion",
+            "ScriptResults",
+            "ScriptAssertion",
             "CollectionExecutionResult",
             "FolderExecutionResult",
             # Utility classes

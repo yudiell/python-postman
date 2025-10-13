@@ -91,12 +91,9 @@ class TestAuth:
         assert auth.get_auth_type() == AuthType.BEARER
 
     def test_get_auth_type_invalid(self):
-        """Test getting invalid auth type defaults to NOAUTH."""
-        auth = Auth(type="invalid")
-        assert auth.get_auth_type() == AuthType.NOAUTH
-
-        auth = Auth(type=None)
-        assert auth.get_auth_type() == AuthType.NOAUTH
+        """Test that invalid auth type raises ValueError at initialization."""
+        with pytest.raises(ValueError, match="Invalid authentication type 'invalid'"):
+            Auth(type="invalid")
 
     def test_get_parameter_exists(self):
         """Test getting existing parameter."""
@@ -280,22 +277,19 @@ class TestAuth:
         assert auth.validate() is True
 
     def test_validate_empty_type_fails(self):
-        """Test validation fails with empty type."""
-        auth = Auth(type="")
-        with pytest.raises(ValueError, match="Auth type is required"):
-            auth.validate()
+        """Test validation fails with empty type at initialization."""
+        with pytest.raises(ValueError, match="Authentication type must be a non-empty string"):
+            Auth(type="")
 
     def test_validate_none_type_fails(self):
-        """Test validation fails with None type."""
-        auth = Auth(type=None)
-        with pytest.raises(ValueError, match="Auth type is required"):
-            auth.validate()
+        """Test validation fails with None type at initialization."""
+        with pytest.raises(ValueError, match="Authentication type must be a non-empty string"):
+            Auth(type=None)
 
     def test_validate_non_string_type_fails(self):
-        """Test validation fails with non-string type."""
-        auth = Auth(type=123)
-        with pytest.raises(ValueError, match="Auth type is required"):
-            auth.validate()
+        """Test validation fails with non-string type at initialization."""
+        with pytest.raises(ValueError, match="Authentication type must be a non-empty string"):
+            Auth(type=123)
 
     def test_validate_non_list_parameters_fails(self):
         """Test validation fails with non-list parameters."""

@@ -2,10 +2,16 @@
 
 from typing import Optional, Dict, Any, List
 from enum import Enum
+from ..types.auth_types import AuthTypeType, AuthTypeEnum
 
 
 class AuthType(Enum):
-    """Enumeration of authentication types."""
+    """
+    Enumeration of authentication types.
+    
+    Note: This enum is maintained for backward compatibility.
+    New code should use AuthTypeEnum from python_postman.types.auth_types.
+    """
 
     BASIC = "basic"
     BEARER = "bearer"
@@ -66,7 +72,7 @@ class AuthParameter:
 class Auth:
     """Represents authentication configuration with support for different auth types."""
 
-    def __init__(self, type: str, parameters: Optional[List[AuthParameter]] = None):
+    def __init__(self, type: AuthTypeType, parameters: Optional[List[AuthParameter]] = None):
         """
         Initialize Auth.
 
@@ -74,6 +80,7 @@ class Auth:
             type: Authentication type
             parameters: List of authentication parameters
         """
+        self._validate_type(type)
         self.type = type
         self._parameters = []
         self._parameter_lookup: Dict[str, AuthParameter] = {}
@@ -81,6 +88,31 @@ class Auth:
         # Set parameters using property to maintain lookup dict
         if parameters:
             self.parameters = parameters
+
+    def _validate_type(self, auth_type: str) -> None:
+        """
+        Validate authentication type at runtime.
+        
+        Args:
+            auth_type: Authentication type to validate
+            
+        Raises:
+            ValueError: If the auth type is not valid
+        """
+        if not auth_type or not isinstance(auth_type, str):
+            raise ValueError(
+                "Authentication type must be a non-empty string. "
+                f"Valid types are: {', '.join(t.value for t in AuthTypeEnum)}"
+            )
+        
+        try:
+            AuthTypeEnum(auth_type.lower())
+        except ValueError:
+            valid_types = [t.value for t in AuthTypeEnum]
+            raise ValueError(
+                f"Invalid authentication type '{auth_type}'. "
+                f"Valid types are: {', '.join(valid_types)}"
+            ) from None
 
     @property
     def parameters(self) -> List[AuthParameter]:

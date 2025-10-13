@@ -17,8 +17,8 @@ from .extensions import RequestExtensions
 # Result classes
 from .results import (
     ExecutionResult,
-    TestResults,
-    TestAssertion,
+    ScriptResults,
+    ScriptAssertion,
     CollectionExecutionResult,
     FolderExecutionResult,
 )
@@ -46,8 +46,8 @@ __all__ = [
     "RequestExtensions",
     # Result classes
     "ExecutionResult",
-    "TestResults",
-    "TestAssertion",
+    "ScriptResults",
+    "ScriptAssertion",
     "CollectionExecutionResult",
     "FolderExecutionResult",
     # Utility classes

@@ -1,0 +1,55 @@
+{
+    "info": {
+        "name": "Auth Service",
+        "description": "Authentication microservice",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Login",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"username\": \"{{username}}\", \"password\": \"{{password}}\"}"
+                },
+                "url": {
+                    "raw": "{{authServiceUrl}}/login",
+                    "host": [
+                        "{{authServiceUrl}}"
+                    ],
+                    "path": [
+                        "login"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Validate Token",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{authToken}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{authServiceUrl}}/validate",
+                    "host": [
+                        "{{authServiceUrl}}"
+                    ],
+                    "path": [
+                        "validate"
+                    ]
+                }
+            }
+        }
+    ]
+}

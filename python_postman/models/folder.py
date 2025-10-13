@@ -2,11 +2,14 @@
 Folder class representing folders that contain other items.
 """
 
-from typing import List, Optional, Iterator
+from typing import List, Optional, Iterator, TYPE_CHECKING
 from .item import Item
 from .auth import Auth
 from .event import Event
 from .variable import Variable
+
+if TYPE_CHECKING:
+    from .collection import Collection
 
 
 class Folder(Item):
@@ -29,16 +32,31 @@ class Folder(Item):
         Args:
             name: Name of the folder
             items: List of items contained in this folder
-            description: Optional description
+            description: Optional description of the folder's purpose. Should explain why
+                        these requests are grouped together, any common authentication or
+                        configuration, and the API domain or feature area covered.
+                        Supports Markdown formatting for rich documentation.
             auth: Optional folder-level authentication
             events: Optional list of folder-level events
             variables: Optional list of folder-level variables
+            
+        Examples:
+            >>> folder = Folder(
+            ...     name="User Management",
+            ...     items=[],
+            ...     description="All endpoints for user CRUD operations. "
+            ...                 "Requires admin authentication via Bearer token."
+            ... )
         """
         super().__init__(name, description)
         self.items = items or []
         self.auth = auth
         self.events = events or []
         self.variables = variables or []
+        
+        # Hierarchy references for authentication resolution
+        self._parent_folder: Optional["Folder"] = None
+        self._collection: Optional["Collection"] = None
 
     def get_requests(self) -> Iterator["Request"]:
         """
@@ -58,6 +76,24 @@ class Folder(Item):
             List of Folder objects that are direct children of this folder
         """
         return [item for item in self.items if isinstance(item, Folder)]
+
+    def set_parent(self, parent: Optional["Folder"]) -> None:
+        """
+        Set parent folder for hierarchy traversal.
+        
+        Args:
+            parent: Parent folder or None if this is a top-level folder
+        """
+        self._parent_folder = parent
+
+    def set_collection(self, collection: Optional["Collection"]) -> None:
+        """
+        Set collection reference for hierarchy traversal.
+        
+        Args:
+            collection: Collection containing this folder
+        """
+        self._collection = collection
 
     @classmethod
     def from_dict(cls, data: dict) -> "Folder":

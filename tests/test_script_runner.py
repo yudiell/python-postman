@@ -11,7 +11,7 @@ from python_postman.execution.script_runner import (
 )
 from python_postman.execution.context import ExecutionContext
 from python_postman.execution.response import ExecutionResponse
-from python_postman.execution.results import TestResults, TestAssertion
+from python_postman.execution.results import ScriptResults, ScriptAssertion
 from python_postman.execution.exceptions import ScriptExecutionError
 from python_postman.models.request import Request
 from python_postman.models.collection import Collection, CollectionInfo
@@ -31,7 +31,7 @@ class TestPostmanAPI:
 
         assert pm.context is context
         assert pm.response is not None
-        assert isinstance(pm.test_results, TestResults)
+        assert isinstance(pm.test_results, ScriptResults)
         assert isinstance(pm.variables, PostmanVariables)
 
     def test_init_without_response(self):
@@ -404,7 +404,7 @@ pm.test("Status code is 200", function() {
 
         results = runner.execute_test_scripts(request, response, context)
 
-        assert isinstance(results, TestResults)
+        assert isinstance(results, ScriptResults)
         assert results.passed == 1
         assert results.failed == 0
 
@@ -431,7 +431,7 @@ pm.test("Status code is 200", function() {
 
         results = runner.execute_test_scripts(request, response, context)
 
-        assert isinstance(results, TestResults)
+        assert isinstance(results, ScriptResults)
         assert results.passed == 0
         assert results.failed == 1
 

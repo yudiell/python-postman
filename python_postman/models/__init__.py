@@ -8,9 +8,12 @@ from .url import Url, QueryParam
 from .header import Header, HeaderCollection
 from .body import Body, FormParameter, BodyMode
 from .item import Item
+from .cookie import Cookie, CookieJar
+from .response import Response, ExampleResponse
 from .request import Request
 from .folder import Folder
 from .collection import Collection, ValidationResult
+from .schema import SchemaVersion, SchemaValidator
 
 __all__ = [
     "CollectionInfo",
@@ -30,8 +33,14 @@ __all__ = [
     "FormParameter",
     "BodyMode",
     "Item",
+    "Cookie",
+    "CookieJar",
+    "Response",
+    "ExampleResponse",
     "Request",
     "Folder",
     "Collection",
     "ValidationResult",
+    "SchemaVersion",
+    "SchemaValidator",
 ]
