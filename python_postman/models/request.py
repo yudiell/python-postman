@@ -287,6 +287,142 @@ class Request(Item):
         
         return AuthResolver.resolve_auth(self, folder, coll)
 
+    # Convenience methods for checking request characteristics
+
+    def has_body(self) -> bool:
+        """
+        Check if request has a body.
+        
+        Returns:
+            True if the request has a body with content, False otherwise
+            
+        Examples:
+            >>> if request.has_body():
+            ...     print(f"Body mode: {request.body.mode}")
+        """
+        return self.body is not None and bool(self.body.raw or self.body.formdata or self.body.urlencoded)
+
+    def has_auth(self) -> bool:
+        """
+        Check if request has authentication configured.
+        
+        Returns:
+            True if the request has authentication, False otherwise
+            
+        Examples:
+            >>> if request.has_auth():
+            ...     print(f"Auth type: {request.auth.type}")
+        """
+        return self.auth is not None
+
+    def has_headers(self) -> bool:
+        """
+        Check if request has headers.
+        
+        Returns:
+            True if the request has one or more headers, False otherwise
+            
+        Examples:
+            >>> if request.has_headers():
+            ...     for header in request.headers:
+            ...         print(f"{header.key}: {header.value}")
+        """
+        return bool(self.headers)
+
+    def has_prerequest_script(self) -> bool:
+        """
+        Check if request has pre-request scripts.
+        
+        Returns:
+            True if the request has pre-request scripts, False otherwise
+            
+        Examples:
+            >>> if request.has_prerequest_script():
+            ...     print("Request has pre-request script")
+        """
+        return any(event.listen == "prerequest" for event in self.events)
+
+    def has_test_script(self) -> bool:
+        """
+        Check if request has test scripts.
+        
+        Returns:
+            True if the request has test scripts, False otherwise
+            
+        Examples:
+            >>> if request.has_test_script():
+            ...     print("Request has test script")
+        """
+        return any(event.listen == "test" for event in self.events)
+
+    def get_content_type(self) -> Optional[str]:
+        """
+        Get the Content-Type header value.
+        
+        Returns:
+            Content-Type header value if present, None otherwise
+            
+        Examples:
+            >>> content_type = request.get_content_type()
+            >>> if content_type:
+            ...     print(f"Content-Type: {content_type}")
+        """
+        for header in self.headers:
+            if header.key.lower() == "content-type":
+                return header.value
+        return None
+
+    def is_idempotent(self) -> bool:
+        """
+        Check if request method is idempotent.
+        
+        Idempotent methods: GET, HEAD, PUT, DELETE, OPTIONS
+        These methods can be called multiple times with the same result.
+        
+        Returns:
+            True if the request method is idempotent, False otherwise
+            
+        Examples:
+            >>> if request.is_idempotent():
+            ...     print("Safe to retry this request")
+        """
+        idempotent_methods = {"GET", "HEAD", "PUT", "DELETE", "OPTIONS"}
+        return self.method.upper() in idempotent_methods
+
+    def is_cacheable(self) -> bool:
+        """
+        Check if request method is cacheable.
+        
+        Cacheable methods: GET, HEAD
+        These methods can have their responses cached by default.
+        
+        Returns:
+            True if the request method is cacheable, False otherwise
+            
+        Examples:
+            >>> if request.is_cacheable():
+            ...     print("Response can be cached")
+        """
+        cacheable_methods = {"GET", "HEAD"}
+        return self.method.upper() in cacheable_methods
+
+    def is_safe(self) -> bool:
+        """
+        Check if request method is safe.
+        
+        Safe methods: GET, HEAD, OPTIONS
+        These methods should not modify server state.
+        
+        Returns:
+            True if the request method is safe, False otherwise
+            
+        Examples:
+            >>> if request.is_safe():
+            ...     print("Request is read-only")
+        """
+        safe_methods = {"GET", "HEAD", "OPTIONS"}
+        return self.method.upper() in safe_methods
+
     async def execute(
         self,
         executor: Optional["RequestExecutor"] = None,
