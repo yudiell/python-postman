@@ -59,10 +59,6 @@ async def main():
             print(f"  - {error}")
         return
     
-    if validation_result.warnings:
-        print("⚠ Warnings:")
-        for warning in validation_result.warnings:
-            print(f"  - {warning}")
     print()
     
     # Analyze request methods

@@ -163,13 +163,14 @@ for event in collection.events:
     print(f"Script Content: {event.script}")
 
 # Access script content from request-level events
-# Note: JavaScript execution is not supported - scripts are accessible as text only
+# Note: Scripts are converted from JavaScript to Python and executed in a sandboxed environment
+# during request execution. You can also access script content directly:
 for request in collection.get_requests():
     for event in request.events:
         if event.listen == "prerequest":
-            print(f"Pre-request script for {request.name}: {event.script}")
+            print(f"Pre-request script for {request.name}: {event.get_script_content()}")
         elif event.listen == "test":
-            print(f"Test script for {request.name}: {event.script}")
+            print(f"Test script for {request.name}: {event.get_script_content()}")
 ```
 
 ### Validation
@@ -283,9 +284,9 @@ async def execute_collection():
     )
 
     # Get the request responses
-    for result in result.results:
-        print(f"Request: {result.request.name}")
-        print(f"Result Text: {result.response.text}")
+    for exec_result in result.results:
+        print(f"Request: {exec_result.request.name}")
+        print(f"Result Text: {exec_result.response.text}")
 
     print(f"Parallel execution completed in {result.total_time_ms:.2f}ms")
 
@@ -418,13 +419,16 @@ from python_postman.execution import (
     ExecutionError,
     RequestExecutionError,
     VariableResolutionError,
-    AuthenticationError
+    AuthenticationError,
+    ExecutionTimeoutError,
 )
 
 try:
     result = await executor.execute_request(request, context)
     if not result.success:
         print(f"Request failed: {result.error}")
+except ExecutionTimeoutError as e:
+    print(f"Timeout: {e}")
 except VariableResolutionError as e:
     print(f"Variable error: {e}")
 except AuthenticationError as e:
@@ -443,7 +447,7 @@ except RequestExecutionError as e:
 - **`Folder`**: Container for organizing requests and sub-folders
 - **`Variable`**: Collection, folder, or request-level variables
 - **`Auth`**: Authentication configuration
-- **`Event`**: Pre-request and test script definitions (text only, execution not supported)
+- **`Event`**: Pre-request and test script definitions (executed in a sandboxed environment during request execution)
 
 ### Exception Handling
 

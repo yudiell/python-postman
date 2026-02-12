@@ -423,10 +423,6 @@ else:
     print("Validation errors:")
     for error in result.errors:
         print(f"  - {error}")
-
-    print("Validation warnings:")
-    for warning in result.warnings:
-        print(f"  - {warning}")
 ```
 
 **Validation Checks:**
