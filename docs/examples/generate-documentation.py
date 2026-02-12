@@ -394,8 +394,7 @@ def main():
     
     # Parse collection
     print("Parsing collection...")
-    parser = PythonPostman()
-    collection = parser.parse("collection.json")
+    collection = PythonPostman.from_file("collection.json")
     print(f"✓ Parsed: {collection.info.name}")
     print(f"  Requests: {len(list(collection.get_requests()))}")
     print()

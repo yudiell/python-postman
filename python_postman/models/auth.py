@@ -1,28 +1,10 @@
 """Auth model for Postman collection authentication."""
 
 from typing import Optional, Dict, Any, List
-from enum import Enum
 from ..types.auth_types import AuthTypeType, AuthTypeEnum
 
-
-class AuthType(Enum):
-    """
-    Enumeration of authentication types.
-    
-    Note: This enum is maintained for backward compatibility.
-    New code should use AuthTypeEnum from python_postman.types.auth_types.
-    """
-
-    BASIC = "basic"
-    BEARER = "bearer"
-    DIGEST = "digest"
-    HAWK = "hawk"
-    NOAUTH = "noauth"
-    OAUTH1 = "oauth1"
-    OAUTH2 = "oauth2"
-    NTLM = "ntlm"
-    APIKEY = "apikey"
-    AWSV4 = "awsv4"
+# AuthType is an alias for AuthTypeEnum — single source of truth
+AuthType = AuthTypeEnum
 
 
 class AuthParameter:

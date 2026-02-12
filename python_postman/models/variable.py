@@ -19,6 +19,7 @@ class VariableScope(Enum):
     COLLECTION = "collection"
     FOLDER = "folder"
     REQUEST = "request"
+    ENVIRONMENT = "environment"
 
 
 class Variable:

@@ -24,8 +24,7 @@ class CollectionStatistics:
     
     Examples:
         >>> from python_postman import PythonPostman
-        >>> parser = PythonPostman()
-        >>> collection = parser.parse("my_collection.json")
+        >>> collection = PythonPostman.from_file("my_collection.json")
         >>> 
         >>> # Get statistics
         >>> stats = collection.get_statistics()

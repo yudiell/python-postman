@@ -1,0 +1,841 @@
+{
+	"info": {
+		"_postman_id": "bbbb9f64-0a6d-4653-bbf7-5d5df724379e",
+		"name": "Genscape Oil Refineries",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3009653"
+	},
+	"item": [
+		{
+			"name": "/v2/unit-status/daily",
+			"item": [
+				{
+					"name": "/v2/unit-status/daily",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v2/unit-status/daily?startDate={{startDate}}&limit={{limit}}&offset={{offset}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v2",
+								"unit-status",
+								"daily"
+							],
+							"query": [
+								{
+									"key": "regions",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "facilityIDs",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "processingClasses",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "startDate",
+									"value": "{{startDate}}"
+								},
+								{
+									"key": "endDate",
+									"value": "2023-02-04",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "{{limit}}"
+								},
+								{
+									"key": "offset",
+									"value": "{{offset}}"
+								},
+								{
+									"key": "format",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "/v2/unit-status/daily"
+		},
+		{
+			"name": "/v2/unit-status/daily/limited-refresh",
+			"item": [
+				{
+					"name": "/v2/unit-status/daily/limited-refresh",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v2/unit-status/daily/limited-refresh?limit={{limit}}&offset={{offset}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v2",
+								"unit-status",
+								"daily",
+								"limited-refresh"
+							],
+							"query": [
+								{
+									"key": "regions",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "facilityIDs",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "processingClasses",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "startDate",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "endDate",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "{{limit}}"
+								},
+								{
+									"key": "offset",
+									"value": "{{offset}}"
+								},
+								{
+									"key": "format",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "/v2/unit-status/daily/limited-refresh"
+		},
+		{
+			"name": "/v1/planned-outages",
+			"item": [
+				{
+					"name": "/v1/planned-outages",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/planned-outages?limit={{limit}}&offset={{offset}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"planned-outages"
+							],
+							"query": [
+								{
+									"key": "regions",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "facilityIDs",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "startExpectedStart",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "endExpectedStart",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "updatedSince",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "{{limit}}"
+								},
+								{
+									"key": "offset",
+									"value": "{{offset}}"
+								},
+								{
+									"key": "format",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "utcOffset",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "/v1/planned-outages"
+		},
+		{
+			"name": "/v1/unit-status/daily",
+			"item": [
+				{
+					"name": "/v1/unit-status/daily",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/unit-status/daily?limit={{limit}}&offset={{offset}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"unit-status",
+								"daily"
+							],
+							"query": [
+								{
+									"key": "regions",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "facilityIDs",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "processingClasses",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "startDate",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "endDate",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "{{limit}}"
+								},
+								{
+									"key": "offset",
+									"value": "{{offset}}"
+								},
+								{
+									"key": "format",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "/v1/unit-status/daily"
+		},
+		{
+			"name": "/v1/unit-status/daily/limited-refresh",
+			"item": [
+				{
+					"name": "https://api.genscape.com/refineries/oil/v1/unit-status/daily/limited-refresh",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "https://api.genscape.com/refineries/oil/v1/unit-status/daily/limited-refresh?regions=&facilityIDs=&processingClasses=&startDate=&endDate=&limit=200&offset=0&format=&=",
+							"protocol": "https",
+							"host": [
+								"api",
+								"genscape",
+								"com"
+							],
+							"path": [
+								"refineries",
+								"oil",
+								"v1",
+								"unit-status",
+								"daily",
+								"limited-refresh"
+							],
+							"query": [
+								{
+									"key": "regions",
+									"value": ""
+								},
+								{
+									"key": "facilityIDs",
+									"value": ""
+								},
+								{
+									"key": "processingClasses",
+									"value": ""
+								},
+								{
+									"key": "startDate",
+									"value": ""
+								},
+								{
+									"key": "endDate",
+									"value": ""
+								},
+								{
+									"key": "limit",
+									"value": "200"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "format",
+									"value": ""
+								},
+								{
+									"key": null,
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "/v1/unit-status/daily/limited-refresh"
+		},
+		{
+			"name": "/v1/refinery-inputs-outputs/daily",
+			"item": [
+				{
+					"name": "https://api.genscape.com/refineries/oil/v1/refinery-inputs-outputs/daily",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "https://api.genscape.com/refineries/oil/v1/refinery-inputs-outputs/daily?revision=revised&regions=&products=&owners=&facilityIDs=&startDate=&endDate=&limit=200&offset=0&format=&=",
+							"protocol": "https",
+							"host": [
+								"api",
+								"genscape",
+								"com"
+							],
+							"path": [
+								"refineries",
+								"oil",
+								"v1",
+								"refinery-inputs-outputs",
+								"daily"
+							],
+							"query": [
+								{
+									"key": "revision",
+									"value": "revised"
+								},
+								{
+									"key": "regions",
+									"value": ""
+								},
+								{
+									"key": "products",
+									"value": ""
+								},
+								{
+									"key": "owners",
+									"value": ""
+								},
+								{
+									"key": "facilityIDs",
+									"value": ""
+								},
+								{
+									"key": "startDate",
+									"value": ""
+								},
+								{
+									"key": "endDate",
+									"value": ""
+								},
+								{
+									"key": "limit",
+									"value": "200"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "format",
+									"value": ""
+								},
+								{
+									"key": null,
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "/v1/refinery-inputs-outputs/daily"
+		},
+		{
+			"name": "/v1/refinery-inputs-outputs/weekly",
+			"item": [
+				{
+					"name": "https://api.genscape.com/refineries/oil/v1/refinery-inputs-outputs/weekly",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "https://api.genscape.com/refineries/oil/v1/refinery-inputs-outputs/weekly?revision=revised&regions=&products=&owners=&facilityIDs=&startDate=&endDate=&limit=200&offset=0&format=&=",
+							"protocol": "https",
+							"host": [
+								"api",
+								"genscape",
+								"com"
+							],
+							"path": [
+								"refineries",
+								"oil",
+								"v1",
+								"refinery-inputs-outputs",
+								"weekly"
+							],
+							"query": [
+								{
+									"key": "revision",
+									"value": "revised"
+								},
+								{
+									"key": "regions",
+									"value": ""
+								},
+								{
+									"key": "products",
+									"value": ""
+								},
+								{
+									"key": "owners",
+									"value": ""
+								},
+								{
+									"key": "facilityIDs",
+									"value": ""
+								},
+								{
+									"key": "startDate",
+									"value": ""
+								},
+								{
+									"key": "endDate",
+									"value": ""
+								},
+								{
+									"key": "limit",
+									"value": "200"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "format",
+									"value": ""
+								},
+								{
+									"key": null,
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "/v1/refinery-inputs-outputs/weekly"
+		},
+		{
+			"name": "/v1/region-inputs-outputs/daily",
+			"item": [
+				{
+					"name": "https://api.genscape.com/refineries/oil/v1/region-inputs-outputs/daily",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "https://api.genscape.com/refineries/oil/v1/region-inputs-outputs/daily?revision=revised&regions=&products=&startDate=&endDate=&limit=200&offset=0&format=&=",
+							"protocol": "https",
+							"host": [
+								"api",
+								"genscape",
+								"com"
+							],
+							"path": [
+								"refineries",
+								"oil",
+								"v1",
+								"region-inputs-outputs",
+								"daily"
+							],
+							"query": [
+								{
+									"key": "revision",
+									"value": "revised"
+								},
+								{
+									"key": "regions",
+									"value": ""
+								},
+								{
+									"key": "products",
+									"value": ""
+								},
+								{
+									"key": "startDate",
+									"value": ""
+								},
+								{
+									"key": "endDate",
+									"value": ""
+								},
+								{
+									"key": "limit",
+									"value": "200"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "format",
+									"value": ""
+								},
+								{
+									"key": null,
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "/v1/region-inputs-outputs/daily"
+		},
+		{
+			"name": "/v1/region-inputs-outputs/weekly",
+			"item": [
+				{
+					"name": "https://api.genscape.com/refineries/oil/v1/region-inputs-outputs/weekly",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "https://api.genscape.com/refineries/oil/v1/region-inputs-outputs/weekly?revision=revised&regions=&products=&startDate=&endDate=&limit=200&offset=0&format=&=",
+							"protocol": "https",
+							"host": [
+								"api",
+								"genscape",
+								"com"
+							],
+							"path": [
+								"refineries",
+								"oil",
+								"v1",
+								"region-inputs-outputs",
+								"weekly"
+							],
+							"query": [
+								{
+									"key": "revision",
+									"value": "revised"
+								},
+								{
+									"key": "regions",
+									"value": ""
+								},
+								{
+									"key": "products",
+									"value": ""
+								},
+								{
+									"key": "startDate",
+									"value": ""
+								},
+								{
+									"key": "endDate",
+									"value": ""
+								},
+								{
+									"key": "limit",
+									"value": "200"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "format",
+									"value": ""
+								},
+								{
+									"key": null,
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "/v1/region-inputs-outputs/weekly"
+		},
+		{
+			"name": "/v1/refinery-alerts",
+			"item": [
+				{
+					"name": "/v1/refinery-alerts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/refinery-alerts?startDate={{startDate}}&limit={{limit}}&offset={{offset}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"refinery-alerts"
+							],
+							"query": [
+								{
+									"key": "regions",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "facilityIDs",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "processingClasses",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "unitCategories",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "startDate",
+									"value": "{{startDate}}"
+								},
+								{
+									"key": "endDate",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "{{limit}}"
+								},
+								{
+									"key": "offset",
+									"value": "{{offset}}"
+								},
+								{
+									"key": "format",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "/v1/refinery-alerts"
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "{{Gen-Api-Key}}",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "Gen-Api-Key",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://api.genscape.com/refineries/oil",
+			"type": "string"
+		},
+		{
+			"key": "limit",
+			"value": "5000",
+			"type": "string"
+		},
+		{
+			"key": "offset",
+			"value": "0",
+			"type": "string"
+		},
+		{
+			"key": "s3_prefix",
+			"value": "{{ENV}}/musket_systems/genscape/refineries/oil/api/{{ENDPOINT}}/snapshots/{{DATE_PARTITION}}",
+			"type": "string"
+		},
+		{
+			"key": "api_tags",
+			"value": "grouped,genscape,refineries,genscape-refineries,oil-refineries,daily",
+			"type": "string"
+		},
+		{
+			"key": "startDate",
+			"value": "2010-01-01",
+			"type": "string"
+		}
+	]
+}

@@ -1,0 +1,1057 @@
+{
+	"info": {
+		"_postman_id": "47c68137-7c25-4023-bacc-0706b2742a85",
+		"name": "ArgusWS",
+		"description": "\n",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3009653"
+	},
+	"item": [
+		{
+			"name": "ArgusWSSoap",
+			"item": [
+				{
+					"name": "Authenticate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// require('cheerio')",
+									"// var xml = cheerio.load(responseBody, {",
+									"//   ignoreWhitespace: true,",
+									"//   xmlMode: true",
+									"// });",
+									"",
+									"// var elementContent = xml(\"AuthToken\")[0].children[0].data;",
+									"// console.log(elementContent)",
+									"// pm.environment.set(\"argusAuthToken\", elementContent);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml; charset=utf-8"
+							},
+							{
+								"key": "SOAPAction",
+								"value": "http://tempuri.org/Authenticate"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\nxmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n    <soap:Body>\n        <Authenticate xmlns=\"http://tempuri.org/\">\n            <username>{{argus_username}}</username>\n            <password>{{argus_password}}</password>\n        </Authenticate>\n    </soap:Body>\n</soap:Envelope>\n",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ArgusWSSoapBaseUrl}}/ArgusWSVSTO/ArgusOnline.asmx",
+							"host": [
+								"{{ArgusWSSoapBaseUrl}}"
+							],
+							"path": [
+								"ArgusWSVSTO",
+								"ArgusOnline.asmx"
+							]
+						},
+						"description": "Validates username and password"
+					},
+					"response": [
+						{
+							"name": "Authenticate response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/xml; charset=utf-8"
+									},
+									{
+										"key": "SOAPAction",
+										"value": "http://tempuri.org/Authenticate"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:Authenticate xmlns=\"http://tempuri.org/\">\n      <tns:username>string</tns:username>\n      <tns:password>string</tns:password>\n    </tns:Authenticate>\n  </soap:Body>\n</soap:Envelope>\n",
+									"options": {
+										"raw": {
+											"language": "xml"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://www.argusmedia.com/ArgusWSVSTO/ArgusOnline.asmx",
+									"protocol": "https",
+									"host": [
+										"www",
+										"argusmedia",
+										"com"
+									],
+									"path": [
+										"ArgusWSVSTO",
+										"ArgusOnline.asmx"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:AuthenticateResponse xmlns=\"http://tempuri.org/\">\n      <tns:AuthenticateResult>\n        <tns:LoginResult>100</tns:LoginResult>\n        <tns:AuthToken>string</tns:AuthToken>\n        <tns:LatestVersion>string</tns:LatestVersion>\n        <tns:LatestVersionUrl>string</tns:LatestVersionUrl>\n      </tns:AuthenticateResult>\n    </tns:AuthenticateResponse>\n  </soap:Body>\n</soap:Envelope>\n"
+						}
+					]
+				},
+				{
+					"name": "Authenticate2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml; charset=utf-8"
+							},
+							{
+								"key": "SOAPAction",
+								"value": "http://tempuri.org/Authenticate2"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:Authenticate2 xmlns=\"http://tempuri.org/\">\n      <tns:username>string</tns:username>\n      <tns:password>string</tns:password>\n      <tns:pluginInstallID>string</tns:pluginInstallID>\n    </tns:Authenticate2>\n  </soap:Body>\n</soap:Envelope>\n",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ArgusWSSoapBaseUrl}}/ArgusWSVSTO/ArgusOnline.asmx",
+							"host": [
+								"{{ArgusWSSoapBaseUrl}}"
+							],
+							"path": [
+								"ArgusWSVSTO",
+								"ArgusOnline.asmx"
+							]
+						},
+						"description": "Validates username and password"
+					},
+					"response": [
+						{
+							"name": "Authenticate2 response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/xml; charset=utf-8"
+									},
+									{
+										"key": "SOAPAction",
+										"value": "http://tempuri.org/Authenticate2"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:Authenticate2 xmlns=\"http://tempuri.org/\">\n      <tns:username>string</tns:username>\n      <tns:password>string</tns:password>\n      <tns:pluginInstallID>string</tns:pluginInstallID>\n    </tns:Authenticate2>\n  </soap:Body>\n</soap:Envelope>\n",
+									"options": {
+										"raw": {
+											"language": "xml"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://www.argusmedia.com/ArgusWSVSTO/ArgusOnline.asmx",
+									"protocol": "https",
+									"host": [
+										"www",
+										"argusmedia",
+										"com"
+									],
+									"path": [
+										"ArgusWSVSTO",
+										"ArgusOnline.asmx"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:Authenticate2Response xmlns=\"http://tempuri.org/\">\n      <tns:Authenticate2Result>\n        <tns:LoginResult>100</tns:LoginResult>\n        <tns:AuthToken>string</tns:AuthToken>\n        <tns:LatestVersion>string</tns:LatestVersion>\n        <tns:LatestVersionUrl>string</tns:LatestVersionUrl>\n      </tns:Authenticate2Result>\n    </tns:Authenticate2Response>\n  </soap:Body>\n</soap:Envelope>\n"
+						}
+					]
+				},
+				{
+					"name": "Authenticate3",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml; charset=utf-8"
+							},
+							{
+								"key": "SOAPAction",
+								"value": "http://tempuri.org/Authenticate3"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:Authenticate3 xmlns=\"http://tempuri.org/\">\n      <tns:username>string</tns:username>\n      <tns:password>string</tns:password>\n      <tns:pluginInstallID>string</tns:pluginInstallID>\n      <tns:pluginVersion>string</tns:pluginVersion>\n    </tns:Authenticate3>\n  </soap:Body>\n</soap:Envelope>\n",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ArgusWSSoapBaseUrl}}/ArgusWSVSTO/ArgusOnline.asmx",
+							"host": [
+								"{{ArgusWSSoapBaseUrl}}"
+							],
+							"path": [
+								"ArgusWSVSTO",
+								"ArgusOnline.asmx"
+							]
+						},
+						"description": "Validates username and password"
+					},
+					"response": [
+						{
+							"name": "Authenticate3 response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/xml; charset=utf-8"
+									},
+									{
+										"key": "SOAPAction",
+										"value": "http://tempuri.org/Authenticate3"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:Authenticate3 xmlns=\"http://tempuri.org/\">\n      <tns:username>string</tns:username>\n      <tns:password>string</tns:password>\n      <tns:pluginInstallID>string</tns:pluginInstallID>\n      <tns:pluginVersion>string</tns:pluginVersion>\n    </tns:Authenticate3>\n  </soap:Body>\n</soap:Envelope>\n",
+									"options": {
+										"raw": {
+											"language": "xml"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://www.argusmedia.com/ArgusWSVSTO/ArgusOnline.asmx",
+									"protocol": "https",
+									"host": [
+										"www",
+										"argusmedia",
+										"com"
+									],
+									"path": [
+										"ArgusWSVSTO",
+										"ArgusOnline.asmx"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:Authenticate3Response xmlns=\"http://tempuri.org/\">\n      <tns:Authenticate3Result>\n        <tns:LoginResult>100</tns:LoginResult>\n        <tns:AuthToken>string</tns:AuthToken>\n        <tns:LatestVersion>string</tns:LatestVersion>\n        <tns:LatestVersionUrl>string</tns:LatestVersionUrl>\n      </tns:Authenticate3Result>\n    </tns:Authenticate3Response>\n  </soap:Body>\n</soap:Envelope>\n"
+						}
+					]
+				},
+				{
+					"name": "GetCustomReport",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml; charset=utf-8"
+							},
+							{
+								"key": "SOAPAction",
+								"value": "http://tempuri.org/GetCustomReport"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetCustomReport xmlns=\"http://tempuri.org/\">\n      <tns:authToken>string</tns:authToken>\n      <tns:pars>\n        <tns:Periodicity>Daily</tns:Periodicity>\n        <tns:StartDate>2024-04-10Z</tns:StartDate>\n        <tns:EndDate>2024-04-10Z</tns:EndDate>\n        <tns:ItemList>\n          <tns:PriceReportItem>\n            <tns:QuoteId>7</tns:QuoteId>\n            <tns:PriceTypeId>60</tns:PriceTypeId>\n            <tns:PriceReportItemID>100</tns:PriceReportItemID>\n            <tns:ForwardPeriod>68</tns:ForwardPeriod>\n            <tns:ForwardYear>44</tns:ForwardYear>\n            <tns:CurrencyUnit>54</tns:CurrencyUnit>\n            <tns:MeasureUnit>25</tns:MeasureUnit>\n            <tns:TimestampId>58</tns:TimestampId>\n          </tns:PriceReportItem>\n        </tns:ItemList>\n      </tns:pars>\n    </tns:GetCustomReport>\n  </soap:Body>\n</soap:Envelope>\n",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ArgusWSSoapBaseUrl}}/ArgusWSVSTO/ArgusOnline.asmx",
+							"host": [
+								"{{ArgusWSSoapBaseUrl}}"
+							],
+							"path": [
+								"ArgusWSVSTO",
+								"ArgusOnline.asmx"
+							]
+						},
+						"description": "Returns custom price report"
+					},
+					"response": [
+						{
+							"name": "GetCustomReport response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/xml; charset=utf-8"
+									},
+									{
+										"key": "SOAPAction",
+										"value": "http://tempuri.org/GetCustomReport"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetCustomReport xmlns=\"http://tempuri.org/\">\n      <tns:authToken>string</tns:authToken>\n      <tns:pars>\n        <tns:Periodicity>Daily</tns:Periodicity>\n        <tns:StartDate>2024-04-10Z</tns:StartDate>\n        <tns:EndDate>2024-04-10Z</tns:EndDate>\n        <tns:ItemList>\n          <tns:PriceReportItem>\n            <tns:QuoteId>7</tns:QuoteId>\n            <tns:PriceTypeId>60</tns:PriceTypeId>\n            <tns:PriceReportItemID>100</tns:PriceReportItemID>\n            <tns:ForwardPeriod>68</tns:ForwardPeriod>\n            <tns:ForwardYear>44</tns:ForwardYear>\n            <tns:CurrencyUnit>54</tns:CurrencyUnit>\n            <tns:MeasureUnit>25</tns:MeasureUnit>\n            <tns:TimestampId>58</tns:TimestampId>\n          </tns:PriceReportItem>\n        </tns:ItemList>\n      </tns:pars>\n    </tns:GetCustomReport>\n  </soap:Body>\n</soap:Envelope>\n",
+									"options": {
+										"raw": {
+											"language": "xml"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://www.argusmedia.com/ArgusWSVSTO/ArgusOnline.asmx",
+									"protocol": "https",
+									"host": [
+										"www",
+										"argusmedia",
+										"com"
+									],
+									"path": [
+										"ArgusWSVSTO",
+										"ArgusOnline.asmx"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetCustomReportResponse xmlns=\"http://tempuri.org/\">\n      <tns:GetCustomReportResult>\n        <tns:s:schema/>\n      </tns:GetCustomReportResult>\n    </tns:GetCustomReportResponse>\n  </soap:Body>\n</soap:Envelope>\n"
+						}
+					]
+				},
+				{
+					"name": "GetUpdatedPricesInDateTimeRange",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml; charset=utf-8"
+							},
+							{
+								"key": "SOAPAction",
+								"value": "http://tempuri.org/GetUpdatedPricesInDateTimeRange"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\nxmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n    <soap:Body>\n        <GetUpdatedPricesInDateTimeRange xmlns=\"http://tempuri.org/\">\n            <authToken>{{argusAuthToken}}</authToken>\n            <fromDateTime>{{fromDateTime}}</fromDateTime>\n            <toDateTime>{{toDateTime}}</toDateTime>\n            <startId>{{startId}}</startId>\n        </GetUpdatedPricesInDateTimeRange>\n    </soap:Body>\n</soap:Envelope>\n",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ArgusWSSoapBaseUrl}}/ArgusWSVSTO/ArgusOnline.asmx",
+							"host": [
+								"{{ArgusWSSoapBaseUrl}}"
+							],
+							"path": [
+								"ArgusWSVSTO",
+								"ArgusOnline.asmx"
+							]
+						},
+						"description": "Returns Prices updated in Date Range, starting with StartId, Max number of records is defined in Config file."
+					},
+					"response": [
+						{
+							"name": "GetUpdatedPricesInDateTimeRange response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/xml; charset=utf-8"
+									},
+									{
+										"key": "SOAPAction",
+										"value": "http://tempuri.org/GetUpdatedPricesInDateTimeRange"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetUpdatedPricesInDateTimeRange xmlns=\"http://tempuri.org/\">\n      <tns:authToken>string</tns:authToken>\n      <tns:fromDateTime>2024-04-10T14:32:07.034Z</tns:fromDateTime>\n      <tns:toDateTime>2024-04-10T14:32:07.034Z</tns:toDateTime>\n      <tns:startId>9</tns:startId>\n    </tns:GetUpdatedPricesInDateTimeRange>\n  </soap:Body>\n</soap:Envelope>\n",
+									"options": {
+										"raw": {
+											"language": "xml"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://www.argusmedia.com/ArgusWSVSTO/ArgusOnline.asmx",
+									"protocol": "https",
+									"host": [
+										"www",
+										"argusmedia",
+										"com"
+									],
+									"path": [
+										"ArgusWSVSTO",
+										"ArgusOnline.asmx"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetUpdatedPricesInDateTimeRangeResponse xmlns=\"http://tempuri.org/\">\n      <tns:GetUpdatedPricesInDateTimeRangeResult>\n        <tns:s:schema/>\n      </tns:GetUpdatedPricesInDateTimeRangeResult>\n    </tns:GetUpdatedPricesInDateTimeRangeResponse>\n  </soap:Body>\n</soap:Envelope>\n"
+						}
+					]
+				},
+				{
+					"name": "GetTables",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml; charset=utf-8"
+							},
+							{
+								"key": "SOAPAction",
+								"value": "http://tempuri.org/GetTables"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n  xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"\n  xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <GetTables xmlns=\"http://tempuri.org/\">\n      <authToken>{{argusAuthToken}}</authToken>\n      <tableNames>\n        <string>V_CODE</string>\n        <!-- <string>V_MODULE</string> -->\n        <!-- <string>V_PRICE_TYPE</string> -->\n        <!-- <string>V_QUOTE</string> -->\n      </tableNames>\n    </GetTables>\n  </soap:Body>\n</soap:Envelope>",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ArgusWSSoapBaseUrl}}/ArgusWSVSTO/ArgusOnline.asmx",
+							"host": [
+								"{{ArgusWSSoapBaseUrl}}"
+							],
+							"path": [
+								"ArgusWSVSTO",
+								"ArgusOnline.asmx"
+							]
+						},
+						"description": "Returns DataSource with entire lookup tables"
+					},
+					"response": [
+						{
+							"name": "GetTables response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/xml; charset=utf-8"
+									},
+									{
+										"key": "SOAPAction",
+										"value": "http://tempuri.org/GetTables"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetTables xmlns=\"http://tempuri.org/\">\n      <tns:authToken>string</tns:authToken>\n      <tns:tableNames/>\n    </tns:GetTables>\n  </soap:Body>\n</soap:Envelope>\n",
+									"options": {
+										"raw": {
+											"language": "xml"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://www.argusmedia.com/ArgusWSVSTO/ArgusOnline.asmx",
+									"protocol": "https",
+									"host": [
+										"www",
+										"argusmedia",
+										"com"
+									],
+									"path": [
+										"ArgusWSVSTO",
+										"ArgusOnline.asmx"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetTablesResponse xmlns=\"http://tempuri.org/\">\n      <tns:GetTablesResult>\n        <tns:s:schema/>\n      </tns:GetTablesResult>\n    </tns:GetTablesResponse>\n  </soap:Body>\n</soap:Envelope>\n"
+						}
+					]
+				},
+				{
+					"name": "GetTablesLastUpdated",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml; charset=utf-8"
+							},
+							{
+								"key": "SOAPAction",
+								"value": "http://tempuri.org/GetTablesLastUpdated"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n    xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"\n    xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n    <soap:Body>\n        <GetTables xmlns=\"http://tempuri.org/\">\n            <authToken>{{argusAuthToken}}</authToken>\n            <tableNames>\n                <string>string</string>\n            </tableNames>\n        </GetTables>\n    </soap:Body>\n</soap:Envelope>",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ArgusWSSoapBaseUrl}}/ArgusWSVSTO/ArgusOnline.asmx",
+							"host": [
+								"{{ArgusWSSoapBaseUrl}}"
+							],
+							"path": [
+								"ArgusWSVSTO",
+								"ArgusOnline.asmx"
+							]
+						},
+						"description": "Returns datatable containing last updated time for each lookup table"
+					},
+					"response": [
+						{
+							"name": "GetTablesLastUpdated response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/xml; charset=utf-8"
+									},
+									{
+										"key": "SOAPAction",
+										"value": "http://tempuri.org/GetTablesLastUpdated"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetTablesLastUpdated xmlns=\"http://tempuri.org/\">\n      <tns:authToken>string</tns:authToken>\n      <tns:tableNames/>\n    </tns:GetTablesLastUpdated>\n  </soap:Body>\n</soap:Envelope>\n",
+									"options": {
+										"raw": {
+											"language": "xml"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://www.argusmedia.com/ArgusWSVSTO/ArgusOnline.asmx",
+									"protocol": "https",
+									"host": [
+										"www",
+										"argusmedia",
+										"com"
+									],
+									"path": [
+										"ArgusWSVSTO",
+										"ArgusOnline.asmx"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetTablesLastUpdatedResponse xmlns=\"http://tempuri.org/\">\n      <tns:GetTablesLastUpdatedResult>\n        <tns:s:schema/>\n      </tns:GetTablesLastUpdatedResult>\n    </tns:GetTablesLastUpdatedResponse>\n  </soap:Body>\n</soap:Envelope>\n"
+						}
+					]
+				},
+				{
+					"name": "GetNewsList",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml; charset=utf-8"
+							},
+							{
+								"key": "SOAPAction",
+								"value": "http://tempuri.org/GetNewsList"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetNewsList xmlns=\"http://tempuri.org/\">\n      <tns:authToken>string</tns:authToken>\n      <tns:dateFrom>2024-04-10T14:32:07.035Z</tns:dateFrom>\n      <tns:dateTo>2024-04-10T14:32:07.035Z</tns:dateTo>\n      <tns:categoryList/>\n      <tns:categoryiesListOr>true</tns:categoryiesListOr>\n      <tns:regionList/>\n      <tns:regionListOr>true</tns:regionListOr>\n    </tns:GetNewsList>\n  </soap:Body>\n</soap:Envelope>\n",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ArgusWSSoapBaseUrl}}/ArgusWSVSTO/ArgusOnline.asmx",
+							"host": [
+								"{{ArgusWSSoapBaseUrl}}"
+							],
+							"path": [
+								"ArgusWSVSTO",
+								"ArgusOnline.asmx"
+							]
+						},
+						"description": "Returns a list with Story Ids that match the request parameters"
+					},
+					"response": [
+						{
+							"name": "GetNewsList response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/xml; charset=utf-8"
+									},
+									{
+										"key": "SOAPAction",
+										"value": "http://tempuri.org/GetNewsList"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetNewsList xmlns=\"http://tempuri.org/\">\n      <tns:authToken>string</tns:authToken>\n      <tns:dateFrom>2024-04-10T14:32:07.035Z</tns:dateFrom>\n      <tns:dateTo>2024-04-10T14:32:07.035Z</tns:dateTo>\n      <tns:categoryList/>\n      <tns:categoryiesListOr>true</tns:categoryiesListOr>\n      <tns:regionList/>\n      <tns:regionListOr>true</tns:regionListOr>\n    </tns:GetNewsList>\n  </soap:Body>\n</soap:Envelope>\n",
+									"options": {
+										"raw": {
+											"language": "xml"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://www.argusmedia.com/ArgusWSVSTO/ArgusOnline.asmx",
+									"protocol": "https",
+									"host": [
+										"www",
+										"argusmedia",
+										"com"
+									],
+									"path": [
+										"ArgusWSVSTO",
+										"ArgusOnline.asmx"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetNewsListResponse xmlns=\"http://tempuri.org/\">\n      <tns:GetNewsListResult/>\n    </tns:GetNewsListResponse>\n  </soap:Body>\n</soap:Envelope>\n"
+						}
+					]
+				},
+				{
+					"name": "GetNewsStory",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml; charset=utf-8"
+							},
+							{
+								"key": "SOAPAction",
+								"value": "http://tempuri.org/GetNewsStory"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetNewsStory xmlns=\"http://tempuri.org/\">\n      <tns:authToken>string</tns:authToken>\n      <tns:newsId>50</tns:newsId>\n    </tns:GetNewsStory>\n  </soap:Body>\n</soap:Envelope>\n",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ArgusWSSoapBaseUrl}}/ArgusWSVSTO/ArgusOnline.asmx",
+							"host": [
+								"{{ArgusWSSoapBaseUrl}}"
+							],
+							"path": [
+								"ArgusWSVSTO",
+								"ArgusOnline.asmx"
+							]
+						},
+						"description": "Returns a News Record"
+					},
+					"response": [
+						{
+							"name": "GetNewsStory response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/xml; charset=utf-8"
+									},
+									{
+										"key": "SOAPAction",
+										"value": "http://tempuri.org/GetNewsStory"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetNewsStory xmlns=\"http://tempuri.org/\">\n      <tns:authToken>string</tns:authToken>\n      <tns:newsId>50</tns:newsId>\n    </tns:GetNewsStory>\n  </soap:Body>\n</soap:Envelope>\n",
+									"options": {
+										"raw": {
+											"language": "xml"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://www.argusmedia.com/ArgusWSVSTO/ArgusOnline.asmx",
+									"protocol": "https",
+									"host": [
+										"www",
+										"argusmedia",
+										"com"
+									],
+									"path": [
+										"ArgusWSVSTO",
+										"ArgusOnline.asmx"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetNewsStoryResponse xmlns=\"http://tempuri.org/\">\n      <tns:GetNewsStoryResult>\n        <tns:StoryId>7</tns:StoryId>\n        <tns:CategoryIds/>\n        <tns:Headline>string</tns:Headline>\n        <tns:PublicationDate>2024-04-10T14:32:07.036Z</tns:PublicationDate>\n        <tns:DateModified>2024-04-10T14:32:07.036Z</tns:DateModified>\n        <tns:Text>string</tns:Text>\n      </tns:GetNewsStoryResult>\n    </tns:GetNewsStoryResponse>\n  </soap:Body>\n</soap:Envelope>\n"
+						}
+					]
+				},
+				{
+					"name": "GetNewsStoryById",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml; charset=utf-8"
+							},
+							{
+								"key": "SOAPAction",
+								"value": "http://tempuri.org/GetNewsStoryById"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetNewsStoryById xmlns=\"http://tempuri.org/\">\n      <tns:authToken>string</tns:authToken>\n      <tns:newsId>29</tns:newsId>\n    </tns:GetNewsStoryById>\n  </soap:Body>\n</soap:Envelope>\n",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ArgusWSSoapBaseUrl}}/ArgusWSVSTO/ArgusOnline.asmx",
+							"host": [
+								"{{ArgusWSSoapBaseUrl}}"
+							],
+							"path": [
+								"ArgusWSVSTO",
+								"ArgusOnline.asmx"
+							]
+						},
+						"description": "Returns a News Record"
+					},
+					"response": [
+						{
+							"name": "GetNewsStoryById response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/xml; charset=utf-8"
+									},
+									{
+										"key": "SOAPAction",
+										"value": "http://tempuri.org/GetNewsStoryById"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetNewsStoryById xmlns=\"http://tempuri.org/\">\n      <tns:authToken>string</tns:authToken>\n      <tns:newsId>29</tns:newsId>\n    </tns:GetNewsStoryById>\n  </soap:Body>\n</soap:Envelope>\n",
+									"options": {
+										"raw": {
+											"language": "xml"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://www.argusmedia.com/ArgusWSVSTO/ArgusOnline.asmx",
+									"protocol": "https",
+									"host": [
+										"www",
+										"argusmedia",
+										"com"
+									],
+									"path": [
+										"ArgusWSVSTO",
+										"ArgusOnline.asmx"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetNewsStoryByIdResponse xmlns=\"http://tempuri.org/\">\n      <tns:GetNewsStoryByIdResult>\n        <tns:NewsId>58</tns:NewsId>\n        <tns:CategoryIds>\n          <tns:RegionIds/>\n          <tns:SectorIds/>\n          <tns:ContextIds/>\n        </tns:CategoryIds>\n        <tns:StreamIds/>\n        <tns:Free>true</tns:Free>\n        <tns:Featured>true</tns:Featured>\n        <tns:LanguageId>32</tns:LanguageId>\n        <tns:NewsTypeId>14</tns:NewsTypeId>\n        <tns:Headline>string</tns:Headline>\n        <tns:PublicationDate>2024-04-10T14:32:07.036Z</tns:PublicationDate>\n        <tns:DateModified>2024-04-10T14:32:07.036Z</tns:DateModified>\n        <tns:Text>string</tns:Text>\n      </tns:GetNewsStoryByIdResult>\n    </tns:GetNewsStoryByIdResponse>\n  </soap:Body>\n</soap:Envelope>\n"
+						}
+					]
+				},
+				{
+					"name": "GetNewsItemsByDateTime",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/xml; charset=utf-8"
+							},
+							{
+								"key": "SOAPAction",
+								"value": "http://tempuri.org/GetNewsItemsByDateTime"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetNewsItemsByDateTime xmlns=\"http://tempuri.org/\">\n      <tns:authToken>string</tns:authToken>\n      <tns:dateTimeFrom>2024-04-10T14:32:07.037Z</tns:dateTimeFrom>\n      <tns:dateTimeTo>2024-04-10T14:32:07.037Z</tns:dateTimeTo>\n      <tns:free>true</tns:free>\n      <tns:featured>true</tns:featured>\n      <tns:languageId>19</tns:languageId>\n      <tns:newsTypeId>83</tns:newsTypeId>\n    </tns:GetNewsItemsByDateTime>\n  </soap:Body>\n</soap:Envelope>\n",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ArgusWSSoapBaseUrl}}/ArgusWSVSTO/ArgusOnline.asmx",
+							"host": [
+								"{{ArgusWSSoapBaseUrl}}"
+							],
+							"path": [
+								"ArgusWSVSTO",
+								"ArgusOnline.asmx"
+							]
+						},
+						"description": "Returns a list of news records that match the request parameters"
+					},
+					"response": [
+						{
+							"name": "GetNewsItemsByDateTime response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "text/xml; charset=utf-8"
+									},
+									{
+										"key": "SOAPAction",
+										"value": "http://tempuri.org/GetNewsItemsByDateTime"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetNewsItemsByDateTime xmlns=\"http://tempuri.org/\">\n      <tns:authToken>string</tns:authToken>\n      <tns:dateTimeFrom>2024-04-10T14:32:07.037Z</tns:dateTimeFrom>\n      <tns:dateTimeTo>2024-04-10T14:32:07.037Z</tns:dateTimeTo>\n      <tns:free>true</tns:free>\n      <tns:featured>true</tns:featured>\n      <tns:languageId>19</tns:languageId>\n      <tns:newsTypeId>83</tns:newsTypeId>\n    </tns:GetNewsItemsByDateTime>\n  </soap:Body>\n</soap:Envelope>\n",
+									"options": {
+										"raw": {
+											"language": "xml"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://www.argusmedia.com/ArgusWSVSTO/ArgusOnline.asmx",
+									"protocol": "https",
+									"host": [
+										"www",
+										"argusmedia",
+										"com"
+									],
+									"path": [
+										"ArgusWSVSTO",
+										"ArgusOnline.asmx"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/xml; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <tns:GetNewsItemsByDateTimeResponse xmlns=\"http://tempuri.org/\">\n      <tns:GetNewsItemsByDateTimeResult>\n        <tns:NewsEntity>\n          <tns:NewsId>5</tns:NewsId>\n          <tns:Headline>string</tns:Headline>\n          <tns:PublicationDate>2024-04-10T14:32:07.037Z</tns:PublicationDate>\n          <tns:DateModified>2024-04-10T14:32:07.037Z</tns:DateModified>\n          <tns:Free>true</tns:Free>\n          <tns:Featured>true</tns:Featured>\n          <tns:LanguageId>66</tns:LanguageId>\n          <tns:NewsTypeId>29</tns:NewsTypeId>\n        </tns:NewsEntity>\n      </tns:GetNewsItemsByDateTimeResult>\n    </tns:GetNewsItemsByDateTimeResponse>\n  </soap:Body>\n</soap:Envelope>\n"
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "ArgusWSSoapBaseUrl",
+			"value": "https://www.argusmedia.com",
+			"type": "any"
+		},
+		{
+			"key": "ArgusWSSoap12BaseUrl",
+			"value": "https://www.argusmedia.com",
+			"type": "any"
+		},
+		{
+			"key": "fromDateTime",
+			"value": "2024-01-09",
+			"type": "string"
+		},
+		{
+			"key": "toDateTime",
+			"value": "2024-01-10",
+			"type": "string"
+		},
+		{
+			"key": "startId",
+			"value": "0",
+			"type": "string"
+		},
+		{
+			"key": "api_tags",
+			"value": "argus,argus_soap",
+			"type": "string"
+		}
+	]
+}

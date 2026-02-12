@@ -1,7 +1,7 @@
 """Tests for the ScriptRunner class."""
 
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock, MagicMock, PropertyMock
 from python_postman.execution.script_runner import (
     ScriptRunner,
     PostmanAPI,
@@ -133,13 +133,12 @@ class TestPostmanResponse:
     def test_json(self):
         """Test getting JSON response."""
         mock_response = Mock(spec=ExecutionResponse)
-        mock_response.json.return_value = {"key": "value"}
+        type(mock_response).json = PropertyMock(return_value={"key": "value"})
 
         response = PostmanResponse(mock_response)
         result = response.json()
 
         assert result == {"key": "value"}
-        mock_response.json.assert_called_once()
 
     def test_text(self):
         """Test getting text response."""

@@ -142,11 +142,11 @@ if collection.auth:
 
     # Access auth details based on type
     if collection.auth.type == "bearer":
-        token = collection.auth.bearer.get("token")
+        token = collection.auth.get_bearer_token()
         print(f"Bearer Token: {token}")
     elif collection.auth.type == "basic":
-        username = collection.auth.basic.get("username")
-        print(f"Basic Auth Username: {username}")
+        credentials = collection.auth.get_basic_credentials()
+        print(f"Basic Auth Username: {credentials['username']}")
 
 # Request-level auth (overrides collection auth)
 for request in collection.get_requests():
@@ -469,7 +469,7 @@ except CollectionValidationError as e:
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.9+
 - No external dependencies for core functionality
 
 ## Development
@@ -530,15 +530,17 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Changelog
 
-### 0.8.0 (Updated version)
+### 0.9.0
 
-- Updated version to 0.8.0
-- Updated README.md
-- Updated pyproject.toml
-- Updated tests
-- Updated docs
-- Updated examples
-- Updated code
+- Added HTTP request execution layer with full async/sync support
+- Added variable resolution with proper scoping and precedence
+- Added authentication handling (Bearer, Basic, API Key)
+- Added request extensions for runtime modification
+- Added search and statistics modules
+- Added introspection utilities (AuthResolver, VariableTracer)
+- Added comprehensive type hints and type safety enhancements
+- Added path parameter support (:parameterName syntax)
+- Added collection and folder execution with parallel mode
 
 ## Support
 

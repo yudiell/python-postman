@@ -52,7 +52,7 @@ class TestAuthTypeEnumTypes:
 
     def test_auth_type_enum_count(self):
         """Test AuthTypeEnum has expected number of types."""
-        assert len(AuthTypeEnum) == 10
+        assert len(AuthTypeEnum) == 12
 
 
 class TestRequestMethodValidation:

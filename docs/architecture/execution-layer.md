@@ -39,18 +39,18 @@ Main class for executing requests.
 
 ```python
 from python_postman import PythonPostman
-from python_postman.execution import RequestExecutor
+from python_postman.execution import RequestExecutor, ExecutionContext
 
 # Parse collection
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Create executor
 executor = RequestExecutor()
 
 # Execute a single request
 request = collection.items[0]
-result = await executor.execute_request(request)
+context = ExecutionContext()
+result = await executor.execute_request(request, context)
 
 # Check result
 if result.success:
@@ -62,7 +62,8 @@ else:
 
 **Key Methods:**
 
-- `execute_request(request, context=None)` - Execute single request
+- `execute_request(request, context)` - Execute single request (async)
+- `execute_request_sync(request, context)` - Execute single request (sync)
 - `execute_collection(collection, context=None)` - Execute all requests
 - `execute_folder(folder, context=None)` - Execute folder requests
 - `execute_requests(requests, context=None)` - Execute multiple requests
@@ -71,10 +72,11 @@ else:
 
 ```python
 executor = RequestExecutor(
-    timeout=30.0,           # Request timeout in seconds
-    follow_redirects=True,  # Follow HTTP redirects
-    verify_ssl=True,        # Verify SSL certificates
-    max_redirects=10        # Maximum redirect hops
+    client_config={"timeout": 30.0, "verify": True, "follow_redirects": True},
+    global_headers={"User-Agent": "python-postman/1.0"},
+    variable_overrides={"base_url": "https://api.example.com"},
+    script_timeout=30.0,    # Script execution timeout in seconds
+    request_delay=0.0       # Delay between requests in seconds
 )
 ```
 
@@ -92,8 +94,8 @@ context = ExecutionContext()
 context.set_variable("api_key", "secret123")
 context.set_variable("base_url", "https://api.example.com")
 
-# Set environment variables
-context.set_environment_variable("env", "production")
+# Set environment-scoped variables
+context.set_variable("env", "production", "environment")
 
 # Execute with context
 result = await executor.execute_request(request, context=context)
@@ -111,25 +113,26 @@ token = context.get_variable("auth_token")
 
 **Variable Precedence** (highest to lowest):
 
-1. Request variables (set in scripts)
-2. Environment variables
+1. Request variables (highest precedence)
+2. Folder variables
 3. Collection variables
-4. Global variables
+4. Environment variables (lowest precedence)
 
 **Key Methods:**
 
-- `set_variable(key, value)` - Set global variable
-- `get_variable(key)` - Get variable value
-- `set_environment_variable(key, value)` - Set environment variable
-- `get_environment_variable(key)` - Get environment variable
-- `clear_variables()` - Clear all variables
+- `set_variable(key, value, scope)` - Set variable in scope ("request", "folder", "collection", "environment")
+- `get_variable(key)` - Get variable value (follows precedence)
+- `has_variable(key)` - Check if variable exists in any scope
+- `get_all_variables()` - Get all variables merged with precedence
+- `clear_scope(scope)` - Clear all variables in a scope
+- `create_child_context(request_variables)` - Create child context for request execution
 
 ### ExecutionResult
 
 Contains the result of request execution.
 
 ```python
-result = await executor.execute_request(request)
+result = await executor.execute_request(request, context)
 
 # Check success
 if result.success:
@@ -137,10 +140,10 @@ if result.success:
     print(f"Status: {result.response.status_code}")
     print(f"Headers: {result.response.headers}")
     print(f"Body: {result.response.text}")
-    print(f"JSON: {result.response.json()}")
+    print(f"JSON: {result.response.json}")
 
     # Access timing
-    print(f"Duration: {result.duration_ms}ms")
+    print(f"Duration: {result.execution_time_ms}ms")
 
     # Access test results
     if result.test_results:
@@ -149,17 +152,15 @@ if result.success:
 else:
     # Handle error
     print(f"Error: {result.error}")
-    print(f"Error type: {result.error_type}")
 ```
 
 **Key Attributes:**
 
 - `success` - Whether execution succeeded
 - `response` - ExecutionResponse object
-- `error` - Error message (if failed)
-- `error_type` - Error type (if failed)
-- `duration_ms` - Execution duration in milliseconds
-- `test_results` - TestResults object
+- `error` - Error (Optional[Exception], if failed)
+- `execution_time_ms` - Execution duration in milliseconds
+- `test_results` - ScriptResults object
 - `request` - Original request object
 
 ### ExecutionResponse
@@ -171,7 +172,6 @@ response = result.response
 
 # Access status
 print(response.status_code)
-print(response.reason)
 
 # Access headers
 print(response.headers)
@@ -180,11 +180,7 @@ content_type = response.headers.get("content-type")
 # Access body
 print(response.text)        # Text content
 print(response.content)     # Raw bytes
-data = response.json()      # Parse as JSON
-
-# Access cookies
-for cookie in response.cookies:
-    print(f"{cookie.name}={cookie.value}")
+data = response.json       # Parse as JSON (property)
 
 # Access timing
 print(response.elapsed_ms)  # Response time in milliseconds
@@ -193,18 +189,19 @@ print(response.elapsed_ms)  # Response time in milliseconds
 **Key Attributes:**
 
 - `status_code` - HTTP status code
-- `reason` - HTTP reason phrase
 - `headers` - Response headers (dict)
 - `text` - Response body as text
 - `content` - Response body as bytes
-- `cookies` - Response cookies
 - `elapsed_ms` - Response time in milliseconds
 - `url` - Final URL (after redirects)
 
-**Key Methods:**
+**Key Properties and Methods:**
 
-- `json()` - Parse response as JSON
-- `raise_for_status()` - Raise exception for error status codes
+- `json` - Response body parsed as JSON (property)
+- `elapsed_seconds` - Response time in seconds
+- `request_method` - HTTP method used
+- `is_success()`, `is_redirect()`, `is_client_error()`, `is_server_error()` - Status checks
+- `to_dict()` - Convert to dictionary
 
 ### AuthHandler
 
@@ -311,7 +308,7 @@ pm.test("Response has user data", function () {
 });
 ```
 
-### TestResults
+### ScriptResults
 
 Contains test execution results.
 
@@ -319,26 +316,27 @@ Contains test execution results.
 test_results = result.test_results
 
 # Check overall status
-if test_results.all_passed:
+if test_results.failed == 0:
     print("All tests passed!")
 else:
     print(f"Passed: {test_results.passed}")
     print(f"Failed: {test_results.failed}")
+    print(f"Success rate: {test_results.success_rate:.0%}")
 
-# Access individual test results
-for test in test_results.tests:
-    print(f"{test.name}: {'PASS' if test.passed else 'FAIL'}")
-    if not test.passed:
-        print(f"  Error: {test.error}")
+# Access individual assertion results
+for assertion in test_results.assertions:
+    print(f"{assertion.name}: {'PASS' if assertion.passed else 'FAIL'}")
+    if not assertion.passed:
+        print(f"  Error: {assertion.error}")
 ```
 
 **Key Attributes:**
 
-- `tests` - List of individual test results
-- `passed` - Number of passed tests
-- `failed` - Number of failed tests
-- `total` - Total number of tests
-- `all_passed` - Whether all tests passed
+- `assertions` - List of ScriptAssertion objects (each has `.name`, `.passed`, `.error`)
+- `passed` - Number of passed assertions
+- `failed` - Number of failed assertions
+- `total` - Property: total assertion count
+- `success_rate` - Property: 0.0 to 1.0
 
 ## Usage Patterns
 
@@ -349,8 +347,7 @@ from python_postman import PythonPostman
 from python_postman.execution import RequestExecutor, ExecutionContext
 
 # Parse collection
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Create executor and context
 executor = RequestExecutor()
@@ -374,10 +371,10 @@ else:
 
 ```python
 # Execute all requests in collection
-results = await executor.execute_collection(collection, context=context)
+collection_result = await executor.execute_collection(collection, context=context)
 
 # Process results
-for result in results:
+for result in collection_result.results:
     print(f"{result.request.name}: {result.response.status_code}")
 ```
 
@@ -386,9 +383,7 @@ for result in results:
 ```python
 # Create executor with custom settings
 executor = RequestExecutor(
-    timeout=60.0,
-    follow_redirects=False,
-    verify_ssl=False
+    client_config={"timeout": 60.0, "follow_redirects": False, "verify": False}
 )
 
 # Execute request
@@ -403,7 +398,7 @@ login_request = collection.get_request_by_name("Login")
 login_result = await executor.execute_request(login_request, context=context)
 
 # Extract token from response
-token = login_result.response.json()["token"]
+token = login_result.response.json["token"]
 context.set_variable("auth_token", token)
 
 # Second request - use token
@@ -418,28 +413,23 @@ try:
     result = await executor.execute_request(request, context=context)
 
     if not result.success:
-        if result.error_type == "timeout":
-            print("Request timed out")
-        elif result.error_type == "connection":
-            print("Connection failed")
-        else:
-            print(f"Error: {result.error}")
+        print(f"Error: {result.error}")
 except Exception as e:
     print(f"Unexpected error: {e}")
 ```
 
 ### Synchronous Execution
 
-For synchronous code, use the synchronous executor:
+For synchronous code, use the same RequestExecutor class:
 
 ```python
-from python_postman.execution import SyncRequestExecutor
+from python_postman.execution import RequestExecutor, ExecutionContext
 
-# Create synchronous executor
-executor = SyncRequestExecutor()
-
-# Execute synchronously (no await)
-result = executor.execute_request(request, context=context)
+# Synchronous execution uses the same RequestExecutor class
+with RequestExecutor() as executor:
+    context = ExecutionContext()
+    result = executor.execute_request_sync(request, context)
+    print(f"Status: {result.response.status_code}")
 ```
 
 ## Advanced Features
@@ -471,23 +461,6 @@ class CustomVariableResolver(VariableResolver):
         return super().resolve_custom_function(function_name)
 ```
 
-### Request Hooks
-
-Add hooks for request/response processing:
-
-```python
-async def before_request(request, context):
-    print(f"Executing: {request.name}")
-
-async def after_response(request, response, context):
-    print(f"Completed: {request.name} - {response.status_code}")
-
-executor = RequestExecutor(
-    before_request_hook=before_request,
-    after_response_hook=after_response
-)
-```
-
 ## Performance Considerations
 
 1. **Connection Pooling** - httpx automatically pools connections
@@ -498,7 +471,8 @@ executor = RequestExecutor(
 ```python
 # Use context manager for automatic cleanup
 async with RequestExecutor() as executor:
-    result = await executor.execute_request(request)
+    context = ExecutionContext()
+    result = await executor.execute_request(request, context)
 ```
 
 ## Error Handling
@@ -540,12 +514,13 @@ Common error types:
 4. **Set appropriate timeouts**
 
    ```python
-   executor = RequestExecutor(timeout=30.0)
+   executor = RequestExecutor(client_config={"timeout": 30.0})
    ```
 
 5. **Verify SSL in production**
+
    ```python
-   executor = RequestExecutor(verify_ssl=True)
+   executor = RequestExecutor(client_config={"verify": True})
    ```
 
 ## Next Steps

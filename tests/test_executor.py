@@ -196,7 +196,7 @@ class TestRequestExecutorContextCreation:
     def test_create_context_with_folder(self, executor):
         """Test creating context with folder variables."""
         folder = Mock()
-        folder.variable = [
+        folder.variables = [
             Mock(key="folder_var", value="folder_value"),
         ]
 
@@ -207,7 +207,7 @@ class TestRequestExecutorContextCreation:
     def test_create_context_with_request(self, executor):
         """Test creating context with request variables."""
         request = Mock()
-        request.variable = [
+        request.variables = [
             Mock(key="req_var", value="req_value"),
         ]
 
@@ -748,7 +748,7 @@ class TestRequestExecutorFolderExecution:
         """Create a mock folder for testing."""
         folder = Mock(spec=Folder)
         folder.name = "Test Folder"
-        folder.variable = [
+        folder.variables = [
             Mock(key="folder_var", value="folder_value"),
         ]
         return folder
@@ -1028,7 +1028,7 @@ class TestRequestExecutorFolderExecution:
         mock_folder.get_requests.return_value = iter(mock_requests)
 
         # Mock folder with variables
-        mock_folder.variable = [
+        mock_folder.variables = [
             Mock(key="folder_var", value="folder_value"),
             Mock(key="override_var", value="folder_override"),
         ]
@@ -1901,7 +1901,7 @@ class TestRequestExecutorMethodPlaceholders:
         mock_folder = Mock()
         mock_folder.name = "Test Folder"
         mock_folder.get_requests.return_value = iter([])  # Empty folder
-        mock_folder.variable = []
+        mock_folder.variables = []
 
         mock_context = Mock()
         mock_context.collection_variables = {}

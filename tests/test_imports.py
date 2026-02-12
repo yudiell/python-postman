@@ -88,7 +88,7 @@ class TestImports:
                 VariableResolutionError,
                 ScriptExecutionError,
                 AuthenticationError,
-                TimeoutError,
+                ExecutionTimeoutError,
             )
 
             # Verify they are not None
@@ -140,7 +140,7 @@ class TestImports:
             "VariableResolutionError",
             "ScriptExecutionError",
             "AuthenticationError",
-            "TimeoutError",
+            "ExecutionTimeoutError",
         ]
 
         if httpx_available:
@@ -153,7 +153,7 @@ class TestImports:
         """Test that package metadata is correctly set."""
         import python_postman
 
-        assert python_postman.__version__ == "0.8.0"
+        assert python_postman.__version__ == "0.9.0"
         assert python_postman.__author__ == "Python Postman Contributors"
         assert python_postman.__license__ == "MIT"
         assert "Postman collection" in python_postman.__description__
@@ -213,7 +213,7 @@ class TestImports:
                 VariableResolutionError,
                 ScriptExecutionError,
                 AuthenticationError,
-                TimeoutError,
+                ExecutionTimeoutError,
             )
 
             # Verify they are classes/types

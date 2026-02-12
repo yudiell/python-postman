@@ -6,7 +6,7 @@ substitution in URLs, headers, body content, and authentication parameters,
 with support for recursive resolution and circular reference protection.
 """
 
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any
 import json
 from .context import ExecutionContext
 from .exceptions import VariableResolutionError

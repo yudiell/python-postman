@@ -136,7 +136,7 @@ class VariableTracer:
                 references.append(
                     VariableReference(
                         variable_name,
-                        VariableScope.REQUEST,  # Using REQUEST as proxy for ENVIRONMENT
+                        VariableScope.ENVIRONMENT,
                         context.environment_variables[variable_name],
                         "environment context",
                     )

@@ -9,7 +9,7 @@ from python_postman.execution.exceptions import (
     VariableResolutionError,
     ScriptExecutionError,
     AuthenticationError,
-    TimeoutError,
+    ExecutionTimeoutError,
 )
 from python_postman.exceptions.base import PostmanCollectionError
 
@@ -312,13 +312,13 @@ class TestAuthenticationError:
         assert isinstance(error, Exception)
 
 
-class TestTimeoutError:
-    """Test cases for TimeoutError class."""
+class TestExecutionTimeoutError:
+    """Test cases for ExecutionTimeoutError class."""
 
     def test_basic_initialization(self):
         """Test basic initialization with message only."""
         message = "Operation timed out"
-        error = TimeoutError(message)
+        error = ExecutionTimeoutError(message)
 
         assert error.message == message
         assert error.timeout_type is None
@@ -329,7 +329,7 @@ class TestTimeoutError:
         """Test initialization with timeout type."""
         message = "Operation timed out"
         timeout_type = "request"
-        error = TimeoutError(message, timeout_type=timeout_type)
+        error = ExecutionTimeoutError(message, timeout_type=timeout_type)
 
         assert error.message == message
         assert error.timeout_type == timeout_type
@@ -339,7 +339,7 @@ class TestTimeoutError:
         """Test initialization with timeout duration."""
         message = "Operation timed out"
         timeout_duration = 30.0
-        error = TimeoutError(message, timeout_duration=timeout_duration)
+        error = ExecutionTimeoutError(message, timeout_duration=timeout_duration)
 
         assert error.message == message
         assert error.timeout_duration == timeout_duration
@@ -352,7 +352,7 @@ class TestTimeoutError:
         timeout_duration = 15.5
         details = {"operation": "pre_request_script", "script_name": "auth_setup"}
 
-        error = TimeoutError(
+        error = ExecutionTimeoutError(
             message,
             timeout_type=timeout_type,
             timeout_duration=timeout_duration,
@@ -367,8 +367,8 @@ class TestTimeoutError:
         assert error.details["operation"] == "pre_request_script"
 
     def test_inheritance_from_execution_error(self):
-        """Test that TimeoutError inherits from ExecutionError."""
-        error = TimeoutError("test")
+        """Test that ExecutionTimeoutError inherits from ExecutionError."""
+        error = ExecutionTimeoutError("test")
         assert isinstance(error, ExecutionError)
         assert isinstance(error, PostmanCollectionError)
         assert isinstance(error, Exception)
@@ -384,7 +384,7 @@ class TestExecutionExceptionHierarchy:
             VariableResolutionError("test"),
             ScriptExecutionError("test"),
             AuthenticationError("test"),
-            TimeoutError("test"),
+            ExecutionTimeoutError("test"),
         ]
 
         for exc in exceptions:
@@ -416,7 +416,7 @@ class TestExecutionExceptionHierarchy:
         variable_error = VariableResolutionError("variable")
         script_error = ScriptExecutionError("script")
         auth_error = AuthenticationError("auth")
-        timeout_error = TimeoutError("timeout")
+        timeout_error = ExecutionTimeoutError("timeout")
 
         exceptions = [
             request_error,
@@ -474,8 +474,8 @@ class TestExecutionExceptionHierarchy:
         assert auth_error.auth_type == "bearer"
         assert auth_error.auth_parameter == "token"
 
-        # Test TimeoutError details
-        timeout_error = TimeoutError(
+        # Test ExecutionTimeoutError details
+        timeout_error = ExecutionTimeoutError(
             "Timeout occurred", timeout_type="request", timeout_duration=30.0
         )
         assert timeout_error.timeout_type == "request"

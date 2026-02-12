@@ -22,7 +22,7 @@ Do you need to execute HTTP requests?
     ├─ Need to execute all requests? → Use execute_collection()
     ├─ Need to execute specific requests? → Use Search + execute_request()
     ├─ Need to chain requests? → Use ExecutionContext + Variables
-    ├─ Need to run tests? → Use Test Scripts + TestResults
+    ├─ Need to run tests? → Use Test Scripts + ScriptResults
     └─ Need custom execution logic? → Extend RequestExecutor
 ```
 
@@ -48,8 +48,7 @@ Do you need to execute HTTP requests?
 ```python
 from python_postman import PythonPostman
 
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Analyze structure
 print(f"Total requests: {len(collection.get_requests())}")
@@ -90,8 +89,7 @@ pip install python-postman
 from python_postman import PythonPostman
 from python_postman.execution import RequestExecutor, ExecutionContext
 
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 executor = RequestExecutor()
 context = ExecutionContext()
@@ -130,8 +128,7 @@ pip install python-postman[execution]
 ```python
 from python_postman import PythonPostman
 
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Modify all requests
 for request in collection.get_requests():
@@ -169,8 +166,7 @@ pip install python-postman
 ```python
 from python_postman import PythonPostman
 
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Validate structure
 result = collection.validate()
@@ -335,7 +331,7 @@ context = ExecutionContext()
 
 # First request - login
 login_result = await executor.execute_request(login_request, context=context)
-token = login_result.response.json()["token"]
+token = login_result.response.json["token"]
 
 # Store token for next request
 context.set_variable("auth_token", token)
@@ -408,9 +404,7 @@ class CustomExecutor(RequestExecutor):
 
 ```python
 executor = RequestExecutor(
-    timeout=30.0,
-    follow_redirects=True,
-    verify_ssl=True
+    client_config={"timeout": 30.0, "follow_redirects": True, "verify": True}
 )
 ```
 
@@ -473,7 +467,7 @@ pip install python-postman[dev]
 5. Report status
 
 ```python
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Validate
 if not collection.validate().is_valid:
@@ -503,7 +497,7 @@ if failed > 0:
 4. Include example responses
 
 ```python
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 for request in collection.get_requests():
     generate_doc_section(request)
@@ -523,7 +517,7 @@ for request in collection.get_requests():
 4. Modify and save
 
 ```python
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Find requests without auth
 for request in collection.get_requests():
@@ -551,8 +545,8 @@ critical_requests = collection.search() \
 
 for search_result in critical_requests:
     result = await executor.execute_request(search_result.request, context)
-    if result.duration_ms > 1000:
-        print(f"Slow: {search_result.request.name} - {result.duration_ms}ms")
+    if result.execution_time_ms > 1000:
+        print(f"Slow: {search_result.request.name} - {result.execution_time_ms}ms")
 ```
 
 ---
@@ -568,7 +562,7 @@ for search_result in critical_requests:
 3. Save new collection
 
 ```python
-collection = parser.parse("staging_collection.json")
+collection = PythonPostman.from_file("staging_collection.json")
 
 for request in collection.get_requests():
     request.url.host = request.url.host.replace("staging", "production")

@@ -1,0 +1,178 @@
+{
+	"info": {
+		"_postman_id": "8c9f8aaf-0ef4-4a95-ae6b-e8f017ae38ed",
+		"name": "Petroleum.gov.gy",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3009653",
+		"_collection_link": "https://rubrics.postman.co/workspace/Gunvor~78231e38-2193-4abd-9ba4-cb015422fcf6/collection/3009653-8c9f8aaf-0ef4-4a95-ae6b-e8f017ae38ed?action=share&source=collection_link&creator=3009653"
+	},
+	"item": [
+		{
+			"name": "Oil Production",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Referer",
+						"value": "https://docs.google.com/",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/spreadsheets/d/e/2PACX-1vTnrIe1-udDJ3J1kyXE9X1-94HNQEaVR22uLqNd2oT_PUZGXoW8icTWzJgba0cWBKF3xAf1TxuEQayC/pub?output=csv",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"spreadsheets",
+						"d",
+						"e",
+						"2PACX-1vTnrIe1-udDJ3J1kyXE9X1-94HNQEaVR22uLqNd2oT_PUZGXoW8icTWzJgba0cWBKF3xAf1TxuEQayC",
+						"pub"
+					],
+					"query": [
+						{
+							"key": "output",
+							"value": "csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Gas Injected Used and Flared Chart",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Referer",
+						"value": "https://docs.google.com/",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/spreadsheets/d/e/2PACX-1vRXF9_AtTKMIObeDAya9LUV6yOtPUP_bjQxjyZvj8p4j2RS2cFMigqNY8zBdi2CogxveznB5OWCCzG_/pub?output=csv",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"spreadsheets",
+						"d",
+						"e",
+						"2PACX-1vRXF9_AtTKMIObeDAya9LUV6yOtPUP_bjQxjyZvj8p4j2RS2cFMigqNY8zBdi2CogxveznB5OWCCzG_",
+						"pub"
+					],
+					"query": [
+						{
+							"key": "output",
+							"value": "csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Gas Production",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Referer",
+						"value": "https://docs.google.com/",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/spreadsheets/d/e/2PACX-1vTb6v-wF74oNmY-G5zo2zcI0Jxdyu9upEr_6WDOUXhIJy80z0BFJj2S6IdH8spnV9k2nURRFQ3Jv1i-/pub?output=csv",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"spreadsheets",
+						"d",
+						"e",
+						"2PACX-1vTb6v-wF74oNmY-G5zo2zcI0Jxdyu9upEr_6WDOUXhIJy80z0BFJj2S6IdH8spnV9k2nURRFQ3Jv1i-",
+						"pub"
+					],
+					"query": [
+						{
+							"key": "output",
+							"value": "csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Liza Unity Gold Payara Gold Oil Production",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Referer",
+						"value": "https://docs.google.com/",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/spreadsheets/d/e/2PACX-1vTrrcRCl4e6MgsC1mH6zAKAZ5n3rE7sG-cRWogmRN-oiLRsrKkb_vaAuXtLqEFqYbGZ8NgoWgSg4Uyo/pub?output=csv",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"spreadsheets",
+						"d",
+						"e",
+						"2PACX-1vTrrcRCl4e6MgsC1mH6zAKAZ5n3rE7sG-cRWogmRN-oiLRsrKkb_vaAuXtLqEFqYbGZ8NgoWgSg4Uyo",
+						"pub"
+					],
+					"query": [
+						{
+							"key": "output",
+							"value": "csv"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://docs.google.com",
+			"type": "string"
+		}
+	]
+}

@@ -56,8 +56,7 @@ pip install python-postman[execution]
 from python_postman import PythonPostman
 
 # Parse collection
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Analyze
 print(f"Collection: {collection.info.name}")
@@ -76,8 +75,7 @@ from python_postman import PythonPostman
 from python_postman.execution import RequestExecutor, ExecutionContext
 
 # Parse collection
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Setup execution
 executor = RequestExecutor()
@@ -85,10 +83,10 @@ context = ExecutionContext()
 context.set_variable("api_key", "your-key")
 
 # Execute
-results = await executor.execute_collection(collection, context=context)
+collection_result = await executor.execute_collection(collection, context=context)
 
 # Check results
-for result in results:
+for result in collection_result.results:
     print(f"{result.request.name}: {result.response.status_code}")
 ```
 
@@ -143,7 +141,7 @@ for result in results:
 **Example:**
 
 ```python
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Validate structure
 result = collection.validate()
@@ -177,7 +175,7 @@ for search_result in critical:
 **Example:**
 
 ```python
-collection = parser.parse("staging_collection.json")
+collection = PythonPostman.from_file("staging_collection.json")
 
 # Update URLs
 for request in collection.get_requests():
@@ -207,7 +205,7 @@ with open("production_collection.json", "w") as f:
 ```python
 from python_postman.introspection import AuthResolver
 
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Analyze authentication
 for request in collection.get_requests():
@@ -294,12 +292,12 @@ Collection
 
 Variables can be defined at multiple levels:
 
-1. Collection variables
-2. Environment variables
-3. Global variables
-4. Request variables (set in scripts)
+1. Request variables (highest precedence)
+2. Folder variables
+3. Collection variables
+4. Environment variables (lowest precedence)
 
-**Precedence:** Request > Environment > Collection > Global
+**Precedence:** Request > Folder > Collection > Environment
 
 ### Authentication
 

@@ -14,7 +14,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -25,9 +24,7 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP",
 ]
 requires-python = ">=3.9"
-dependencies = [
-    "httpx>=0.28.1",
-]
+dependencies = []
 
 [project.optional-dependencies]
 dev = [
@@ -39,6 +36,11 @@ dev = [
     "mypy>=1.0.0",
 ]
 execution = [
+    "httpx>=0.28.1",
+    "python-dotenv>=1.0.0",
+]
+all = [
+    "httpx>=0.28.1",
     "python-dotenv>=1.0.0",
 ]
 
@@ -68,7 +70,7 @@ markers = [
 
 [tool.black]
 line-length = 88
-target-version = ["py38"]
+target-version = ["py39"]
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -91,7 +93,7 @@ line_length = 88
 known_first_party = ["python_postman"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -105,7 +107,3 @@ warn_no_return = true
 warn_unreachable = true
 strict_equality = true
 
-[dependency-groups]
-dev = [
-    "pytest-asyncio>=1.2.0",
-]

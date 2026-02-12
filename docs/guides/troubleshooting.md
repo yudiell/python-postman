@@ -112,7 +112,7 @@ FileNotFoundError: [Errno 2] No such file or directory: 'collection.json'
    ```python
    import os
    file_path = os.path.abspath("collection.json")
-   collection = parser.parse(file_path)
+   collection = PythonPostman.from_file(file_path)
    ```
 
 3. Check working directory:
@@ -227,8 +227,8 @@ result = collection.validate()
    if not result.is_valid:
        for error in result.errors:
            print(f"Error: {error}")
-       for warning in result.warnings:
-           print(f"Warning: {warning}")
+       # ValidationResult has is_valid and errors attributes
+       print(f"Valid: {result.is_valid}")
    ```
 
 2. Common validation issues:
@@ -250,7 +250,7 @@ result = collection.validate()
 
 ```python
 result.success == False
-result.error_type == "timeout"
+isinstance(result.error, ExecutionTimeoutError)
 ```
 
 **Causes:**
@@ -264,7 +264,7 @@ result.error_type == "timeout"
 1. Increase timeout:
 
    ```python
-   executor = RequestExecutor(timeout=60.0)  # 60 seconds
+   executor = RequestExecutor(client_config={"timeout": 60.0})  # 60 seconds
    ```
 
 2. Check server is accessible:
@@ -275,7 +275,7 @@ result.error_type == "timeout"
 
 3. Test with longer timeout:
    ```python
-   executor = RequestExecutor(timeout=120.0)
+   executor = RequestExecutor(client_config={"timeout": 120.0})
    result = await executor.execute_request(request, context)
    ```
 
@@ -286,7 +286,7 @@ result.error_type == "timeout"
 **Symptoms:**
 
 ```python
-result.error_type == "ssl"
+isinstance(result.error, SSLError)
 SSLError: certificate verify failed
 ```
 
@@ -301,7 +301,7 @@ SSLError: certificate verify failed
 1. Disable SSL verification (development only):
 
    ```python
-   executor = RequestExecutor(verify_ssl=False)
+   executor = RequestExecutor(client_config={"verify": False})
    ```
 
 2. Provide custom CA bundle:
@@ -420,7 +420,7 @@ result.response.status_code == 403  # Forbidden
 **Symptoms:**
 
 ```python
-result.error_type == "connection"
+isinstance(result.error, ConnectionError)
 ConnectionRefusedError: [Errno 61] Connection refused
 ```
 
@@ -462,7 +462,7 @@ ConnectionRefusedError: [Errno 61] Connection refused
 **Symptoms:**
 
 ```python
-result.error_type == "script"
+isinstance(result.error, ScriptError)
 # Script execution error
 ```
 
@@ -511,17 +511,17 @@ result.test_results.failed > 0
 1. Check test results:
 
    ```python
-   for test in result.test_results.tests:
-       if not test.passed:
-           print(f"Failed: {test.name}")
-           print(f"Error: {test.error}")
+   for assertion in result.test_results.assertions:
+       if not assertion.passed:
+           print(f"Failed: {assertion.name}")
+           print(f"Error: {assertion.error}")
    ```
 
 2. Verify response format:
 
    ```python
    print(result.response.text)
-   print(result.response.json())
+   print(result.response.json)
    ```
 
 3. Update test expectations
@@ -731,10 +731,9 @@ if result.success:
     print(f"Status: {result.response.status_code}")
     print(f"Headers: {result.response.headers}")
     print(f"Body: {result.response.text}")
-    print(f"Duration: {result.duration_ms}ms")
+    print(f"Duration: {result.execution_time_ms}ms")
 else:
     print(f"Error: {result.error}")
-    print(f"Error type: {result.error_type}")
 ```
 
 ### Use Python Debugger
@@ -779,9 +778,7 @@ If you're still experiencing issues:
 
 ### Python Version Compatibility
 
-**Minimum Python Version:** 3.7+
-
-**Recommended:** Python 3.9+
+**Minimum Python Version:** 3.9+
 
 Check your Python version:
 

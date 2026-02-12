@@ -173,7 +173,7 @@ class AuthenticationError(ExecutionError):
         self.auth_parameter = auth_parameter
 
 
-class TimeoutError(ExecutionError):
+class ExecutionTimeoutError(ExecutionError):
     """
     Error due to request or script execution timeout.
 
