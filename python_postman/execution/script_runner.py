@@ -432,6 +432,7 @@ class ScriptRunner:
                 "ctypes", "socket", "http", "ftplib", "smtplib",
                 "webbrowser", "code", "codeop", "compile",
                 "importlib", "runpy", "pickletools", "shelve",
+                "builtins",
             })
 
             def _safe_import(name, *args, **kwargs):

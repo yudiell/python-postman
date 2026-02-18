@@ -725,8 +725,6 @@ class RequestExecutor:
 
         if hasattr(context, "collection_variables"):
             folder_context.collection_variables.update(context.collection_variables)
-        if hasattr(context, "environment_variables"):
-            folder_context.environment_variables.update(context.environment_variables)
 
         all_requests = list(folder.get_requests())
 
