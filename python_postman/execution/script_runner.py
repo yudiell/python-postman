@@ -6,6 +6,7 @@ scripts from Postman collections, providing a sandboxed environment for
 script execution with access to request/response data and variables.
 """
 
+import ast
 import re
 import json
 import time
@@ -110,7 +111,7 @@ class PostmanVariables:
 
     def has(self, key: str) -> bool:
         """Check if a variable exists."""
-        return self.context.get_variable(key) is not None
+        return self.context.has_variable(key)
 
 
 class PostmanResponse:
@@ -129,7 +130,7 @@ class PostmanResponse:
         """Get response body as JSON."""
         if not self.response:
             raise ScriptExecutionError("No response available")
-        return self.response.json()
+        return self.response.json
 
     def text(self) -> str:
         """Get response body as text."""
@@ -204,6 +205,65 @@ class PostmanExpect:
             raise AssertionError("Expected object with status property")
 
 
+class _ScriptASTValidator(ast.NodeVisitor):
+    """
+    AST validator that rejects dangerous patterns before exec().
+
+    Blocks sandbox escape vectors such as:
+    - Dunder attribute access (e.g., __class__, __bases__, __subclasses__)
+    - Direct dunder name usage in code
+    """
+
+    # Dunder attributes that enable sandbox escapes
+    _BLOCKED_ATTRS = frozenset({
+        "__class__", "__bases__", "__subclasses__", "__mro__",
+        "__globals__", "__builtins__", "__import__", "__loader__",
+        "__spec__", "__code__", "__func__", "__self__",
+        "__dict__", "__init_subclass__", "__set_name__",
+        "__reduce__", "__reduce_ex__", "__getattr__",
+        "__setattr__", "__delattr__", "__getattribute__",
+    })
+
+    def __init__(self) -> None:
+        self.errors: List[str] = []
+
+    def visit_Attribute(self, node: ast.Attribute) -> None:
+        if node.attr in self._BLOCKED_ATTRS:
+            self.errors.append(
+                f"Access to '{node.attr}' is not allowed in Postman scripts"
+            )
+        self.generic_visit(node)
+
+    def visit_Name(self, node: ast.Name) -> None:
+        if node.id in self._BLOCKED_ATTRS:
+            self.errors.append(
+                f"Use of '{node.id}' is not allowed in Postman scripts"
+            )
+        self.generic_visit(node)
+
+    @classmethod
+    def validate(cls, code: str) -> None:
+        """
+        Parse and validate Python code for disallowed patterns.
+
+        Args:
+            code: Python source code to validate
+
+        Raises:
+            ScriptExecutionError: If the code contains disallowed patterns
+        """
+        try:
+            tree = ast.parse(code)
+        except SyntaxError as e:
+            raise ScriptExecutionError(f"Script syntax error: {e}") from None
+        validator = cls()
+        validator.visit(tree)
+        if validator.errors:
+            raise ScriptExecutionError(
+                f"Script blocked by security policy: {'; '.join(validator.errors)}"
+            )
+
+
 class ScriptRunner:
     """
     Executes JavaScript-like scripts from Postman collections.
@@ -211,6 +271,21 @@ class ScriptRunner:
     The ScriptRunner provides a sandboxed environment for executing
     pre-request and test scripts, with access to variables, request
     data, and response data.
+
+    Security boundaries:
+        Scripts are executed via exec() with the following mitigations:
+        - **Restricted builtins**: Only a safe subset of Python builtins is available.
+        - **Import blocklist**: Dangerous modules (os, subprocess, sys, etc.) are blocked.
+        - **AST validation**: Before execution, scripts are parsed and inspected to reject
+          dunder attribute access (e.g., ``__class__``, ``__bases__``, ``__subclasses__``),
+          which prevents object-introspection-based sandbox escapes.
+        - **Thread-based timeout**: Scripts that exceed the timeout are interrupted (though
+          Python cannot forcibly kill threads, so CPU-bound infinite loops may linger as
+          daemon threads until process exit).
+
+        These mitigations significantly raise the bar for exploitation but do not provide
+        the same guarantees as a process-level sandbox. Scripts from untrusted sources
+        should be reviewed before execution.
     """
 
     def __init__(self, timeout: float = 30.0):
@@ -348,16 +423,85 @@ class ScriptRunner:
             # Convert JavaScript-like syntax to Python
             python_code = self._convert_js_to_python(script_content)
 
-            # Execute the converted code
-            start_time = time.time()
-            exec(python_code, env)
-            execution_time = time.time() - start_time
+            # AST validation — reject dangerous patterns before execution
+            _ScriptASTValidator.validate(python_code)
 
-            # Check for timeout
-            if execution_time > self.timeout:
+            # Restrict builtins for security — only allow safe operations
+            _BLOCKED_MODULES = frozenset({
+                "os", "subprocess", "sys", "shutil", "signal",
+                "ctypes", "socket", "http", "ftplib", "smtplib",
+                "webbrowser", "code", "codeop", "compile",
+                "importlib", "runpy", "pickletools", "shelve",
+            })
+
+            def _safe_import(name, *args, **kwargs):
+                if name.split(".")[0] in _BLOCKED_MODULES:
+                    raise ImportError(
+                        f"Import of '{name}' is not allowed in Postman scripts"
+                    )
+                return __builtins__["__import__"](name, *args, **kwargs) if isinstance(__builtins__, dict) else __import__(name, *args, **kwargs)
+
+            safe_builtins = {
+                "__import__": _safe_import,
+                "abs": abs,
+                "all": all,
+                "any": any,
+                "bool": bool,
+                "dict": dict,
+                "enumerate": enumerate,
+                "float": float,
+                "int": int,
+                "isinstance": isinstance,
+                "len": len,
+                "list": list,
+                "max": max,
+                "min": min,
+                "print": print,
+                "range": range,
+                "round": round,
+                "set": set,
+                "sorted": sorted,
+                "str": str,
+                "sum": sum,
+                "tuple": tuple,
+                "zip": zip,
+                "True": True,
+                "False": False,
+                "None": None,
+                "Exception": Exception,
+                "AssertionError": AssertionError,
+                "ValueError": ValueError,
+                "TypeError": TypeError,
+                "KeyError": KeyError,
+                "IndexError": IndexError,
+            }
+            env["__builtins__"] = safe_builtins
+
+            # Execute the converted code with a thread-based timeout
+            import threading
+
+            exec_exception = [None]
+
+            def _run_script():
+                try:
+                    exec(python_code, env)
+                except Exception as e:
+                    exec_exception[0] = e
+
+            thread = threading.Thread(target=_run_script, daemon=True)
+            start_time = time.time()
+            thread.start()
+            thread.join(timeout=self.timeout)
+
+            if thread.is_alive():
                 raise ScriptExecutionError(
                     f"Script execution timed out after {self.timeout}s"
                 )
+
+            if exec_exception[0] is not None:
+                raise exec_exception[0]
+
+            execution_time = time.time() - start_time
 
             # Return test results if this was a test script
             if response and "pm" in env:

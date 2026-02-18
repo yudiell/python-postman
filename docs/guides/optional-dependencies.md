@@ -45,8 +45,7 @@ pip install python-postman
 from python_postman import PythonPostman
 
 # Parse and analyze collection
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Validate
 result = collection.validate()
@@ -77,8 +76,8 @@ pip install python-postman[execution]
 
 **Additional Dependencies:**
 
-- `httpx` - Modern HTTP client for Python
-- `httpx[http2]` - HTTP/2 support (optional)
+- `httpx` >= 0.28.1 - Modern HTTP client for Python
+- `python-dotenv` >= 1.0.0 - Environment variable loading from .env files
 
 **What's Added:**
 
@@ -104,8 +103,7 @@ from python_postman import PythonPostman
 from python_postman.execution import RequestExecutor, ExecutionContext
 
 # Parse collection
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Execute requests
 executor = RequestExecutor()
@@ -134,7 +132,6 @@ pip install python-postman[dev]
 - `pytest-cov` - Coverage reporting
 - `mypy` - Type checking
 - `black` - Code formatting
-- `flake8` - Linting
 - `isort` - Import sorting
 
 **Use Cases:**
@@ -158,9 +155,6 @@ mypy python_postman
 
 # Format code
 black python_postman
-
-# Lint
-flake8 python_postman
 ```
 
 ---
@@ -178,7 +172,7 @@ pip install python-postman[all]
 Equivalent to:
 
 ```bash
-pip install python-postman[execution,dev]
+pip install python-postman[execution]
 ```
 
 ---
@@ -189,7 +183,7 @@ pip install python-postman[execution,dev]
 
 **Purpose:** HTTP client for request execution
 
-**Version:** >= 0.24.0
+**Version:** >= 0.28.1
 
 **Features:**
 
@@ -679,7 +673,6 @@ pip install python-postman[execution]
 
 ## Next Steps
 
-- [Installation Guide](installation.md)
-- [Quick Start](quickstart.md)
 - [Architecture Overview](../architecture/overview.md)
+- [Getting Started](../README.md)
 - [Troubleshooting](troubleshooting.md)

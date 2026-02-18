@@ -38,18 +38,19 @@ Entry point for loading collections.
 from python_postman import PythonPostman
 
 # Parse from file
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Parse from dictionary
-collection = parser.parse_dict(json_data)
+collection = PythonPostman.from_dict(json_data)
 ```
 
 **Key Methods:**
 
-- `parse(file_path)` - Parse collection from file
-- `parse_dict(data)` - Parse collection from dictionary
-- `validate(collection)` - Validate collection structure
+- `from_file(file_path)` - Parse collection from file (classmethod)
+- `from_json(json_string)` - Parse collection from JSON string (classmethod)
+- `from_dict(data)` - Parse collection from dictionary (classmethod)
+- `create_collection(name, description)` - Create new empty collection (classmethod)
+- `validate_collection_dict(data)` - Quick validation without creating Collection (classmethod)
 
 ### Collection
 
@@ -422,10 +423,6 @@ else:
     print("Validation errors:")
     for error in result.errors:
         print(f"  - {error}")
-
-    print("Validation warnings:")
-    for warning in result.warnings:
-        print(f"  - {warning}")
 ```
 
 **Validation Checks:**
@@ -457,7 +454,7 @@ with open("output.json", "w") as f:
 1. **Always validate collections after parsing**
 
    ```python
-   collection = parser.parse("collection.json")
+   collection = PythonPostman.from_file("collection.json")
    result = collection.validate()
    if not result.is_valid:
        handle_errors(result.errors)

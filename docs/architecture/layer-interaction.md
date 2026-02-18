@@ -50,8 +50,7 @@ Use only the model layer for collection analysis and manipulation.
 from python_postman import PythonPostman
 
 # Parse collection
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Analyze collection
 print(f"Collection: {collection.info.name}")
@@ -97,8 +96,7 @@ from python_postman import PythonPostman
 from python_postman.execution import RequestExecutor, ExecutionContext
 
 # Parse collection (Model Layer)
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Validate before execution (Model Layer)
 result = collection.validate()
@@ -133,8 +131,7 @@ from python_postman import PythonPostman
 from python_postman.execution import RequestExecutor, ExecutionContext
 
 # Parse and filter (Model Layer)
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Find specific requests to execute
 auth_requests = collection.search() \
@@ -171,8 +168,7 @@ from python_postman.introspection import AuthResolver
 from python_postman.execution import RequestExecutor, ExecutionContext
 
 # Parse collection
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Introspect authentication (Model Layer)
 for request in collection.get_requests():
@@ -203,8 +199,7 @@ from python_postman import PythonPostman
 from python_postman.execution import RequestExecutor, ExecutionContext
 
 # Parse collection
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Transform collection (Model Layer)
 for request in collection.get_requests():
@@ -240,27 +235,26 @@ from python_postman import PythonPostman
 from python_postman.execution import RequestExecutor, ExecutionContext
 
 # Parse and execute
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 executor = RequestExecutor()
 context = ExecutionContext()
-results = await executor.execute_collection(collection, context=context)
+collection_result = await executor.execute_collection(collection, context=context)
 
 # Analyze results (Model Layer + Execution Layer)
-success_count = sum(1 for r in results if r.success)
-failure_count = sum(1 for r in results if not r.success)
+success_count = sum(1 for r in collection_result.results if r.success)
+failure_count = sum(1 for r in collection_result.results if not r.success)
 
-print(f"Success: {success_count}/{len(results)}")
-print(f"Failure: {failure_count}/{len(results)}")
+print(f"Success: {success_count}/{len(collection_result.results)}")
+print(f"Failure: {failure_count}/{len(collection_result.results)}")
 
 # Group by status code
 from collections import Counter
-status_codes = Counter(r.response.status_code for r in results if r.success)
+status_codes = Counter(r.response.status_code for r in collection_result.results if r.success)
 print(f"Status codes: {status_codes}")
 
 # Find slow requests
-slow_requests = [r for r in results if r.duration_ms > 1000]
+slow_requests = [r for r in collection_result.results if r.execution_time_ms > 1000]
 print(f"Slow requests (>1s): {len(slow_requests)}")
 ```
 
@@ -282,8 +276,7 @@ from python_postman import PythonPostman
 from python_postman.execution import RequestExecutor, ExecutionContext
 
 # 1. Parse (Model Layer)
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # 2. Inspect (Model Layer)
 print(f"Collection: {collection.info.name}")
@@ -329,8 +322,7 @@ Use model layer to generate API documentation.
 from python_postman import PythonPostman
 
 # Parse collection
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Generate markdown documentation
 def generate_docs(collection):
@@ -372,8 +364,7 @@ from python_postman import PythonPostman
 from python_postman.execution import RequestExecutor, ExecutionContext
 
 # Parse collection
-parser = PythonPostman()
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 
 # Validate structure
 validation_result = collection.validate()
@@ -445,7 +436,7 @@ result = await executor.execute_request(request, context=context)
 example_response = ExampleResponse(
     name="Success Response",
     code=result.response.status_code,
-    status=result.response.reason,
+    status="OK",
     headers=[
         Header(key=k, value=v)
         for k, v in result.response.headers.items()
@@ -498,7 +489,7 @@ Keep model operations separate from execution operations.
 
 ```python
 # Good - clear separation
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 filtered_requests = collection.search().by_method("POST").execute()
 
 executor = RequestExecutor()
@@ -506,7 +497,7 @@ for search_result in filtered_requests:
     result = await executor.execute_request(search_result.request)
 
 # Bad - mixing concerns
-collection = parser.parse("collection.json")
+collection = PythonPostman.from_file("collection.json")
 for item in collection.items:
     if isinstance(item, Request) and item.method == "POST":
         result = await executor.execute_request(item)
@@ -519,7 +510,7 @@ Handle errors appropriately for each layer.
 ```python
 # Model layer errors
 try:
-    collection = parser.parse("collection.json")
+    collection = PythonPostman.from_file("collection.json")
 except FileNotFoundError:
     print("Collection file not found")
 except ValueError as e:

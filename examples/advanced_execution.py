@@ -70,7 +70,7 @@ async def main():
                 "application/json"
             ):
                 try:
-                    data = result.response.json()
+                    data = result.response.json
                     print(f"User name: {data.get('name', 'N/A')}")
                 except:
                     print("Response is not valid JSON")

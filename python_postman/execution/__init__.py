@@ -35,7 +35,7 @@ from .exceptions import (
     VariableResolutionError,
     ScriptExecutionError,
     AuthenticationError,
-    TimeoutError,
+    ExecutionTimeoutError,
 )
 
 __all__ = [
@@ -60,5 +60,5 @@ __all__ = [
     "VariableResolutionError",
     "ScriptExecutionError",
     "AuthenticationError",
-    "TimeoutError",
+    "ExecutionTimeoutError",
 ]

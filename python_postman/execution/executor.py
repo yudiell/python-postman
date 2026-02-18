@@ -187,20 +187,20 @@ class RequestExecutor:
 
         # Extract variables from folder
         folder_vars = {}
-        if folder and hasattr(folder, "variable") and folder.variable:
-            for var in folder.variable:
+        if folder and hasattr(folder, "variables") and folder.variables:
+            for var in folder.variables:
                 if hasattr(var, "key") and hasattr(var, "value"):
                     folder_vars[var.key] = var.value
 
         # Extract variables from request
         request_vars = {}
-        if request and hasattr(request, "variable") and request.variable:
-            for var in request.variable:
+        if request and hasattr(request, "variables") and request.variables:
+            for var in request.variables:
                 if hasattr(var, "key") and hasattr(var, "value"):
                     request_vars[var.key] = var.value
 
-        # Merge with overrides and additional variables
-        environment_vars = {**self.variable_overrides, **(additional_variables or {})}
+        # Merge additional variables with overrides taking highest precedence
+        environment_vars = {**(additional_variables or {}), **self.variable_overrides}
 
         context = ExecutionContext(
             collection_variables=collection_vars,
@@ -328,9 +328,21 @@ class RequestExecutor:
             self._sync_client.close()
             self._sync_client = None
         if self._async_client:
-            # Note: async client close should be awaited, but we can't do that in sync method
-            # Users should call aclose() for proper async cleanup
-            self._async_client = None
+            import asyncio
+
+            try:
+                try:
+                    loop = asyncio.get_running_loop()
+                    # We're inside an event loop — schedule the close
+                    loop.create_task(self._async_client.aclose())
+                except RuntimeError:
+                    # No running event loop — safe to run synchronously
+                    asyncio.run(self._async_client.aclose())
+            except Exception:
+                # Best-effort close; don't let cleanup errors propagate
+                pass
+            finally:
+                self._async_client = None
 
     async def aclose(self) -> None:
         """Close HTTP clients asynchronously and clean up resources."""
@@ -543,6 +555,69 @@ class RequestExecutor:
             execution_time_ms=execution_time_ms,
         )
 
+    async def _execute_requests(
+        self,
+        all_requests: list,
+        context: ExecutionContext,
+        result: Union[CollectionExecutionResult, FolderExecutionResult],
+        parallel: bool = False,
+        stop_on_error: bool = False,
+    ) -> None:
+        """
+        Execute a list of requests and populate the result object.
+
+        Args:
+            all_requests: List of Request objects to execute
+            context: Execution context with variables and state
+            result: Result object to populate (CollectionExecutionResult or FolderExecutionResult)
+            parallel: Whether to execute requests in parallel
+            stop_on_error: Whether to stop execution on first error
+        """
+        import asyncio
+
+        if parallel:
+            if all_requests:
+                tasks = []
+                for request in all_requests:
+                    task = asyncio.create_task(self.execute_request(request, context))
+                    tasks.append(task)
+
+                execution_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+                for i, exec_result in enumerate(execution_results):
+                    if isinstance(exec_result, Exception):
+                        failed_result = ExecutionResult(
+                            request=all_requests[i],
+                            error=exec_result,
+                            execution_time_ms=0.0,
+                        )
+                        result.add_result(failed_result)
+
+                        if stop_on_error:
+                            break
+                    else:
+                        result.add_result(exec_result)
+
+                        if stop_on_error and not exec_result.success:
+                            break
+        else:
+            for request in all_requests:
+                try:
+                    exec_result = await self.execute_request(request, context)
+                    result.add_result(exec_result)
+
+                    if stop_on_error and not exec_result.success:
+                        break
+
+                except Exception as e:
+                    failed_result = ExecutionResult(
+                        request=request, error=e, execution_time_ms=0.0
+                    )
+                    result.add_result(failed_result)
+
+                    if stop_on_error:
+                        break
+
     async def execute_collection(
         self,
         collection: Collection,
@@ -594,80 +669,26 @@ class RequestExecutor:
             ...     collection, context=context
             ... )
         """
-        import asyncio
-
         execution_start = time.time()
 
-        # Create collection execution result
         result = CollectionExecutionResult(
             collection_name=(
                 collection.info.name if collection.info else "Unknown Collection"
             )
         )
 
-        # Create execution context for the collection
         if context is None:
             context = self._create_execution_context(collection=collection)
 
-        # Get all requests from the collection
         all_requests = list(collection.get_requests())
 
-        # Set collection reference on requests for auth inheritance
         for request in all_requests:
             request._collection = collection
 
-        if parallel:
-            # Execute requests in parallel
-            if all_requests:
-                # Create tasks for all requests
-                tasks = []
-                for request in all_requests:
-                    task = asyncio.create_task(self.execute_request(request, context))
-                    tasks.append(task)
+        await self._execute_requests(
+            all_requests, context, result, parallel, stop_on_error
+        )
 
-                # Wait for all tasks to complete
-                execution_results = await asyncio.gather(*tasks, return_exceptions=True)
-
-                # Process results and handle exceptions
-                for i, exec_result in enumerate(execution_results):
-                    if isinstance(exec_result, Exception):
-                        # Create failed execution result for exceptions
-                        failed_result = ExecutionResult(
-                            request=all_requests[i],
-                            error=exec_result,
-                            execution_time_ms=0.0,
-                        )
-                        result.add_result(failed_result)
-
-                        if stop_on_error:
-                            break
-                    else:
-                        result.add_result(exec_result)
-
-                        if stop_on_error and not exec_result.success:
-                            break
-        else:
-            # Execute requests sequentially
-            for request in all_requests:
-                try:
-                    exec_result = await self.execute_request(request, context)
-                    result.add_result(exec_result)
-
-                    # Stop on error if configured
-                    if stop_on_error and not exec_result.success:
-                        break
-
-                except Exception as e:
-                    # Create failed execution result for exceptions
-                    failed_result = ExecutionResult(
-                        request=request, error=e, execution_time_ms=0.0
-                    )
-                    result.add_result(failed_result)
-
-                    if stop_on_error:
-                        break
-
-        # Calculate total execution time
         execution_end = time.time()
         result.total_time_ms = (execution_end - execution_start) * 1000
 
@@ -692,89 +713,32 @@ class RequestExecutor:
         Returns:
             FolderExecutionResult: Result of the folder execution
         """
-        import asyncio
-
         execution_start = time.time()
 
-        # Create folder execution result
         result = FolderExecutionResult(folder_name=folder.name)
 
-        # Create child context with folder variables
         folder_context = self._create_execution_context(
             collection=getattr(context, "_collection", None),
             folder=folder,
             additional_variables=context.environment_variables,
         )
 
-        # Merge parent context variables with folder context
         if hasattr(context, "collection_variables"):
             folder_context.collection_variables.update(context.collection_variables)
         if hasattr(context, "environment_variables"):
             folder_context.environment_variables.update(context.environment_variables)
 
-        # Get all requests from the folder (including nested folders)
         all_requests = list(folder.get_requests())
 
-        # Set collection reference on requests for auth inheritance
         collection = getattr(context, "_collection", None)
         for request in all_requests:
             if not hasattr(request, "_collection") or request._collection is None:
                 request._collection = collection
 
-        if parallel:
-            # Execute requests in parallel
-            if all_requests:
-                # Create tasks for all requests
-                tasks = []
-                for request in all_requests:
-                    task = asyncio.create_task(
-                        self.execute_request(request, folder_context)
-                    )
-                    tasks.append(task)
+        await self._execute_requests(
+            all_requests, folder_context, result, parallel, stop_on_error
+        )
 
-                # Wait for all tasks to complete
-                execution_results = await asyncio.gather(*tasks, return_exceptions=True)
-
-                # Process results and handle exceptions
-                for i, exec_result in enumerate(execution_results):
-                    if isinstance(exec_result, Exception):
-                        # Create failed execution result for exceptions
-                        failed_result = ExecutionResult(
-                            request=all_requests[i],
-                            error=exec_result,
-                            execution_time_ms=0.0,
-                        )
-                        result.add_result(failed_result)
-
-                        if stop_on_error:
-                            break
-                    else:
-                        result.add_result(exec_result)
-
-                        if stop_on_error and not exec_result.success:
-                            break
-        else:
-            # Execute requests sequentially
-            for request in all_requests:
-                try:
-                    exec_result = await self.execute_request(request, folder_context)
-                    result.add_result(exec_result)
-
-                    # Stop on error if configured
-                    if stop_on_error and not exec_result.success:
-                        break
-
-                except Exception as e:
-                    # Create failed execution result for exceptions
-                    failed_result = ExecutionResult(
-                        request=request, error=e, execution_time_ms=0.0
-                    )
-                    result.add_result(failed_result)
-
-                    if stop_on_error:
-                        break
-
-        # Calculate total execution time
         execution_end = time.time()
         result.total_time_ms = (execution_end - execution_start) * 1000
 

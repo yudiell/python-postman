@@ -233,19 +233,47 @@ class RequestQuery:
     def execute_iter(self) -> Iterator[SearchResult]:
         """
         Execute query and return results as an iterator.
-        
-        This is more memory-efficient for large result sets.
-        
+
+        This is more memory-efficient for large result sets as results
+        are yielded incrementally without building the full list first.
+
         Returns:
             Iterator of SearchResult objects matching the query
-            
+
         Examples:
             >>> for result in collection.search().by_method("POST").execute_iter():
             ...     print(f"Processing: {result.request.name}")
             ...     # Process each result without loading all into memory
         """
-        for result in self.execute():
-            yield result
+        yield from self._search_items_iter(self.collection.items, [])
+
+    def _search_items_iter(
+        self,
+        items: List["Item"],
+        path: List[str],
+    ) -> Iterator[SearchResult]:
+        """
+        Recursively search through items, yielding results incrementally.
+
+        Args:
+            items: List of items to search
+            path: Current path in the hierarchy
+        """
+        from ..models.request import Request
+        from ..models.folder import Folder
+
+        for item in items:
+            if isinstance(item, Request):
+                if self._folder_filter:
+                    if self._folder_filter not in path:
+                        continue
+                if all(f(item) for f in self.filters):
+                    yield SearchResult(item, path + [item.name])
+            elif isinstance(item, Folder):
+                yield from self._search_items_iter(
+                    item.items,
+                    path + [item.name],
+                )
 
     def _search_items(
         self,

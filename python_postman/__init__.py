@@ -83,14 +83,14 @@ try:
         VariableResolutionError,
         ScriptExecutionError,
         AuthenticationError,
-        TimeoutError,
+        ExecutionTimeoutError,
     )
 
     _EXECUTION_AVAILABLE = True
 except ImportError:
     _EXECUTION_AVAILABLE = False
 
-__version__ = "0.8.0"
+__version__ = "0.9.0"
 __author__ = "Python Postman Contributors"
 __email__ = "python-postman@example.com"
 __license__ = "MIT"
@@ -190,6 +190,6 @@ if _EXECUTION_AVAILABLE:
             "VariableResolutionError",
             "ScriptExecutionError",
             "AuthenticationError",
-            "TimeoutError",
+            "ExecutionTimeoutError",
         ]
     )

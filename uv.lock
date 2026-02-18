@@ -462,14 +462,23 @@ wheels = [
 ]
 
 [[package]]
-name = "python-postman"
-version = "0.8.0"
-source = { editable = "." }
-dependencies = [
-    { name = "httpx" },
+name = "python-dotenv"
+version = "1.2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f0/26/19cadc79a718c5edbec86fd4919a6b6d3f681039a2f6d66d14be94e75fb9/python_dotenv-1.2.1.tar.gz", hash = "sha256:42667e897e16ab0d66954af0e60a9caa94f0fd4ecf3aaf6d2d260eec1aa36ad6", size = 44221, upload-time = "2025-10-26T15:12:10.434Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/14/1b/a298b06749107c305e1fe0f814c6c74aea7b2f1e10989cb30f544a1b3253/python_dotenv-1.2.1-py3-none-any.whl", hash = "sha256:b81ee9561e9ca4004139c6cbba3a238c32b03e4894671e181b671e8cb8425d61", size = 21230, upload-time = "2025-10-26T15:12:09.109Z" },
 ]
 
+[[package]]
+name = "python-postman"
+version = "0.9.0"
+source = { editable = "." }
+
 [package.optional-dependencies]
+all = [
+    { name = "httpx" },
+]
 dev = [
     { name = "black" },
     { name = "isort" },
@@ -477,27 +486,25 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
+    { name = "python-dotenv" },
 ]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest-asyncio" },
+execution = [
+    { name = "httpx" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "black", marker = "extra == 'dev'", specifier = ">=23.0.0" },
-    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "httpx", marker = "extra == 'all'", specifier = ">=0.28.1" },
+    { name = "httpx", marker = "extra == 'execution'", specifier = ">=0.28.1" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=5.12.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4.2" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.21.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0.0" },
+    { name = "python-dotenv", marker = "extra == 'dev'", specifier = ">=1.0.0" },
 ]
-provides-extras = ["dev"]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest-asyncio", specifier = ">=1.2.0" }]
+provides-extras = ["dev", "execution", "all"]
 
 [[package]]
 name = "pytokens"

@@ -21,6 +21,8 @@ class AuthTypeEnum(str, Enum):
     NTLM = "ntlm"
     APIKEY = "apikey"
     AWSV4 = "awsv4"
+    JWT = "jwt"
+    EDGEGRID = "edgegrid"
 
 
 # Literal type for static type checking
@@ -35,6 +37,8 @@ AuthTypeLiteral = Literal[
     "ntlm",
     "apikey",
     "awsv4",
+    "jwt",
+    "edgegrid",
 ]
 
 # Union type for flexibility - accepts both literal types and strings

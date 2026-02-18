@@ -44,6 +44,11 @@ class ValidationResult:
     def __repr__(self) -> str:
         return f"ValidationResult(is_valid={self.is_valid}, errors={self.errors})"
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ValidationResult):
+            return False
+        return self.is_valid == other.is_valid and self.errors == other.errors
+
 
 class Collection:
     """
@@ -201,9 +206,24 @@ class Collection:
         for event_data in events_data:
             events.append(Event.from_dict(event_data))
 
-        return cls(
+        collection = cls(
             info=info, items=items, variables=variables, auth=auth, events=events
         )
+
+        # Wire up parent hierarchy references
+        def _wire_hierarchy(item_list: list, parent_folder: "Folder" = None) -> None:
+            for item in item_list:
+                if isinstance(item, Request):
+                    item._collection = collection
+                    item._parent_folder = parent_folder
+                elif isinstance(item, Folder):
+                    item._collection = collection
+                    item._parent_folder = parent_folder
+                    _wire_hierarchy(item.items, item)
+
+        _wire_hierarchy(items)
+
+        return collection
 
     def to_dict(self) -> dict:
         """
@@ -228,6 +248,18 @@ class Collection:
 
         return result
 
+    def to_json(self, indent: Optional[int] = None) -> str:
+        """Serialize collection to JSON string.
+
+        Args:
+            indent: JSON indentation level (None for compact)
+
+        Returns:
+            JSON string representation of the collection
+        """
+        import json
+        return json.dumps(self.to_dict(), indent=indent)
+
     def get_requests(self) -> Iterator["Request"]:
         """
         Get all requests in the collection, traversing folders recursively.
@@ -237,6 +269,25 @@ class Collection:
         """
         for item in self.items:
             yield from item.get_requests()
+
+    def get_folders(self) -> Iterator["Folder"]:
+        """
+        Get all folders in the collection, traversing nested folders recursively.
+
+        Returns:
+            Iterator of all Folder objects in the collection
+        """
+        for item in self.items:
+            if isinstance(item, Folder):
+                yield item
+                yield from self._get_subfolders_recursive(item)
+
+    def _get_subfolders_recursive(self, folder: "Folder") -> Iterator["Folder"]:
+        """Recursively yield all subfolders of a folder."""
+        for item in folder.items:
+            if isinstance(item, Folder):
+                yield item
+                yield from self._get_subfolders_recursive(item)
 
     def list_requests(self) -> List[str]:
         """

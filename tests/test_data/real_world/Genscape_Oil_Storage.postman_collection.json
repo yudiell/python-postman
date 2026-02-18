@@ -1,0 +1,1047 @@
+{
+	"info": {
+		"_postman_id": "1ac1efde-fb29-47c3-979b-ad2415d2d087",
+		"name": "Genscape Oil Storage",
+		"description": "Crude oil storage data for terminals located around the world. Refined product and renewables storage data for select terminals in North America and Europe.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3009653"
+	},
+	"item": [
+		{
+			"name": "v1",
+			"item": [
+				{
+					"name": "region-volumes",
+					"item": [
+						{
+							"name": "Oil Storage By Region",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/v1/region-volumes?limit=5000&offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"v1",
+										"region-volumes"
+									],
+									"query": [
+										{
+											"key": "regions",
+											"value": "Patoka",
+											"description": "List of regions to return separated by commas",
+											"disabled": true
+										},
+										{
+											"key": "products",
+											"value": "",
+											"description": "List of products to return, separated by commas",
+											"disabled": true
+										},
+										{
+											"key": "revision",
+											"value": "published",
+											"description": "Specify originally published or revised data",
+											"disabled": true
+										},
+										{
+											"key": "limit",
+											"value": "5000",
+											"description": "Format - int64. When provided, **only** the specified number _(0-5000)_ of records will be provided. This value is used to help implement paging through results. When this parameter is not provided, only 200 records will be returned"
+										},
+										{
+											"key": "offset",
+											"value": "0",
+											"description": "Format - int64. When provided, the specified number of records will be skipped. This value should be provided when wishing to page through results. When not provided, the returned records will start with the first record."
+										},
+										{
+											"key": "startDate",
+											"value": "<date>",
+											"description": "Format - date (as full-date in RFC3339). Beginning of date range (e.g. \"YYYY-MM-DD\")",
+											"disabled": true
+										},
+										{
+											"key": "endDate",
+											"value": "<date>",
+											"description": "Format - date (as full-date in RFC3339). End of date range (e.g. \"YYYY-MM-DD\")",
+											"disabled": true
+										},
+										{
+											"key": "format",
+											"value": "json",
+											"description": "Specify the format of the response data. If not provided, the type specified by the `Accept` header will be used. If neither are provided, the type returned will be JSON.",
+											"disabled": true
+										}
+									]
+								},
+								"description": "This dataset contains historical data for the following regions:\n\n* ARA - Updated at 10AM CET every Wednesday. Data available from August 2012\n* Canada - Updated at 10AM ET every Tuesday. Data available from April 2011\n* Cushing - Updated Monday and Thursday at 10AM ET. Data available from May 2009\n* Louisiana Gulf Coast - Updated at 10AM ET every Tuesday. Data available from May 2012\n* Patoka - Updated at 10AM ET every Monday. Data available from June 2010\n* Texas Gulf Coast - Updated at 10AM ET every Tuesday. Data available from July 2014\n* West Texas - Updated at 10AM ET every Monday. Data available from October 2010\n\nRefined Products and Renewables:\n* ARA Gasoil & Jet Fuel - Updated at 10AM CET every Wednesday. Data available from August 2012\n* ARA Gasoline & Naphtha - Updated at 10AM CET every Wednesday. Data available from September 2015\n* ARA Ethanol & Methanol - Updated at 10AM CET every Wednesday. Data available from January 2019\n* ARA Biodiesel & Renewable Diesel - Updated at 10AM CET every Wednesday. Data available from January 2022\n* New York Harbor - Updated at 10AM ET every Tuesday. Data available from November 2013\n* Gulf Coast Ethanol - Updated at 10AM ET every Tuesday. Data available from November 2014\n* Chicago Ethanol - Updated at 12PM ET every Monday. Data available from August 2014\n\n\\* All updates subject to holiday delays – refer to the Holiday delay schedule for rescheduled publication dates"
+							},
+							"response": [
+								{
+									"name": "Storage volume measurements by region",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											},
+											{
+												"key": "Gen-Api-Key",
+												"value": "<API Key>",
+												"description": "Added as a part of security scheme: apikey"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/v1/region-volumes?regions=Patoka&products=&revision=published&limit=200&offset=0&startDate=<date>&endDate=<date>&format=json",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"v1",
+												"region-volumes"
+											],
+											"query": [
+												{
+													"key": "regions",
+													"value": "Patoka",
+													"description": "List of regions to return separated by commas"
+												},
+												{
+													"key": "products",
+													"value": "",
+													"description": "List of products to return, separated by commas"
+												},
+												{
+													"key": "revision",
+													"value": "published",
+													"description": "Specify originally published or revised data"
+												},
+												{
+													"key": "limit",
+													"value": "200",
+													"description": "Format - int64. When provided, **only** the specified number _(0-5000)_ of records will be provided. This value is used to help implement paging through results. When this parameter is not provided, only 200 records will be returned"
+												},
+												{
+													"key": "offset",
+													"value": "0",
+													"description": "Format - int64. When provided, the specified number of records will be skipped. This value should be provided when wishing to page through results. When not provided, the returned records will start with the first record."
+												},
+												{
+													"key": "startDate",
+													"value": "<date>",
+													"description": "Format - date (as full-date in RFC3339). Beginning of date range (e.g. \"YYYY-MM-DD\")"
+												},
+												{
+													"key": "endDate",
+													"value": "<date>",
+													"description": "Format - date (as full-date in RFC3339). End of date range (e.g. \"YYYY-MM-DD\")"
+												},
+												{
+													"key": "format",
+													"value": "json",
+													"description": "Specify the format of the response data. If not provided, the type specified by the `Accept` header will be used. If neither are provided, the type returned will be JSON."
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"data\": [\n    {\n      \"reportDate\": \"<date>\",\n      \"region\": \"<string>\",\n      \"product\": \"<string>\",\n      \"storageAmount\": \"<long>\",\n      \"operationalCapacity\": \"<long>\",\n      \"capacityUtilization\": \"<float>\",\n      \"units\": \"<string>\"\n    },\n    {\n      \"reportDate\": \"<date>\",\n      \"region\": \"<string>\",\n      \"product\": \"<string>\",\n      \"storageAmount\": \"<long>\",\n      \"operationalCapacity\": \"<long>\",\n      \"capacityUtilization\": \"<float>\",\n      \"units\": \"<string>\"\n    }\n  ]\n}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "tank-volumes",
+					"item": [
+						{
+							"name": "Oil Storage By Tank",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/v1/tank-volumes?limit=5000&offset=0&startDate=1900-01-01",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"v1",
+										"tank-volumes"
+									],
+									"query": [
+										{
+											"key": "regions",
+											"value": "Patoka",
+											"description": "List of regions to return separated by commas",
+											"disabled": true
+										},
+										{
+											"key": "products",
+											"value": "GasolineComponents",
+											"description": "List of products to return, separated by commas",
+											"disabled": true
+										},
+										{
+											"key": "revision",
+											"value": "published",
+											"description": "Specify originally published or revised data",
+											"disabled": true
+										},
+										{
+											"key": "limit",
+											"value": "5000",
+											"description": "Format - int64. When provided, **only** the specified number _(0-5000)_ of records will be provided. This value is used to help implement paging through results. When this parameter is not provided, only 200 records will be returned"
+										},
+										{
+											"key": "offset",
+											"value": "0",
+											"description": "Format - int64. When provided, the specified number of records will be skipped. This value should be provided when wishing to page through results. When not provided, the returned records will start with the first record."
+										},
+										{
+											"key": "startDate",
+											"value": "1900-01-01",
+											"description": "Format - date (as full-date in RFC3339). Beginning of date range (e.g. \"YYYY-MM-DD\")"
+										},
+										{
+											"key": "endDate",
+											"value": "<date>",
+											"description": "Format - date (as full-date in RFC3339). End of date range (e.g. \"YYYY-MM-DD\")",
+											"disabled": true
+										},
+										{
+											"key": "format",
+											"value": "json",
+											"description": "Specify the format of the response data. If not provided, the type specified by the `Accept` header will be used. If neither are provided, the type returned will be JSON.",
+											"disabled": true
+										},
+										{
+											"key": "utcOffset",
+											"value": "<string>",
+											"description": "When provided, the specified time offset from UTC while be applied to all date-time fields in the data response.  The offset must be specified in hours (hh) and optionally minutes (mm) in the form of (-)hh, (-)hh:mm, or (-)hhmm. Prefix with a minus (-) to designate a negative offset. Examples: -05:00, 02:00, -0500, 02, -04",
+											"disabled": true
+										}
+									]
+								},
+								"description": "This dataset contains historical data for the following regions:\n\n* ARA - Updated at 10AM CET every Wednesday. Data available from August 2012\n* Canada - Updated at 10AM ET every Tuesday. Data available from April 2011\n* Cushing - Updated Monday and Thursday at 10AM ET. Data available from May 2009\n* Louisiana Gulf Coast - Updated at 10AM ET every Tuesday. Data available from May 2012\n* Patoka - Updated at 10AM ET every Monday. Data available from June 2010\n* Texas Gulf Coast - Updated at 10AM ET every Tuesday. Data available from July 2014\n* West Texas - Updated at 10AM ET every Monday. Data available from October 2010\n\nRefined Products and Renewables:\n* ARA Gasoil & Jet Fuel - Updated at 10AM CET every Wednesday. Data available from August 2012\n* ARA Gasoline & Naphtha - Updated at 10AM CET every Wednesday. Data available from September 2015\n* ARA Ethanol & Methanol - Updated at 10AM CET every Wednesday. Data available from January 2019\n* ARA Biodiesel & Renewable Diesel - Updated at 10AM CET every Wednesday. Data available from January 2022\n* New York Harbor - Updated at 10AM ET every Tuesday. Data available from November 2013\n* Gulf Coast Ethanol - Updated at 10AM ET every Tuesday. Data available from November 2014\n* Chicago Ethanol - Updated at 12PM ET every Monday. Data available from August 2014\n\n\\* All updates subject to holiday delays – refer to the Holiday delay schedule for rescheduled publication dates"
+							},
+							"response": [
+								{
+									"name": "Storage volume measurements by tank",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											},
+											{
+												"key": "Gen-Api-Key",
+												"value": "<API Key>",
+												"description": "Added as a part of security scheme: apikey"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/v1/tank-volumes?regions=Patoka&products=GasolineComponents&revision=published&limit=200&offset=0&startDate=<date>&endDate=<date>&format=json&utcOffset=<string>",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"v1",
+												"tank-volumes"
+											],
+											"query": [
+												{
+													"key": "regions",
+													"value": "Patoka",
+													"description": "List of regions to return separated by commas"
+												},
+												{
+													"key": "products",
+													"value": "GasolineComponents",
+													"description": "List of products to return, separated by commas"
+												},
+												{
+													"key": "revision",
+													"value": "published",
+													"description": "Specify originally published or revised data"
+												},
+												{
+													"key": "limit",
+													"value": "200",
+													"description": "Format - int64. When provided, **only** the specified number _(0-5000)_ of records will be provided. This value is used to help implement paging through results. When this parameter is not provided, only 200 records will be returned"
+												},
+												{
+													"key": "offset",
+													"value": "0",
+													"description": "Format - int64. When provided, the specified number of records will be skipped. This value should be provided when wishing to page through results. When not provided, the returned records will start with the first record."
+												},
+												{
+													"key": "startDate",
+													"value": "<date>",
+													"description": "Format - date (as full-date in RFC3339). Beginning of date range (e.g. \"YYYY-MM-DD\")"
+												},
+												{
+													"key": "endDate",
+													"value": "<date>",
+													"description": "Format - date (as full-date in RFC3339). End of date range (e.g. \"YYYY-MM-DD\")"
+												},
+												{
+													"key": "format",
+													"value": "json",
+													"description": "Specify the format of the response data. If not provided, the type specified by the `Accept` header will be used. If neither are provided, the type returned will be JSON."
+												},
+												{
+													"key": "utcOffset",
+													"value": "<string>",
+													"description": "When provided, the specified time offset from UTC while be applied to all date-time fields in the data response.  The offset must be specified in hours (hh) and optionally minutes (mm) in the form of (-)hh, (-)hh:mm, or (-)hhmm. Prefix with a minus (-) to designate a negative offset. Examples: -05:00, 02:00, -0500, 02, -04"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"data\": [\n    {\n      \"reportDate\": \"<date>\",\n      \"region\": \"<string>\",\n      \"tankId\": \"<string>\",\n      \"tankType\": \"<string>\",\n      \"tankNumber\": \"<string>\",\n      \"storageField\": \"<string>\",\n      \"measurementDate\": \"<dateTime>\",\n      \"estimatedMeasurement\": \"<boolean>\",\n      \"monthlyMeasurement\": \"<boolean>\",\n      \"statusDesc\": \"<string>\",\n      \"owner\": \"<string>\",\n      \"product\": \"<string>\",\n      \"storageAmount\": \"<long>\",\n      \"operationalCapacity\": \"<long>\",\n      \"capacityUtilization\": \"<float>\",\n      \"units\": \"<string>\"\n    },\n    {\n      \"reportDate\": \"<date>\",\n      \"region\": \"<string>\",\n      \"tankId\": \"<string>\",\n      \"tankType\": \"<string>\",\n      \"tankNumber\": \"<string>\",\n      \"storageField\": \"<string>\",\n      \"measurementDate\": \"<dateTime>\",\n      \"estimatedMeasurement\": \"<boolean>\",\n      \"monthlyMeasurement\": \"<boolean>\",\n      \"statusDesc\": \"<string>\",\n      \"owner\": \"<string>\",\n      \"product\": \"<string>\",\n      \"storageAmount\": \"<long>\",\n      \"operationalCapacity\": \"<long>\",\n      \"capacityUtilization\": \"<float>\",\n      \"units\": \"<string>\"\n    }\n  ]\n}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "owner-volumes",
+					"item": [
+						{
+							"name": "Oil Storage By Owner",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/v1/owner-volumes?limit=5000&offset=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"v1",
+										"owner-volumes"
+									],
+									"query": [
+										{
+											"key": "regions",
+											"value": "Patoka",
+											"description": "List of regions to return separated by commas",
+											"disabled": true
+										},
+										{
+											"key": "products",
+											"value": "GasolineComponents",
+											"description": "List of products to return, separated by commas",
+											"disabled": true
+										},
+										{
+											"key": "revision",
+											"value": "published",
+											"description": "Specify originally published or revised data",
+											"disabled": true
+										},
+										{
+											"key": "limit",
+											"value": "5000",
+											"description": "Format - int64. When provided, **only** the specified number _(0-5000)_ of records will be provided. This value is used to help implement paging through results. When this parameter is not provided, only 200 records will be returned"
+										},
+										{
+											"key": "offset",
+											"value": "0",
+											"description": "Format - int64. When provided, the specified number of records will be skipped. This value should be provided when wishing to page through results. When not provided, the returned records will start with the first record."
+										},
+										{
+											"key": "startDate",
+											"value": "<date>",
+											"description": "Format - date (as full-date in RFC3339). Beginning of date range (e.g. \"YYYY-MM-DD\")",
+											"disabled": true
+										},
+										{
+											"key": "endDate",
+											"value": "<date>",
+											"description": "Format - date (as full-date in RFC3339). End of date range (e.g. \"YYYY-MM-DD\")",
+											"disabled": true
+										},
+										{
+											"key": "format",
+											"value": "json",
+											"description": "Specify the format of the response data. If not provided, the type specified by the `Accept` header will be used. If neither are provided, the type returned will be JSON.",
+											"disabled": true
+										}
+									]
+								},
+								"description": "This dataset contains historical data for the following regions:\n\n* ARA - Updated at 10AM CET every Wednesday. Data available from August 2012\n* Canada - Updated at 10AM ET every Tuesday. Data available from April 2011\n* Cushing - Updated Monday and Thursday at 10AM ET. Data available from May 2009\n* Louisiana Gulf Coast - Updated at 10AM ET every Tuesday. Data available from May 2012\n* Patoka - Updated at 10AM ET every Monday. Data available from June 2010\n* Texas Gulf Coast - Updated at 10AM ET every Tuesday. Data available from July 2014\n* West Texas - Updated at 10AM ET every Monday. Data available from October 2010\n\nRefined Products and Renewables:\n* ARA Gasoil & Jet Fuel - Updated at 10AM CET every Wednesday. Data available from August 2012\n* ARA Gasoline & Naphtha - Updated at 10AM CET every Wednesday. Data available from September 2015\n* ARA Ethanol & Methanol - Updated at 10AM CET every Wednesday. Data available from January 2019\n* ARA Biodiesel & Renewable Diesel - Updated at 10AM CET every Wednesday. Data available from January 2022\n* New York Harbor - Updated at 10AM ET every Tuesday. Data available from November 2013\n* Gulf Coast Ethanol - Updated at 10AM ET every Tuesday. Data available from November 2014\n* Chicago Ethanol - Updated at 12PM ET every Monday. Data available from August 2014\n\n\\* All updates subject to holiday delays – refer to the Holiday delay schedule for rescheduled publication dates"
+							},
+							"response": [
+								{
+									"name": "Storage volume measurements aggregated by owner",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											},
+											{
+												"key": "Gen-Api-Key",
+												"value": "<API Key>",
+												"description": "Added as a part of security scheme: apikey"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/v1/owner-volumes?regions=Patoka&products=GasolineComponents&revision=published&limit=200&offset=0&startDate=<date>&endDate=<date>&format=json",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"v1",
+												"owner-volumes"
+											],
+											"query": [
+												{
+													"key": "regions",
+													"value": "Patoka",
+													"description": "List of regions to return separated by commas"
+												},
+												{
+													"key": "products",
+													"value": "GasolineComponents",
+													"description": "List of products to return, separated by commas"
+												},
+												{
+													"key": "revision",
+													"value": "published",
+													"description": "Specify originally published or revised data"
+												},
+												{
+													"key": "limit",
+													"value": "200",
+													"description": "Format - int64. When provided, **only** the specified number _(0-5000)_ of records will be provided. This value is used to help implement paging through results. When this parameter is not provided, only 200 records will be returned"
+												},
+												{
+													"key": "offset",
+													"value": "0",
+													"description": "Format - int64. When provided, the specified number of records will be skipped. This value should be provided when wishing to page through results. When not provided, the returned records will start with the first record."
+												},
+												{
+													"key": "startDate",
+													"value": "<date>",
+													"description": "Format - date (as full-date in RFC3339). Beginning of date range (e.g. \"YYYY-MM-DD\")"
+												},
+												{
+													"key": "endDate",
+													"value": "<date>",
+													"description": "Format - date (as full-date in RFC3339). End of date range (e.g. \"YYYY-MM-DD\")"
+												},
+												{
+													"key": "format",
+													"value": "json",
+													"description": "Specify the format of the response data. If not provided, the type specified by the `Accept` header will be used. If neither are provided, the type returned will be JSON."
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"data\": [\n    {\n      \"reportDate\": \"<date>\",\n      \"region\": \"<string>\",\n      \"storageField\": \"<string>\",\n      \"owner\": \"<string>\",\n      \"product\": \"<string>\",\n      \"storageAmount\": \"<long>\",\n      \"operationalCapacity\": \"<long>\",\n      \"capacityUtilization\": \"<float>\",\n      \"units\": \"<string>\"\n    },\n    {\n      \"reportDate\": \"<date>\",\n      \"region\": \"<string>\",\n      \"storageField\": \"<string>\",\n      \"owner\": \"<string>\",\n      \"product\": \"<string>\",\n      \"storageAmount\": \"<long>\",\n      \"operationalCapacity\": \"<long>\",\n      \"capacityUtilization\": \"<float>\",\n      \"units\": \"<string>\"\n    }\n  ]\n}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "global-tank-volumes",
+					"item": [
+						{
+							"name": "Global Oil Storage By Tank",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/v1/global-tank-volumes?countryCode=<string>&revision=published&limit=200&offset=0&startDate=<date>&endDate=<date>&format=json&utcOffset=<string>",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"v1",
+										"global-tank-volumes"
+									],
+									"query": [
+										{
+											"key": "countryCode",
+											"value": "<string>",
+											"description": "List of 2-letter ISO country codes to return, separated by commas"
+										},
+										{
+											"key": "revision",
+											"value": "published",
+											"description": "Specify originally published or revised data"
+										},
+										{
+											"key": "limit",
+											"value": "200",
+											"description": "Format - int64. When provided, **only** the specified number _(0-5000)_ of records will be provided. This value is used to help implement paging through results. When this parameter is not provided, only 200 records will be returned"
+										},
+										{
+											"key": "offset",
+											"value": "0",
+											"description": "Format - int64. When provided, the specified number of records will be skipped. This value should be provided when wishing to page through results. When not provided, the returned records will start with the first record."
+										},
+										{
+											"key": "startDate",
+											"value": "<date>",
+											"description": "Format - date (as full-date in RFC3339). Beginning of date range (e.g. \"YYYY-MM-DD\")"
+										},
+										{
+											"key": "endDate",
+											"value": "<date>",
+											"description": "Format - date (as full-date in RFC3339). End of date range (e.g. \"YYYY-MM-DD\")"
+										},
+										{
+											"key": "format",
+											"value": "json",
+											"description": "Specify the format of the response data. If not provided, the type specified by the `Accept` header will be used. If neither are provided, the type returned will be JSON."
+										},
+										{
+											"key": "utcOffset",
+											"value": "<string>",
+											"description": "When provided, the specified time offset from UTC while be applied to all date-time fields in the data response.  The offset must be specified in hours (hh) and optionally minutes (mm) in the form of (-)hh, (-)hh:mm, or (-)hhmm. Prefix with a minus (-) to designate a negative offset. Examples: -05:00, 02:00, -0500, 02, -04"
+										}
+									]
+								},
+								"description": "This dataset contains historical global storage data, excluding the United States. The dataset is updated daily at 4:00 a.m. UTC with any new observations collected that day. Data is available from April 2017.\n\n\\* Note: Users of this product are hereby informed and accept that the use, presentation or transmission of the product or its output may be deemed sensitive or controversial to the governments of some countries. Please obtain independent advice before using, presenting, or transmitting the product or its output outside of your home country. Any cross-border use, presentation or transmission shall be at the users own risk."
+							},
+							"response": [
+								{
+									"name": "Storage volume measurements by tank",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											},
+											{
+												"key": "Gen-Api-Key",
+												"value": "<API Key>",
+												"description": "Added as a part of security scheme: apikey"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/v1/global-tank-volumes?countryCode=<string>&revision=published&limit=200&offset=0&startDate=<date>&endDate=<date>&format=json&utcOffset=<string>",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"v1",
+												"global-tank-volumes"
+											],
+											"query": [
+												{
+													"key": "countryCode",
+													"value": "<string>",
+													"description": "List of 2-letter ISO country codes to return, separated by commas"
+												},
+												{
+													"key": "revision",
+													"value": "published",
+													"description": "Specify originally published or revised data"
+												},
+												{
+													"key": "limit",
+													"value": "200",
+													"description": "Format - int64. When provided, **only** the specified number _(0-5000)_ of records will be provided. This value is used to help implement paging through results. When this parameter is not provided, only 200 records will be returned"
+												},
+												{
+													"key": "offset",
+													"value": "0",
+													"description": "Format - int64. When provided, the specified number of records will be skipped. This value should be provided when wishing to page through results. When not provided, the returned records will start with the first record."
+												},
+												{
+													"key": "startDate",
+													"value": "<date>",
+													"description": "Format - date (as full-date in RFC3339). Beginning of date range (e.g. \"YYYY-MM-DD\")"
+												},
+												{
+													"key": "endDate",
+													"value": "<date>",
+													"description": "Format - date (as full-date in RFC3339). End of date range (e.g. \"YYYY-MM-DD\")"
+												},
+												{
+													"key": "format",
+													"value": "json",
+													"description": "Specify the format of the response data. If not provided, the type specified by the `Accept` header will be used. If neither are provided, the type returned will be JSON."
+												},
+												{
+													"key": "utcOffset",
+													"value": "<string>",
+													"description": "When provided, the specified time offset from UTC while be applied to all date-time fields in the data response.  The offset must be specified in hours (hh) and optionally minutes (mm) in the form of (-)hh, (-)hh:mm, or (-)hhmm. Prefix with a minus (-) to designate a negative offset. Examples: -05:00, 02:00, -0500, 02, -04"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"data\": [\n    {\n      \"observationDateTime\": \"<dateTime>\",\n      \"publishedDateTime\": \"<dateTime>\",\n      \"tankId\": \"<string>\",\n      \"tankType\": \"<string>\",\n      \"storageField\": \"<string>\",\n      \"statusDesc\": \"<string>\",\n      \"countryCode\": \"<string>\",\n      \"countryName\": \"<string>\",\n      \"owner\": \"<string>\",\n      \"product\": \"<string>\",\n      \"storageAmount\": \"<long>\",\n      \"operationalCapacity\": \"<long>\",\n      \"capacityUtilization\": \"<float>\",\n      \"units\": \"<string>\",\n      \"confidenceLevel\": \"<float>\",\n      \"nextExpectedObservationDateTime\": \"<dateTime>\"\n    },\n    {\n      \"observationDateTime\": \"<dateTime>\",\n      \"publishedDateTime\": \"<dateTime>\",\n      \"tankId\": \"<string>\",\n      \"tankType\": \"<string>\",\n      \"storageField\": \"<string>\",\n      \"statusDesc\": \"<string>\",\n      \"countryCode\": \"<string>\",\n      \"countryName\": \"<string>\",\n      \"owner\": \"<string>\",\n      \"product\": \"<string>\",\n      \"storageAmount\": \"<long>\",\n      \"operationalCapacity\": \"<long>\",\n      \"capacityUtilization\": \"<float>\",\n      \"units\": \"<string>\",\n      \"confidenceLevel\": \"<float>\",\n      \"nextExpectedObservationDateTime\": \"<dateTime>\"\n    }\n  ]\n}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "global-region-volumes",
+					"item": [
+						{
+							"name": "{frequency}",
+							"item": [
+								{
+									"name": "Global Oil Storage By Region",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/v1/global-region-volumes/:frequency?regionType=Country&countryCode=<string>&regionId=<integer>&revision=published&limit=200&offset=0&startDate=<date>&endDate=<date>&format=json",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"v1",
+												"global-region-volumes",
+												":frequency"
+											],
+											"query": [
+												{
+													"key": "regionType",
+													"value": "Country",
+													"description": "Type of region to be returned, separated by commas"
+												},
+												{
+													"key": "countryCode",
+													"value": "<string>",
+													"description": "List of 2-letter ISO country codes to return, separated by commas"
+												},
+												{
+													"key": "regionId",
+													"value": "<integer>",
+													"description": "List of region IDs to return, separated by commas"
+												},
+												{
+													"key": "revision",
+													"value": "published",
+													"description": "Specify originally published or revised data"
+												},
+												{
+													"key": "limit",
+													"value": "200",
+													"description": "Format - int64. When provided, **only** the specified number _(0-5000)_ of records will be provided. This value is used to help implement paging through results. When this parameter is not provided, only 200 records will be returned"
+												},
+												{
+													"key": "offset",
+													"value": "0",
+													"description": "Format - int64. When provided, the specified number of records will be skipped. This value should be provided when wishing to page through results. When not provided, the returned records will start with the first record."
+												},
+												{
+													"key": "startDate",
+													"value": "<date>",
+													"description": "Format - date (as full-date in RFC3339). Beginning of date range (e.g. \"YYYY-MM-DD\")"
+												},
+												{
+													"key": "endDate",
+													"value": "<date>",
+													"description": "Format - date (as full-date in RFC3339). End of date range (e.g. \"YYYY-MM-DD\")"
+												},
+												{
+													"key": "format",
+													"value": "json",
+													"description": "Specify the format of the response data. If not provided, the type specified by the `Accept` header will be used. If neither are provided, the type returned will be JSON."
+												}
+											],
+											"variable": [
+												{
+													"key": "frequency",
+													"value": "monthly",
+													"description": "(Required) Frequency of aggregation"
+												}
+											]
+										},
+										"description": "This dataset contains historical global storage data by country and by PADD for the United States. The dataset is updated weekly at 4:00 a.m. UTC Saturdays with any new observations collected that week. Data available from April 2017.\n\n\\* Note: Users of this product are hereby informed and accept that the use, presentation or transmission of the product or its output may be deemed sensitive or controversial to the governments of some countries. Please obtain independent advice before using, presenting, or transmitting the product or its output outside of your home country. Any cross-border use, presentation or transmission shall be at the users own risk."
+									},
+									"response": [
+										{
+											"name": "Storage volume measurements by region",
+											"originalRequest": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "application/json"
+													},
+													{
+														"key": "Gen-Api-Key",
+														"value": "<API Key>",
+														"description": "Added as a part of security scheme: apikey"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/v1/global-region-volumes/:frequency?regionType=Country&countryCode=<string>&regionId=<integer>&revision=published&limit=200&offset=0&startDate=<date>&endDate=<date>&format=json",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"v1",
+														"global-region-volumes",
+														":frequency"
+													],
+													"query": [
+														{
+															"key": "regionType",
+															"value": "Country",
+															"description": "Type of region to be returned, separated by commas"
+														},
+														{
+															"key": "countryCode",
+															"value": "<string>",
+															"description": "List of 2-letter ISO country codes to return, separated by commas"
+														},
+														{
+															"key": "regionId",
+															"value": "<integer>",
+															"description": "List of region IDs to return, separated by commas"
+														},
+														{
+															"key": "revision",
+															"value": "published",
+															"description": "Specify originally published or revised data"
+														},
+														{
+															"key": "limit",
+															"value": "200",
+															"description": "Format - int64. When provided, **only** the specified number _(0-5000)_ of records will be provided. This value is used to help implement paging through results. When this parameter is not provided, only 200 records will be returned"
+														},
+														{
+															"key": "offset",
+															"value": "0",
+															"description": "Format - int64. When provided, the specified number of records will be skipped. This value should be provided when wishing to page through results. When not provided, the returned records will start with the first record."
+														},
+														{
+															"key": "startDate",
+															"value": "<date>",
+															"description": "Format - date (as full-date in RFC3339). Beginning of date range (e.g. \"YYYY-MM-DD\")"
+														},
+														{
+															"key": "endDate",
+															"value": "<date>",
+															"description": "Format - date (as full-date in RFC3339). End of date range (e.g. \"YYYY-MM-DD\")"
+														},
+														{
+															"key": "format",
+															"value": "json",
+															"description": "Specify the format of the response data. If not provided, the type specified by the `Accept` header will be used. If neither are provided, the type returned will be JSON."
+														}
+													],
+													"variable": [
+														{
+															"key": "frequency"
+														}
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n  \"data\": [\n    {\n      \"reportDate\": \"<date>\",\n      \"regionType\": \"<string>\",\n      \"regionName\": \"<string>\",\n      \"regionId\": \"<long>\",\n      \"product\": \"<string>\",\n      \"storageAmount\": \"<long>\",\n      \"operationalCapacity\": \"<long>\",\n      \"capacityUtilization\": \"<float>\",\n      \"units\": \"<string>\",\n      \"pctCapacityObserved\": \"<float>\"\n    },\n    {\n      \"reportDate\": \"<date>\",\n      \"regionType\": \"<string>\",\n      \"regionName\": \"<string>\",\n      \"regionId\": \"<long>\",\n      \"product\": \"<string>\",\n      \"storageAmount\": \"<long>\",\n      \"operationalCapacity\": \"<long>\",\n      \"capacityUtilization\": \"<float>\",\n      \"units\": \"<string>\",\n      \"pctCapacityObserved\": \"<float>\"\n    }\n  ]\n}"
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "global-owner-volumes",
+					"item": [
+						{
+							"name": "{frequency}",
+							"item": [
+								{
+									"name": "Global Oil Storage By Owner",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/v1/global-owner-volumes/:frequency?limit=5000&offset=0",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"v1",
+												"global-owner-volumes",
+												":frequency"
+											],
+											"query": [
+												{
+													"key": "countryCode",
+													"value": "<string>",
+													"description": "List of 2-letter ISO country codes to return, separated by commas",
+													"disabled": true
+												},
+												{
+													"key": "revision",
+													"value": "published",
+													"description": "Specify originally published or revised data",
+													"disabled": true
+												},
+												{
+													"key": "limit",
+													"value": "5000",
+													"description": "Format - int64. When provided, **only** the specified number _(0-5000)_ of records will be provided. This value is used to help implement paging through results. When this parameter is not provided, only 200 records will be returned"
+												},
+												{
+													"key": "offset",
+													"value": "0",
+													"description": "Format - int64. When provided, the specified number of records will be skipped. This value should be provided when wishing to page through results. When not provided, the returned records will start with the first record."
+												},
+												{
+													"key": "startDate",
+													"value": "<date>",
+													"description": "Format - date (as full-date in RFC3339). Beginning of date range (e.g. \"YYYY-MM-DD\")",
+													"disabled": true
+												},
+												{
+													"key": "endDate",
+													"value": "<date>",
+													"description": "Format - date (as full-date in RFC3339). End of date range (e.g. \"YYYY-MM-DD\")",
+													"disabled": true
+												},
+												{
+													"key": "format",
+													"value": "json",
+													"description": "Specify the format of the response data. If not provided, the type specified by the `Accept` header will be used. If neither are provided, the type returned will be JSON.",
+													"disabled": true
+												}
+											],
+											"variable": [
+												{
+													"key": "frequency",
+													"value": "monthly",
+													"description": "(Required) Frequency of aggregation"
+												}
+											]
+										},
+										"description": "This dataset contains historical global storage data by owner for terminals located around the world, except for in the United States. The dataset is updated weekly at 4:00 a.m. UTC Saturdays with any new observations collected that week. Data available from April 2017.\n\n\\* Note: Users of this product are hereby informed and accept that the use, presentation or transmission of the product or its output may be deemed sensitive or controversial to the governments of some countries. Please obtain independent advice before using, presenting, or transmitting the product or its output outside of your home country. Any cross-border use, presentation or transmission shall be at the users own risk."
+									},
+									"response": [
+										{
+											"name": "Storage volume measurements by owner",
+											"originalRequest": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "application/json"
+													},
+													{
+														"key": "Gen-Api-Key",
+														"value": "<API Key>",
+														"description": "Added as a part of security scheme: apikey"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/v1/global-owner-volumes/:frequency?countryCode=<string>&revision=published&limit=200&offset=0&startDate=<date>&endDate=<date>&format=json",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"v1",
+														"global-owner-volumes",
+														":frequency"
+													],
+													"query": [
+														{
+															"key": "countryCode",
+															"value": "<string>",
+															"description": "List of 2-letter ISO country codes to return, separated by commas"
+														},
+														{
+															"key": "revision",
+															"value": "published",
+															"description": "Specify originally published or revised data"
+														},
+														{
+															"key": "limit",
+															"value": "200",
+															"description": "Format - int64. When provided, **only** the specified number _(0-5000)_ of records will be provided. This value is used to help implement paging through results. When this parameter is not provided, only 200 records will be returned"
+														},
+														{
+															"key": "offset",
+															"value": "0",
+															"description": "Format - int64. When provided, the specified number of records will be skipped. This value should be provided when wishing to page through results. When not provided, the returned records will start with the first record."
+														},
+														{
+															"key": "startDate",
+															"value": "<date>",
+															"description": "Format - date (as full-date in RFC3339). Beginning of date range (e.g. \"YYYY-MM-DD\")"
+														},
+														{
+															"key": "endDate",
+															"value": "<date>",
+															"description": "Format - date (as full-date in RFC3339). End of date range (e.g. \"YYYY-MM-DD\")"
+														},
+														{
+															"key": "format",
+															"value": "json",
+															"description": "Specify the format of the response data. If not provided, the type specified by the `Accept` header will be used. If neither are provided, the type returned will be JSON."
+														}
+													],
+													"variable": [
+														{
+															"key": "frequency"
+														}
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n  \"data\": [\n    {\n      \"reportDate\": \"<date>\",\n      \"owner\": \"<string>\",\n      \"countryCode\": \"<string>\",\n      \"countryName\": \"<string>\",\n      \"storageField\": \"<string>\",\n      \"product\": \"<string>\",\n      \"storageAmount\": \"<long>\",\n      \"operationalCapacity\": \"<long>\",\n      \"capacityUtilization\": \"<float>\",\n      \"units\": \"<string>\",\n      \"pctCapacityObserved\": \"<float>\"\n    },\n    {\n      \"reportDate\": \"<date>\",\n      \"owner\": \"<string>\",\n      \"countryCode\": \"<string>\",\n      \"countryName\": \"<string>\",\n      \"storageField\": \"<string>\",\n      \"product\": \"<string>\",\n      \"storageAmount\": \"<long>\",\n      \"operationalCapacity\": \"<long>\",\n      \"capacityUtilization\": \"<float>\",\n      \"units\": \"<string>\",\n      \"pctCapacityObserved\": \"<float>\"\n    }\n  ]\n}"
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "{{Gen-Api-Key}}",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "Gen-Api-Key",
+				"type": "string"
+			},
+			{
+				"key": "in",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://api.genscape.com/storage/oil"
+		}
+	]
+}

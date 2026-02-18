@@ -45,7 +45,7 @@ from python_postman.models.collection import Collection
 
 
 @dataclass
-class TestResult:
+class CftcTestResult:
     """Result of a test execution."""
     name: str
     passed: bool
@@ -221,7 +221,7 @@ class CFTCTestSuite:
         """
         self.validation_only = validation_only
         self.verbose = verbose
-        self.results: List[TestResult] = []
+        self.results: List[CftcTestResult] = []
         self.executor: Optional[CFTCExecutor] = None
         
         # Get collection path
@@ -236,7 +236,7 @@ class CFTCTestSuite:
         if self.verbose or force:
             print(message)
 
-    def add_result(self, result: TestResult) -> None:
+    def add_result(self, result: CftcTestResult) -> None:
         """Add test result and display it."""
         self.results.append(result)
         status = "✅ PASS" if result.passed else "❌ FAIL"
@@ -246,7 +246,7 @@ class CFTCTestSuite:
         if result.details and self.verbose:
             self.log(f"      {result.details}")
 
-    async def run_test(self, name: str, test_func) -> TestResult:
+    async def run_test(self, name: str, test_func) -> CftcTestResult:
         """
         Run a single test and capture result.
 
@@ -255,7 +255,7 @@ class CFTCTestSuite:
             test_func: Async test function to execute
 
         Returns:
-            TestResult object
+            CftcTestResult object
         """
         self.log(f"\n🧪 Running: {name}")
         start_time = time.time()
@@ -263,7 +263,7 @@ class CFTCTestSuite:
         try:
             await test_func()
             duration_ms = (time.time() - start_time) * 1000
-            return TestResult(
+            return CftcTestResult(
                 name=name,
                 passed=True,
                 duration_ms=duration_ms,
@@ -271,7 +271,7 @@ class CFTCTestSuite:
             )
         except AssertionError as e:
             duration_ms = (time.time() - start_time) * 1000
-            return TestResult(
+            return CftcTestResult(
                 name=name,
                 passed=False,
                 duration_ms=duration_ms,
@@ -279,7 +279,7 @@ class CFTCTestSuite:
             )
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
-            return TestResult(
+            return CftcTestResult(
                 name=name,
                 passed=False,
                 duration_ms=duration_ms,

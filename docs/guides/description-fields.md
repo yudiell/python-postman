@@ -118,8 +118,7 @@ When parsing a Postman collection JSON file, descriptions are automatically extr
 from python_postman import PythonPostman
 
 # Parse collection
-postman = PythonPostman(file_path="my_collection.json")
-collection = postman.collection
+collection = PythonPostman.from_file("my_collection.json")
 
 # Access collection description
 print(f"Collection: {collection.info.name}")
@@ -218,8 +217,8 @@ def generate_markdown_docs(collection):
     return "\n".join(lines)
 
 # Parse and generate docs
-postman = PythonPostman(file_path="api_collection.json")
-markdown = generate_markdown_docs(postman.collection)
+collection = PythonPostman.from_file("api_collection.json")
+markdown = generate_markdown_docs(collection)
 
 # Save to file
 with open("API_DOCS.md", "w") as f:
@@ -236,8 +235,7 @@ You can modify descriptions programmatically:
 from python_postman import PythonPostman
 
 # Load collection
-postman = PythonPostman(file_path="collection.json")
-collection = postman.collection
+collection = PythonPostman.from_file("collection.json")
 
 # Update descriptions for all requests without one
 for request in collection.get_requests():
@@ -399,8 +397,8 @@ def audit_descriptions(collection):
     return missing
 
 # Run audit
-postman = PythonPostman(file_path="collection.json")
-missing_descriptions = audit_descriptions(postman.collection)
+collection = PythonPostman.from_file("collection.json")
+missing_descriptions = audit_descriptions(collection)
 
 if missing_descriptions:
     print(f"Found {len(missing_descriptions)} items without descriptions:\n")

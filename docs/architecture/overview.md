@@ -78,7 +78,7 @@ python_postman/
 ├── execution/                   # Execution layer (optional)
 │   ├── executor.py              # RequestExecutor
 │   ├── context.py               # ExecutionContext
-│   ├── results.py               # ExecutionResult, TestResults
+│   ├── results.py               # ExecutionResult, ScriptResults
 │   ├── auth_handler.py          # AuthHandler
 │   ├── variable_resolver.py     # VariableResolver
 │   ├── script_runner.py         # ScriptRunner
@@ -151,7 +151,7 @@ Item.create_request(name="Test", method="GET", url="https://api.example.com")
 Used for schema version handling:
 
 ```python
-SchemaValidator.get_parser_for_version(version)
+SchemaValidator.detect_version(schema_url)
 ```
 
 ### 4. Visitor Pattern
@@ -159,7 +159,8 @@ SchemaValidator.get_parser_for_version(version)
 Used for traversing collection hierarchies:
 
 ```python
-collection.traverse(visitor_function)
+for request in collection.get_requests():
+    process(request)
 ```
 
 ## Extension Points

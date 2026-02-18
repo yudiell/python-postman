@@ -140,7 +140,7 @@ class Folder(Item):
         for event_data in events_data:
             events.append(Event.from_dict(event_data))
 
-        return cls(
+        folder = cls(
             name=name,
             items=items,
             description=data.get("description"),
@@ -148,6 +148,15 @@ class Folder(Item):
             events=events,
             variables=variables,
         )
+
+        # Wire up parent references for child items
+        for item in items:
+            if isinstance(item, Request):
+                item._parent_folder = folder
+            elif isinstance(item, Folder):
+                item._parent_folder = folder
+
+        return folder
 
     def to_dict(self) -> dict:
         """

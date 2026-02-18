@@ -25,8 +25,7 @@ async def main():
     print("STEP 1: PARSING COLLECTION")
     print("=" * 60)
     
-    parser = PythonPostman()
-    collection = parser.parse("collection.json")
+    collection = PythonPostman.from_file("collection.json")
     
     print(f"✓ Parsed collection: {collection.info.name}")
     print(f"  Description: {collection.info.description}")
@@ -60,10 +59,6 @@ async def main():
             print(f"  - {error}")
         return
     
-    if validation_result.warnings:
-        print("⚠ Warnings:")
-        for warning in validation_result.warnings:
-            print(f"  - {warning}")
     print()
     
     # Analyze request methods
@@ -191,39 +186,38 @@ async def main():
     context = ExecutionContext()
     context.set_variable("api_key", "your-production-api-key")
     context.set_variable("base_url", "https://api.production.example.com")
-    context.set_environment_variable("environment", "production")
-    
+    context.set_variable("environment", "production", "environment")
+
     print("Execution context configured:")
     print(f"  api_key: {context.get_variable('api_key')}")
     print(f"  base_url: {context.get_variable('base_url')}")
-    print(f"  environment: {context.get_environment_variable('environment')}")
+    print(f"  environment: {context.get_variable('environment')}")
     print()
     
     # Create executor with custom configuration
     executor = RequestExecutor(
-        timeout=30.0,
-        follow_redirects=True,
-        verify_ssl=True
+        client_config={"timeout": 30.0, "follow_redirects": True, "verify": True}
     )
-    
+
     # Execute collection
     print("Executing requests...")
     print()
-    
-    results = await executor.execute_collection(collection, context=context)
-    
+
+    collection_result = await executor.execute_collection(collection, context=context)
+    results = collection_result.results
+
     # ========================================
     # STEP 5: ANALYZE RESULTS
     # ========================================
     print("=" * 60)
     print("STEP 5: ANALYZING RESULTS")
     print("=" * 60)
-    
+
     # Summary statistics
     success_count = sum(1 for r in results if r.success)
     failure_count = sum(1 for r in results if not r.success)
-    total_duration = sum(r.duration_ms for r in results if r.success)
-    
+    total_duration = sum(r.execution_time_ms for r in results if r.success)
+
     print(f"Execution Summary:")
     print(f"  Total requests: {len(results)}")
     print(f"  Successful: {success_count}")
@@ -232,23 +226,23 @@ async def main():
     print(f"  Total duration: {total_duration:.0f}ms")
     print(f"  Average duration: {total_duration / len(results):.0f}ms")
     print()
-    
+
     # Detailed results
     print("Detailed Results:")
     for result in results:
         if result.success:
             status_icon = "✓"
             status_code = result.response.status_code
-            duration = f"{result.duration_ms:.0f}ms"
-            
+            duration = f"{result.execution_time_ms:.0f}ms"
+
             # Check test results
             test_info = ""
             if result.test_results:
-                if result.test_results.all_passed:
+                if result.test_results.failed == 0:
                     test_info = f" | Tests: {result.test_results.passed}/{result.test_results.total} passed"
                 else:
                     test_info = f" | Tests: {result.test_results.failed}/{result.test_results.total} failed"
-            
+
             print(f"  {status_icon} {result.request.name}")
             print(f"     Status: {status_code} | Duration: {duration}{test_info}")
         else:
@@ -256,7 +250,7 @@ async def main():
             print(f"  {status_icon} {result.request.name}")
             print(f"     Error: {result.error}")
     print()
-    
+
     # Status code distribution
     print("Status Code Distribution:")
     status_codes = {}
@@ -264,30 +258,30 @@ async def main():
         if result.success:
             code = result.response.status_code
             status_codes[code] = status_codes.get(code, 0) + 1
-    
+
     for code, count in sorted(status_codes.items()):
         print(f"  {code}: {count}")
     print()
-    
+
     # Performance analysis
     print("Performance Analysis:")
     slow_threshold = 1000  # 1 second
-    slow_requests = [r for r in results if r.success and r.duration_ms > slow_threshold]
-    
+    slow_requests = [r for r in results if r.success and r.execution_time_ms > slow_threshold]
+
     if slow_requests:
         print(f"  Slow requests (>{slow_threshold}ms):")
-        for result in sorted(slow_requests, key=lambda r: r.duration_ms, reverse=True):
-            print(f"    {result.request.name}: {result.duration_ms:.0f}ms")
+        for result in sorted(slow_requests, key=lambda r: r.execution_time_ms, reverse=True):
+            print(f"    {result.request.name}: {result.execution_time_ms:.0f}ms")
     else:
         print(f"  No slow requests (all under {slow_threshold}ms)")
     print()
-    
+
     # Test results summary
     print("Test Results Summary:")
     total_tests = 0
     total_passed = 0
     total_failed = 0
-    
+
     for result in results:
         if result.test_results:
             total_tests += result.test_results.total
