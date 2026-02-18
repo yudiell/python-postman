@@ -260,9 +260,9 @@ resolved_body = resolver.resolve_string(body)
 **Variable Syntax:**
 
 - `{{variable_name}}` - Variable reference
-- `{{$guid}}` - Generate GUID
-- `{{$timestamp}}` - Current timestamp
-- `{{$randomInt}}` - Random integer
+- `:parameterName` - Path parameter (resolved from context variables)
+
+> **Note**: Postman dynamic variables (`{{$guid}}`, `{{$timestamp}}`, `{{$randomInt}}`) are not currently supported. Use regular variables with values set in the execution context instead.
 
 ### ScriptRunner
 
@@ -272,13 +272,13 @@ Executes pre-request and test scripts.
 from python_postman.execution import ScriptRunner
 
 # Create script runner
-script_runner = ScriptRunner(context)
+script_runner = ScriptRunner(timeout=30.0)
 
-# Execute pre-request script
-script_runner.run_prerequest_script(request)
+# Execute pre-request scripts (collection-level then request-level)
+script_runner.execute_pre_request_scripts(request, collection, context)
 
-# Execute test script
-script_runner.run_test_script(request, response)
+# Execute test scripts and get results
+results = script_runner.execute_test_scripts(request, response, context)
 ```
 
 **Script Environment:**

@@ -270,6 +270,25 @@ class Collection:
         for item in self.items:
             yield from item.get_requests()
 
+    def get_folders(self) -> Iterator["Folder"]:
+        """
+        Get all folders in the collection, traversing nested folders recursively.
+
+        Returns:
+            Iterator of all Folder objects in the collection
+        """
+        for item in self.items:
+            if isinstance(item, Folder):
+                yield item
+                yield from self._get_subfolders_recursive(item)
+
+    def _get_subfolders_recursive(self, folder: "Folder") -> Iterator["Folder"]:
+        """Recursively yield all subfolders of a folder."""
+        for item in folder.items:
+            if isinstance(item, Folder):
+                yield item
+                yield from self._get_subfolders_recursive(item)
+
     def list_requests(self) -> List[str]:
         """
         Get a list of all request names in the collection.

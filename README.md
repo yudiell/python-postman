@@ -221,7 +221,9 @@ async def main():
     # Create executor
     executor = RequestExecutor(
         client_config={"timeout": 30.0, "verify": True},
-        global_headers={"User-Agent": "python-postman/1.0"}
+        global_headers={"User-Agent": "python-postman/1.0"},
+        variable_overrides={"env": "production"},  # Highest precedence variables
+        request_delay=0.1,  # Delay between sequential requests (seconds)
     )
 
     # Create execution context with variables

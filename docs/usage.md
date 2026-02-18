@@ -665,6 +665,75 @@ request.add_response(new_example)
 
 ---
 
+## Cookies
+
+The `Cookie` and `CookieJar` classes provide HTTP cookie management, useful when working with example responses or managing cookies across requests.
+
+### Working with individual cookies
+
+```python
+from python_postman import Cookie
+
+# Create a cookie
+cookie = Cookie(
+    name="session_id",
+    value="abc123",
+    domain=".example.com",
+    path="/",
+    secure=True,
+    http_only=True,
+    same_site="Lax",
+)
+
+# Parse from a Set-Cookie header
+cookie = Cookie.from_header("session_id=abc123; Domain=.example.com; Path=/; Secure; HttpOnly")
+
+# Parse from a Postman dictionary
+cookie = Cookie.from_dict({"name": "session_id", "value": "abc123", "domain": ".example.com"})
+
+# Convert back to header or dict
+header_str = cookie.to_header()   # "session_id=abc123; Domain=.example.com; Path=/; Secure; HttpOnly"
+cookie_dict = cookie.to_dict()
+
+# Check cookie properties
+cookie.is_expired()                    # True if past expiration date
+cookie.matches_domain("example.com")   # True (matches .example.com)
+cookie.matches_path("/api/users")      # True (prefix match on /)
+```
+
+### Managing cookies with CookieJar
+
+```python
+from python_postman import Cookie, CookieJar
+
+jar = CookieJar()
+
+# Add cookies (replaces existing cookie with same name/domain/path)
+jar.add(Cookie(name="token", value="xyz", domain=".example.com", path="/"))
+jar.add(Cookie(name="prefs", value="dark", domain=".example.com", path="/"))
+
+# Retrieve a cookie by name
+cookie = jar.get("token")
+cookie = jar.get("token", domain=".example.com", path="/")
+
+# Filter cookies
+jar.filter_by_domain("example.com")                     # All cookies for domain
+jar.filter_by_path("/api")                               # All cookies for path
+jar.filter_for_request("example.com", "/api", secure=True)  # Cookies to send with a request
+
+# Remove cookies
+jar.remove("token")           # Remove by name
+jar.clear_expired()           # Remove all expired cookies, returns count removed
+jar.clear()                   # Remove all cookies
+
+# Iterate
+print(f"Total cookies: {len(jar)}")
+for cookie in jar:
+    print(f"  {cookie.name}={cookie.value}")
+```
+
+---
+
 ## Validation
 
 ### Validating a loaded collection
@@ -819,9 +888,16 @@ with open("stats.csv", "w") as f:
 
 ### Caching
 
-Statistics are cached after the first `collect()` call. If you modify the collection and need fresh stats:
+Statistics are cached after the first `collect()` call. You can control caching behavior with the `use_cache` parameter:
 
 ```python
+# Use cached results if available (default)
+data = stats.collect(use_cache=True)
+
+# Force recalculation, bypassing the cache
+fresh_data = stats.collect(use_cache=False)
+
+# Or clear the cache explicitly
 stats.clear_cache()
 fresh_data = stats.collect()
 ```
@@ -1103,6 +1179,24 @@ async with RequestExecutor() as executor:
 with RequestExecutor() as executor:
     result = executor.execute_request_sync(request, context)
 ```
+
+### Creating an executor from a collection
+
+The `collection.create_executor()` convenience method creates a `RequestExecutor` pre-configured with the collection's variables as `variable_overrides`:
+
+```python
+# Instead of manually extracting collection variables:
+executor = collection.create_executor(
+    client_config={"timeout": 60.0},
+    global_headers={"User-Agent": "my-app/1.0"},
+)
+
+# Equivalent to:
+# vars = {v.key: v.value for v in collection.variables}
+# executor = RequestExecutor(variable_overrides=vars, client_config=..., global_headers=...)
+```
+
+Any keyword arguments are forwarded to `RequestExecutor`. If you don't pass `variable_overrides`, the collection's own variables are used automatically.
 
 ### Executing directly from model objects
 
@@ -1387,6 +1481,78 @@ print(f"Tests: {tests.passed} passed, {tests.failed} failed")
 
 ---
 
+## Advanced Execution Classes
+
+The execution layer exposes three utility classes that `RequestExecutor` uses internally. You can use them directly for fine-grained control over variable resolution, authentication, and script execution.
+
+### VariableResolver
+
+Resolves `{{variable}}` and `:parameter` references in request components. Supports recursive resolution with circular reference protection.
+
+```python
+from python_postman.execution import VariableResolver, ExecutionContext
+
+context = ExecutionContext(
+    environment_variables={"base_url": "https://api.example.com", "user_id": "123"}
+)
+resolver = VariableResolver(context)
+
+# Resolve variables in individual request components
+resolved_url = resolver.resolve_url(request.url)
+resolved_headers = resolver.resolve_headers(request.headers)
+resolved_body = resolver.resolve_body(request.body)
+resolved_auth = resolver.resolve_auth(request.auth)
+
+# Resolve variables in an arbitrary string
+resolved = resolver.resolve_string("{{base_url}}/users/:user_id")
+```
+
+### AuthHandler
+
+Processes authentication configurations and returns headers/parameters to apply to a request. Supports Bearer, Basic, and API Key authentication.
+
+```python
+from python_postman.execution import AuthHandler, ExecutionContext
+
+handler = AuthHandler()
+context = ExecutionContext(
+    environment_variables={"token": "my-secret-token"}
+)
+
+# Apply auth returns a dict with "headers" and "params" keys
+auth_result = handler.apply_auth(
+    request_auth=request.auth,
+    collection_auth=collection.auth,
+    context=context,
+)
+# auth_result = {"headers": {"Authorization": "Bearer my-secret-token"}, "params": {}}
+```
+
+### ScriptRunner
+
+Executes pre-request and test scripts in a sandboxed environment. Scripts have access to a `pm` object that mimics the Postman scripting API.
+
+```python
+from python_postman.execution import ScriptRunner, ExecutionContext
+
+runner = ScriptRunner(timeout=30.0)
+
+# Execute pre-request scripts (collection-level first, then request-level)
+runner.execute_pre_request_scripts(request, collection, context)
+
+# Execute test scripts and get results
+results = runner.execute_test_scripts(request, response, context)
+for assertion in results.assertions:
+    print(f"{'PASS' if assertion.passed else 'FAIL'}: {assertion.name}")
+
+# Access console output from scripts
+for log in runner.get_console_logs():
+    print(f"Script log: {log}")
+runner.clear_console_logs()
+```
+
+---
+
 ## Error Handling
 
 ### Parsing errors
@@ -1545,6 +1711,7 @@ asyncio.run(main())
 | `collection.auth` | Collection-level authentication |
 | `collection.events` | Collection-level events |
 | `collection.get_requests()` | Iterator over all requests (recursive) |
+| `collection.get_folders()` | Iterator over all folders (recursive) |
 | `collection.list_requests()` | List of all request names |
 | `collection.get_request_by_name(name)` | Find a request by name |
 | `collection.get_folder_by_name(name)` | Find a folder by name |
@@ -1591,6 +1758,9 @@ asyncio.run(main())
 | `FolderExecutionResult` | Folder execution result |
 | `ExecutionResponse` | HTTP response wrapper |
 | `ScriptResults` | Test script results |
+| `VariableResolver` | Variable substitution in request components |
+| `AuthHandler` | Authentication processing |
+| `ScriptRunner` | Sandboxed script execution |
 
 ---
 
