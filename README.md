@@ -1,5 +1,7 @@
 # Python Postman
 
+> **Disclaimer:** This is an independent, community-maintained open-source project. It is not affiliated with, endorsed by, or sponsored by Postman, Inc. "Postman" is a registered trademark of Postman, Inc.
+
 A comprehensive Python library for working with Postman collections. Parse, execute, search, and analyze Postman collection.json files with a clean, object-oriented interface. Execute HTTP requests with full async/sync support, dynamic variable resolution, and authentication handling.
 
 ## Features
