@@ -44,10 +44,10 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/python-postman/python-postman"
-Repository = "https://github.com/python-postman/python-postman"
-Documentation = "https://python-postman.readthedocs.io"
-"Bug Tracker" = "https://github.com/python-postman/python-postman/issues"
+Homepage = "https://github.com/yudiell/python-postman"
+Repository = "https://github.com/yudiell/python-postman"
+Documentation = "https://github.com/yudiell/python-postman/blob/main/docs/usage.md"
+"Bug Tracker" = "https://github.com/yudiell/python-postman/issues"
 
 [build-system]
 requires = ["hatchling"]
